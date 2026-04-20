@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { ChakraProvider, Flex, Box, defaultSystem } from '@chakra-ui/react'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
@@ -10,7 +9,7 @@ import FieldReports from './pages/FieldReports'
 import Alerts from './pages/Alerts'
 import Users from './pages/Users'
 
-function AppContent() {
+function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
 
   const renderSection = () => {
@@ -35,22 +34,18 @@ function AppContent() {
   }
 
   return (
-    <Flex flexDirection="column" h="100vh" position="relative" zIndex={1}>
+    <div className="flex flex-col w-full h-screen bg-[#060910] text-[#e2e8f0]">
       <Header />
-      <Flex flex={1} overflow="hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0 w-full relative z-1">
         <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-        <Box as="main" flex={1} overflowY="auto" p="22px" pr="24px">
-          {renderSection()}
-        </Box>
-      </Flex>
-    </Flex>
+        <main className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="w-full animate-fade-in">
+            {renderSection()}
+          </div>
+        </main>
+      </div>
+    </div>
   )
 }
 
-export default function App() {
-  return (
-    <ChakraProvider value={defaultSystem}>
-      <AppContent />
-    </ChakraProvider>
-  )
-}
+export default App

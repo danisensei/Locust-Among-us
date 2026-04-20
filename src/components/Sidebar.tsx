@@ -1,5 +1,3 @@
-import { Box, VStack, HStack, Text, Badge } from '@chakra-ui/react'
-
 interface SidebarProps {
   activeSection: string
   setActiveSection: (section: string) => void
@@ -7,78 +5,52 @@ interface SidebarProps {
 
 export default function Sidebar({ activeSection, setActiveSection }: SidebarProps) {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '⬛', group: 'Overview' },
-    { id: 'map', label: 'Swarm Map', icon: '🗺', group: 'Overview' },
-    { id: 'ai', label: 'AI Prediction', icon: '🤖', group: 'Operations' },
-    { id: 'drones', label: 'Drone Ops', icon: '🛸', group: 'Operations' },
-    { id: 'reports', label: 'Field Reports', icon: '📋', group: 'Operations' },
-    { id: 'alerts', label: 'Alerts', icon: '🔔', group: 'System', badge: 5 },
-    { id: 'users', label: 'Users', icon: '👥', group: 'System' },
+    { id: 'dashboard', label: 'Dashboard', emoji: '⬛', group: 'Overview' },
+    { id: 'map', label: 'Swarm Map', emoji: '🗺', group: 'Overview' },
+    { id: 'ai', label: 'AI Prediction', emoji: '🤖', group: 'Operations' },
+    { id: 'drones', label: 'Drone Ops', emoji: '🛸', group: 'Operations' },
+    { id: 'reports', label: 'Field Reports', emoji: '📋', group: 'Operations' },
+    { id: 'alerts', label: 'Alerts', emoji: '🔔', group: 'System', badge: 5 },
+    { id: 'users', label: 'Users', emoji: '👥', group: 'System' },
   ]
 
   const groups = ['Overview', 'Operations', 'System']
 
   return (
-    <Box as="nav" w="214px" bg="slate.900/70" borderRight="1px solid" borderColor="slate.700" py={4} flexShrink={0} overflowY="auto">
+    <nav className="w-56 bg-[rgba(13,20,33,0.7)] border-r border-[rgba(255,255,255,0.07)] py-4 flex-shrink-0 overflow-y-auto">
       {groups.map((group) => (
-        <Box key={group}>
-          <Text
-            fontSize="9px"
-            letterSpacing="0.2em"
-            color="slate.500"
-            textTransform="uppercase"
-            px="18px"
-            pb="6px"
-            mt="14px"
-          >
+        <div key={group} className="mb-5">
+          <div className="text-xs font-mono-space font-bold text-[#374151] uppercase tracking-widest px-4.5 mb-1.5">
             {group}
-          </Text>
-          <VStack gap={0} align="stretch">
+          </div>
+          <div>
             {navItems
               .filter((item) => item.group === group)
-              .map((item) => (
-                <HStack
-                  key={item.id}
-                  gap="10px"
-                  px="18px"
-                  py="9px"
-                  cursor="pointer"
-                  fontSize="13px"
-                  borderLeft="2px solid"
-                  transition="all 180ms"
-                  userSelect="none"
-                  borderColor={activeSection === item.id ? 'amber.500' : 'transparent'}
-                  bg={activeSection === item.id ? 'amber.500/10' : 'transparent'}
-                  color={activeSection === item.id ? 'amber.500' : 'slate.400'}
-                  _hover={{
-                    bg: 'slate.700/30',
-                    color: 'slate.300',
-                  }}
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  <Text fontSize="14px" w="18px" textAlign="center">
-                    {item.icon}
-                  </Text>
-                  <Text flex={1}>{item.label}</Text>
-                  {item.badge && (
-                    <Badge
-                      ml="auto"
-                      bg="red.600"
-                      color="white"
-                      fontSize="9px"
-                      px="6px"
-                      py="2px"
-                      rounded="full"
-                      fontFamily="'Space Mono', monospace"
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
-                </HStack>
-              ))}
-          </VStack>
-        </Box>
+              .map((item) => {
+                const isActive = activeSection === item.id
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`flex items-center gap-2.5 px-4.5 py-2.25 cursor-pointer text-sm transition-all border-l-2 ${
+                      isActive
+                        ? 'bg-[rgba(245,158,11,0.12)] text-amber-400 border-l-amber-500'
+                        : 'bg-transparent text-[#64748b] border-l-transparent hover:text-[#e2e8f0] hover:bg-[#131d2e]'
+                    }`}
+                  >
+                    <span className="text-sm">{item.emoji}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge && (
+                      <span className="bg-red-500 text-white text-xs px-1.5 rounded-full font-mono-space">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+          </div>
+        </div>
       ))}
-    </Box>
+    </nav>
   )
 }

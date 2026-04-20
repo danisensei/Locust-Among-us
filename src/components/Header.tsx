@@ -1,107 +1,53 @@
 import { useEffect, useState } from 'react'
-import { Flex, Box, HStack, Badge, Text } from '@chakra-ui/react'
 
 export default function Header() {
-  const [time, setTime] = useState<string>('')
+  const [time, setTime] = useState<string>('—')
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      const formatted = now.toLocaleDateString('en-PK', {
-        timeZone: 'Asia/Karachi',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }) + ' ' + now.toLocaleTimeString('en-PK', {
+      const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Karachi',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
+        month: 'short',
+        day: 'numeric',
       })
-      setTime(formatted)
+      setTime(formatter.format(now))
     }
-
     updateTime()
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <Flex
-      as="header"
-      zIndex={10}
-      alignItems="center"
-      justifyContent="space-between"
-      px={6}
-      h="58px"
-      borderBottom="1px solid"
-      borderColor="slate.700"
-      bg="rgba(0, 0, 0, 0.95)"
-      backdropFilter="blur(12px)"
-    >
-      <HStack gap={3}>
-        <Box w={9} h={9} bgGradient="to-br(from=#fbbf24, to=#b45309)" rounded="lg" display="flex" alignItems="center" justifyContent="center" fontSize="lg" flexShrink={0}>
+    <header className="relative z-10 flex items-center justify-between px-6 h-14 border-b border-[rgba(255,255,255,0.07)] bg-[rgba(6,9,16,0.95)] backdrop-blur-xl">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 bg-gradient-to-br from-amber-500 to-amber-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
           🦗
-        </Box>
-        <Box>
-          <Text fontSize="13px" fontWeight="black" color="amber.500" letterSpacing="wide" fontFamily="'Orbitron', sans-serif">
-            LC-EWS
-          </Text>
-          <Text fontSize="10px" color="slate.400" letterSpacing="wide" textTransform="uppercase" fontFamily="'Space Mono', monospace">
-            Locust Early Warning System
-          </Text>
-        </Box>
-      </HStack>
-      <HStack gap="14px">
-        <Badge
-          px={3}
-          py={1}
-          rounded="full"
-          fontSize="10.5px"
-          fontFamily="'Space Mono', monospace"
-          letterSpacing="wide"
-          bg="green.900/20"
-          borderColor="green.600/30"
-          border="1px solid"
-          color="green.400"
-        >
-          <Box w={1.5} h={1.5} rounded="full" bg="currentColor" mr={1.5} animation="1.5s infinite pulse" />
+        </div>
+        <div>
+          <div className="font-orbitron text-xs font-black text-amber-500 tracking-widest">LC-EWS</div>
+          <div className="text-xs text-[#64748b] tracking-wider uppercase">Locust Early Warning System</div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3.5">
+        <span className="pill pill-g">
+          <span className="dot"></span>
           AI Engine Online
-        </Badge>
-        <Badge
-          px={3}
-          py={1}
-          rounded="full"
-          fontSize="10.5px"
-          fontFamily="'Space Mono', monospace"
-          letterSpacing="wide"
-          bg="amber.900/20"
-          borderColor="amber.600/30"
-          border="1px solid"
-          color="amber.400"
-        >
-          <Box w={1.5} h={1.5} rounded="full" bg="currentColor" mr={1.5} animation="1.5s infinite pulse" />
+        </span>
+        <span className="pill pill-a">
+          <span className="dot"></span>
           3 Active Swarms
-        </Badge>
-        <Badge
-          px={3}
-          py={1}
-          rounded="full"
-          fontSize="10.5px"
-          fontFamily="'Space Mono', monospace"
-          letterSpacing="wide"
-          bg="green.900/20"
-          borderColor="green.600/30"
-          border="1px solid"
-          color="green.400"
-        >
-          <Box w={1.5} h={1.5} rounded="full" bg="currentColor" mr={1.5} animation="1.5s infinite pulse" />
+        </span>
+        <span className="pill pill-g">
+          <span className="dot"></span>
           Cloud: AWS-ap-south-1
-        </Badge>
-        <Text fontFamily="'Space Mono', monospace" fontSize="11px" color="slate.400">
-          {time}
-        </Text>
-      </HStack>
-    </Flex>
+        </span>
+        <span className="font-mono-space text-xs text-[#64748b]">{time}</span>
+      </div>
+    </header>
   )
 }

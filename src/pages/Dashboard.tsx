@@ -1,148 +1,168 @@
-import { VStack, HStack, Box, Grid, Heading, Text } from '@chakra-ui/react'
+import { Card } from '@heroui/react'
 
 export default function Dashboard() {
-  const metrics = [
-    { label: 'Active Swarms', value: '3', bgColor: 'purple.900/30', accentColor: 'purple.300' },
-    { label: 'Risk Zones', value: '5', bgColor: 'orange.900/30', accentColor: 'orange.300' },
-    { label: 'Affected Area', value: '2,840 km²', bgColor: 'blue.900/30', accentColor: 'blue.300' },
-    { label: 'Alert Status', value: 'Active', bgColor: 'red.900/30', accentColor: 'red.300' },
-  ]
-
-  const statusItems = [
-    { label: 'GPS Tracking', status: 'Active', icon: '●', color: 'green.400' },
-    { label: 'Satellite Feed', status: 'Active', icon: '●', color: 'green.400' },
-    { label: 'Alerts System', status: 'Active', icon: '●', color: 'green.400' },
-    { label: 'AI Predictions', status: 'Processing', icon: '◐', color: 'amber.400' },
-  ]
-
-  const alerts = [
-    { zone: 'Khuzdar', severity: 'Critical', time: '08:42', desc: '2.3M locusts detected', severityColor: 'red.400' },
-    { zone: 'Jacobabad', severity: 'High', time: '07:15', desc: 'High wind conditions', severityColor: 'orange.400' },
-    { zone: 'Hyderabad', severity: 'Medium', time: '05:30', desc: '340K swarm activity', severityColor: 'blue.400' },
-  ]
-
   return (
-    <VStack gap={8} maxW="full" align="stretch">
-      {/* Header */}
-      <Box mb={12}>
-        <Heading
-          as="h1"
-          size="2xl"
-          color="slate.900"
-          _dark={{ color: 'slate.50' }}
-          mb={3}
-          letterSpacing="-0.02em"
-          fontWeight={500}
-        >
-          Dashboard
-        </Heading>
-        <Text fontSize="lg" color="slate.600" _dark={{ color: 'slate.400' }}>
-          Real-time locust swarm tracking and early warning system
-        </Text>
-      </Box>
+    <div className="space-y-6 pb-8">
+      <div>
+        <div className="font-orbitron text-base text-[#e2e8f0]">Command Dashboard</div>
+        <div className="text-xs text-[#64748b] mt-1">Dept. of Plant Protection — Pakistan &nbsp;·&nbsp; Cloud-synced &nbsp;·&nbsp; AI risk scoring active</div>
+      </div>
 
-      {/* Key Metrics */}
-      <Grid templateColumns={{ base: '1fr', md: '1fr 1fr', lg: 'repeat(4, 1fr)' }} gap={6}>
-        {metrics.map((metric) => (
-          <Box
-            key={metric.label}
-            bg={metric.bgColor}
-            border="1px solid"
-            borderColor="slate.700"
-            rounded="lg"
-            p={6}
-            shadow="sm"
-            _hover={{ shadow: 'md' }}
-            transition="all 0.2s"
-          >
-            <Text fontSize="sm" fontWeight="medium" color="slate.400" mb={2}>
-              {metric.label}
-            </Text>
-            <Text fontSize="3xl" fontWeight="semibold" color={metric.accentColor}>
-              {metric.value}
-            </Text>
-          </Box>
-        ))}
-      </Grid>
+      {/* STAT GRID */}
+      <div className="grid grid-cols-4 gap-3.5">
+        <Card className="scard r bg-[#0d1423] border-0 p-4">
+          <div className="sv text-red-500">3</div>
+          <div className="sl">Active Swarms</div>
+          <div className="sc up">▲ +1 since yesterday</div>
+        </Card>
+        <Card className="scard a bg-[#0d1423] border-0 p-4">
+          <div className="sv text-amber-500">7</div>
+          <div className="sl">Risk Zones</div>
+          <div className="sc up">▲ Balochistan, Sindh</div>
+        </Card>
+        <Card className="scard g bg-[#0d1423] border-0 p-4">
+          <div className="sv text-green-500">12</div>
+          <div className="sl">Drones Deployed</div>
+          <div className="sc dn">● 4 currently on mission</div>
+        </Card>
+        <Card className="scard b bg-[#0d1423] border-0 p-4">
+          <div className="sv text-blue-500">38</div>
+          <div className="sl">Field Reports Today</div>
+          <div className="sc dn">▼ 94% verified by AI</div>
+        </Card>
+      </div>
 
-      {/* Main Content Grid */}
-      <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap={6}>
-        {/* Swarm Chart */}
-        <Box gridColumn={{ lg: 'span 2' }} bg="slate.950" border="1px solid" borderColor="slate.800" rounded="lg" p={8} shadow="sm">
-          <Heading as="h2" size="md" color="slate.50" mb={6} fontWeight={500}>
-            Swarm Activity (24h)
-          </Heading>
-          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
-            <defs>
-              <linearGradient id="swarmFill">
-                <stop offset="0%" stopColor="#aa3bff" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#aa3bff" stopOpacity="0.02" />
-              </linearGradient>
-            </defs>
-            <polyline points="20,150 60,120 100,90 140,110 180,70 220,95 260,60 300,85 340,40 380,65" fill="none" stroke="#aa3bff" strokeWidth="2" strokeLinecap="round" />
-            <polygon points="20,150 60,120 100,90 140,110 180,70 220,95 260,60 300,85 340,40 380,65 380,200 20,200" fill="url(#swarmFill)" />
-            <line x1="20" y1="170" x2="380" y2="170" stroke="#d1d5db" strokeWidth="1" opacity="0.3" />
-          </svg>
-        </Box>
+      {/* MAIN GRID: MAP + ALERTS + SCORE */}
+      <div className="grid grid-cols-7 gap-3.5">
+        <div className="col-span-5">
+          <div className="card">
+            <div className="ctitle">Pakistan Risk Overview</div>
+            <div className="bg-[#060d18] rounded-lg overflow-hidden" style={{ height: '270px' }}>
+              <svg viewBox="0 0 440 280" style={{ width: '100%', height: '100%' }}>
+                <polygon points="22,240 22,115 82,78 122,58 142,88 162,78 162,138 182,158 142,198 122,240 82,270 42,278" fill="rgba(239,68,68,.18)" stroke="#ef4444" strokeWidth="1.4"/>
+                <polygon points="162,138 202,128 222,148 242,178 222,218 202,238 162,238 142,198 182,158" fill="rgba(245,158,11,.18)" stroke="#f59e0b" strokeWidth="1.4"/>
+                <polygon points="202,58 242,38 282,48 302,78 282,118 262,128 222,148 202,128 162,78 162,58" fill="rgba(59,130,246,.13)" stroke="#3b82f6" strokeWidth="1.4"/>
+                <polygon points="162,58 162,28 192,13 222,18 242,38 202,58" fill="rgba(16,185,129,.13)" stroke="#10b981" strokeWidth="1.4"/>
+                <polygon points="192,13 222,4 272,8 302,28 282,48 242,38 222,18" fill="rgba(100,116,139,.1)" stroke="#64748b" strokeWidth="1"/>
+                <text x="85" y="175" fill="rgba(239,68,68,.9)" fontFamily="Space Mono,monospace" fontSize="9" textAnchor="middle">BALOCHISTAN</text>
+                <text x="85" y="187" fill="rgba(239,68,68,.65)" fontFamily="Space Mono,monospace" fontSize="7.5" textAnchor="middle">⚠ CRITICAL</text>
+                <text x="192" y="188" fill="rgba(245,158,11,.9)" fontFamily="Space Mono,monospace" fontSize="9" textAnchor="middle">SINDH</text>
+                <text x="240" y="92" fill="rgba(59,130,246,.9)" fontFamily="Space Mono,monospace" fontSize="9" textAnchor="middle">PUNJAB</text>
+                <text x="190" y="40" fill="rgba(16,185,129,.9)" fontFamily="Space Mono,monospace" fontSize="8" textAnchor="middle">KPK</text>
+                <text x="252" y="26" fill="rgba(100,116,139,.8)" fontFamily="Space Mono,monospace" fontSize="7.5" textAnchor="middle">GB/AJK</text>
+                <circle cx="72" cy="198" r="7" fill="none" stroke="#ef4444" strokeWidth="1.8">
+                  <animate attributeName="r" values="7;14;7" dur="2s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="1;.15;1" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="72" cy="198" r="3.5" fill="#ef4444"/>
+                <circle cx="112" cy="148" r="6" fill="none" stroke="#ef4444" strokeWidth="1.8">
+                  <animate attributeName="r" values="6;12;6" dur="2.4s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="1;.15;1" dur="2.4s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="112" cy="148" r="3" fill="#ef4444"/>
+                <circle cx="178" cy="173" r="5.5" fill="none" stroke="#f59e0b" strokeWidth="1.8">
+                  <animate attributeName="r" values="5.5;10;5.5" dur="1.9s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="1;.15;1" dur="1.9s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="178" cy="173" r="2.8" fill="#f59e0b"/>
+                <rect x="300" y="175" width="128" height="95" rx="4" fill="rgba(13,20,33,.92)" stroke="rgba(255,255,255,.07)"/>
+                <text x="310" y="192" fill="#64748b" fontFamily="Space Mono,monospace" fontSize="7.5" letterSpacing="1">RISK LEGEND</text>
+                <rect x="310" y="200" width="7" height="7" rx="1" fill="rgba(239,68,68,.35)" stroke="#ef4444"/>
+                <text x="322" y="207" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">Critical</text>
+                <rect x="310" y="213" width="7" height="7" rx="1" fill="rgba(245,158,11,.35)" stroke="#f59e0b"/>
+                <text x="322" y="220" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">High</text>
+                <rect x="310" y="226" width="7" height="7" rx="1" fill="rgba(59,130,246,.28)" stroke="#3b82f6"/>
+                <text x="322" y="233" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">Medium</text>
+                <rect x="310" y="239" width="7" height="7" rx="1" fill="rgba(16,185,129,.28)" stroke="#10b981"/>
+                <text x="322" y="246" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">Low</text>
+                <circle cx="314" cy="258" r="3.5" fill="none" stroke="#ef4444" strokeWidth="1.4"/>
+                <circle cx="314" cy="258" r="1.8" fill="#ef4444"/>
+                <text x="323" y="261" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">Active Swarm</text>
+              </svg>
+            </div>
+          </div>
+        </div>
 
-        {/* Status */}
-        <Box bg="slate.950" border="1px solid" borderColor="slate.800" rounded="lg" p={8} shadow="sm">
-          <Heading as="h2" size="md" color="slate.50" mb={6} fontWeight={500}>
-            System Status
-          </Heading>
-          <VStack gap={4} align="stretch">
-            {statusItems.map((item) => (
-              <HStack key={item.label} justify="space-between">
-                <Text fontSize="sm" color="slate.400">
-                  {item.label}
-                </Text>
-                <Text fontSize="sm" fontWeight="medium" color={item.color}>
-                  {item.status}
-                </Text>
-              </HStack>
-            ))}
-          </VStack>
-        </Box>
-      </Grid>
+        <div className="col-span-2 space-y-3.5">
+          <div className="card">
+            <div className="ctitle">Latest Alerts</div>
+            <div className="aitem cr">
+              <div className="aicon">🔴</div>
+              <div>
+                <div className="atitle text-red-500">Swarm Detected — Khuzdar</div>
+                <div className="adesc">Est. 2.3M locusts, moving NE at 28 km/h</div>
+                <div className="atime">Today, 08:42 PKT</div>
+              </div>
+            </div>
+            <div className="aitem wa">
+              <div className="aicon">🟡</div>
+              <div>
+                <div className="atitle text-amber-500">High Wind Alert — Jacobabad</div>
+                <div className="adesc">Wind 34 km/h NE — migration risk elevated</div>
+                <div className="atime">Today, 07:15 PKT</div>
+              </div>
+            </div>
+            <div className="aitem inf">
+              <div className="aicon">🔵</div>
+              <div>
+                <div className="atitle text-blue-500">Drone Mission Complete</div>
+                <div className="adesc">DPP-Alpha covered 180 ha, Khuzdar zone</div>
+                <div className="atime">Today, 06:30 PKT</div>
+              </div>
+            </div>
+          </div>
 
-      {/* Alerts */}
-      <Box bg="slate.950" border="1px solid" borderColor="slate.800" rounded="lg" p={8} shadow="sm">
-        <Heading as="h2" size="md" color="slate.50" mb={6} fontWeight={500}>
-          Recent Alerts
-        </Heading>
-        <VStack gap={3} align="stretch">
-          {alerts.map((alert, i) => (
-            <HStack
-              key={i}
-              justify="space-between"
-              p={4}
-              bg="slate.900"
-              rounded="md"
-              border="1px solid"
-              borderColor="slate.800"
-              _hover={{ borderColor: 'slate.700' }}
-              transition="all 0.2s"
-            >
-              <Box flex={1}>
-                <Text fontWeight="medium" color="slate.50">
-                  {alert.zone}
-                </Text>
-                <Text fontSize="sm" color="slate.400">
-                  {alert.desc}
-                </Text>
-              </Box>
-              <Box textAlign="right">
-                <Text fontSize="xs" fontWeight="semibold" color={alert.severityColor}>
-                  {alert.severity}
-                </Text>
-                <Text fontSize="xs" color="slate.500">
-                  {alert.time}
-                </Text>
-              </Box>
-            </HStack>
-          ))}
-        </VStack>
-      </Box>
-    </VStack>
+          <div className="card">
+            <div className="ctitle">AI Confidence Score</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-orbitron text-3xl text-green-500 font-black">87%</span>
+              <span className="text-xs text-[#64748b]">72-hr forecast accuracy</span>
+            </div>
+            <div className="rbar">
+              <div className="rfill" style={{ width: '87%', background: 'linear-gradient(90deg,#10b981,#34d399)' }}></div>
+            </div>
+            <div className="text-xs text-[#64748b] mt-2 font-mono-space">Last trained: 2h ago · Model: GeoAI v2.4 · AWS SageMaker</div>
+          </div>
+        </div>
+      </div>
+
+      {/* WEATHER CARDS */}
+      <div className="card">
+        <div className="ctitle">Weather — Key Monitoring Zones</div>
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="wc">
+            <div className="wcity">📍 Quetta, Balochistan</div>
+            <div className="wtemp">38°C</div>
+            <div className="wdet">
+              Wind: 28 km/h NE<br/>
+              Humidity: 22%<br/>
+              Rainfall: 0 mm<br/>
+              <span className="text-red-500">Risk: CRITICAL</span>
+            </div>
+          </div>
+          <div className="wc">
+            <div className="wcity">📍 Jacobabad, Sindh</div>
+            <div className="wtemp">41°C</div>
+            <div className="wdet">
+              Wind: 34 km/h NE<br/>
+              Humidity: 18%<br/>
+              Rainfall: 0 mm<br/>
+              <span className="text-amber-500">Risk: HIGH</span>
+            </div>
+          </div>
+          <div className="wc">
+            <div className="wcity">📍 D.I. Khan, KPK</div>
+            <div className="wtemp">34°C</div>
+            <div className="wdet">
+              Wind: 15 km/h SW<br/>
+              Humidity: 35%<br/>
+              Rainfall: 2 mm<br/>
+              <span className="text-blue-500">Risk: MEDIUM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
+

@@ -1,72 +1,43 @@
-import { VStack, HStack, Box, Grid, Heading, Text } from '@chakra-ui/react'
+import { Card } from '@heroui/react'
 
 export default function AIPrediction() {
-  const metrics = [
-    { label: 'Model Accuracy', value: '87%', bgColor: 'green.900/30' },
-    { label: 'Processing Time', value: '2.3s', bgColor: 'blue.900/30' },
-    { label: 'Data Points', value: '12,847', bgColor: 'purple.900/30' },
-  ]
-
-  const forecastData = [
-    { hours: 12, risk: 'Low', bgColor: 'green.900/20', textColor: 'green.400' },
-    { hours: 24, risk: 'Low', bgColor: 'green.900/20', textColor: 'green.400' },
-    { hours: 36, risk: 'Medium', bgColor: 'blue.900/20', textColor: 'blue.400' },
-    { hours: 48, risk: 'High', bgColor: 'orange.900/20', textColor: 'orange.400' },
-    { hours: 60, risk: 'Critical', bgColor: 'red.900/20', textColor: 'red.400' },
-    { hours: 72, risk: 'High', bgColor: 'orange.900/20', textColor: 'orange.400' },
-  ]
-
-  const parameters = [
-    { param: 'Wind Direction', value: 'NE at 32 km/h', impact: 'High', impactColor: 'red.400' },
-    { param: 'Temperature', value: '38°C', impact: 'Medium', impactColor: 'orange.400' },
-    { param: 'Humidity', value: '22%', impact: 'Low', impactColor: 'green.400' },
-    { param: 'Vegetation Index', value: 'Moderate growth', impact: 'High', impactColor: 'red.400' },
-  ]
-
   return (
-    <VStack gap={8} align="stretch">
-      <Box mb={12}>
-        <Heading as="h1" size="2xl" color="slate.50" mb={3} letterSpacing="-0.02em" fontWeight={500}>
-          AI Prediction
-        </Heading>
-        <Text fontSize="lg" color="slate.400">72-hour swarm movement forecast using machine learning</Text>
-      </Box>
+    <div className="space-y-6 pb-8">
+      <div>
+        <div className="font-orbitron text-base text-[#e2e8f0]">AI Risk Prediction</div>
+        <div className="text-xs text-[#64748b] mt-1">Machine learning forecast · 72-hour risk horizon · ARIMA + Random Forest ensemble</div>
+      </div>
 
-      <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={6}>
-        {metrics.map((metric) => (
-          <Box key={metric.label} bg={metric.bgColor} border="1px solid" borderColor="slate.700" rounded="lg" p={6} shadow="sm">
-            <Text fontSize="sm" color="slate.400">{metric.label}</Text>
-            <Text fontSize="2xl" fontWeight="semibold" color="slate.50" mt={1}>{metric.value}</Text>
-          </Box>
+      <div className="grid grid-cols-2 gap-3.5">
+        {['Today', 'Tomorrow', 'Day 3', 'Day 4'].map((day, idx) => (
+          <Card key={day} className="card bg-[#0d1423] border-0 p-4">
+            <div className="ctitle">{day}</div>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="font-orbitron text-2xl font-black" style={{color: [40,65,72,58][idx] > 60 ? '#ef4444' : '#f59e0b'}}>
+                {[87, 72, 65, 58][idx]}%
+              </span>
+              <span className="text-xs text-[#64748b]">Risk Level</span>
+            </div>
+            <div className="rbar">
+              <div className="rfill" style={{width: `${[87,72,65,58][idx]}%`, background: [40,65,72,58][idx] > 60 ? '#ef4444' : '#f59e0b'}}></div>
+            </div>
+          </Card>
         ))}
-      </Grid>
+      </div>
 
-      <Box bg="slate.950" border="1px solid" borderColor="slate.800" rounded="lg" p={8} shadow="sm">
-        <Heading as="h2" size="md" color="slate.50" mb={6} fontWeight={500}>72-Hour Risk Forecast</Heading>
-        <Grid templateColumns="repeat(6, 1fr)" gap={3}>
-          {forecastData.map((item, i) => (
-            <Box key={i} p={4} rounded="md" border="1px solid" borderColor="slate.700" bg={item.bgColor} textAlign="center">
-              <Text fontSize="xs" color="slate.400" mb={2}>{item.hours}-{item.hours + 12}h</Text>
-              <Text fontSize="sm" fontWeight="semibold" color={item.textColor}>{item.risk}</Text>
-            </Box>
+      <Card className="card bg-[#0d1423] border-0 p-4">
+        <div className="ctitle">8-Day Forecast</div>
+        <div className="grid grid-cols-8 gap-1">
+          {Array.from({length:8}, (_, i) => (
+            <div key={i} className="fcell" style={{borderColor: Math.random() > 0.7 ? 'rgba(239,68,68,.38)' : Math.random() > 0.4 ? 'rgba(245,158,11,.38)' : 'rgba(16,185,129,.28)', background: Math.random() > 0.7 ? 'rgba(239,68,68,.07)' : Math.random() > 0.4 ? 'rgba(245,158,11,.07)' : 'rgba(16,185,129,.05)'}}>
+              <div className="flbl">Day {i+1}</div>
+              <div className="frisk" style={{color: Math.random() > 0.7 ? '#ef4444' : Math.random() > 0.4 ? '#f59e0b' : '#10b981'}}>
+                {Math.floor(Math.random() * 100)}%
+              </div>
+            </div>
           ))}
-        </Grid>
-      </Box>
-
-      <Box bg="slate.950" border="1px solid" borderColor="slate.800" rounded="lg" p={8} shadow="sm">
-        <Heading as="h2" size="md" color="slate.50" mb={6} fontWeight={500}>Key Parameters</Heading>
-        <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
-          {parameters.map((item) => (
-            <HStack key={item.param} justify="space-between" p={4} bg="slate.900" rounded="md" border="1px solid" borderColor="slate.800">
-              <Box>
-                <Text fontSize="sm" fontWeight="medium" color="slate.50">{item.param}</Text>
-                <Text fontSize="xs" color="slate.400" mt={1}>{item.value}</Text>
-              </Box>
-              <Text fontSize="xs" fontWeight="medium" color={item.impactColor}>{item.impact} Impact</Text>
-            </HStack>
-          ))}
-        </Grid>
-      </Box>
-    </VStack>
+        </div>
+      </Card>
+    </div>
   )
 }
