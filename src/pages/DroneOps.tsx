@@ -10,6 +10,13 @@ export default function DroneOps() {
     { label: 'Battery Avg', value: '76%' },
   ]
 
+  const droneData = [
+    { id: 'DPP-Alpha', status: 'Active', battery: 85, mission: 'Khuzdar Survey', lastUpdated: '2 min ago' },
+    { id: 'DPP-Beta', status: 'Active', battery: 72, mission: 'Quetta Patrol', lastUpdated: '1 min ago' },
+    { id: 'DPP-Gamma', status: 'Charging', battery: 45, mission: 'Idle', lastUpdated: '5 min ago' },
+    { id: 'DPP-Delta', status: 'Active', battery: 91, mission: 'Jacobabad Scan', lastUpdated: '3 min ago' },
+  ]
+
   return (
     <div className="space-y-8">
       <div>
@@ -19,9 +26,9 @@ export default function DroneOps() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <Card key={s.label}>
+          <Card key={s.label} className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{s.label}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.value}</div>
@@ -30,30 +37,53 @@ export default function DroneOps() {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b border-border bg-accent/30">
           <CardTitle>Fleet Status</CardTitle>
           <CardDescription>All active drones</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Drone ID</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Battery</TableHead>
-                <TableHead>Mission</TableHead>
-                <TableHead>Last Updated</TableHead>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
+                <TableHead className="font-semibold text-foreground">Drone ID</TableHead>
+                <TableHead className="font-semibold text-foreground">Status</TableHead>
+                <TableHead className="font-semibold text-foreground">Battery</TableHead>
+                <TableHead className="font-semibold text-foreground">Mission</TableHead>
+                <TableHead className="font-semibold text-foreground">Last Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {['DPP-Alpha', 'DPP-Beta', 'DPP-Gamma', 'DPP-Delta'].map((drone) => (
-                <TableRow key={drone}>
-                  <TableCell className="font-medium">{drone}</TableCell>
-                  <TableCell><Badge>Active</Badge></TableCell>
-                  <TableCell>{Math.floor(Math.random() * 40 + 60)}%</TableCell>
-                  <TableCell>Khuzdar Survey</TableCell>
-                  <TableCell className="text-muted-foreground">{Math.floor(Math.random() * 5)} min ago</TableCell>
+              {droneData.map((drone) => (
+                <TableRow 
+                  key={drone.id}
+                  className="border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
+                >
+                  <TableCell className="font-semibold">{drone.id}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      className={`${
+                        drone.status === 'Active' 
+                          ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30' 
+                          : 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'
+                      } transition-colors`}
+                    >
+                      {drone.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                          style={{ width: `${drone.battery}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{drone.battery}%</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">{drone.mission}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{drone.lastUpdated}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

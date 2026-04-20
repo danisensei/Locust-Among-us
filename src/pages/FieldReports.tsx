@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { CheckCircle2, Clock } from 'lucide-react'
 
 export default function FieldReports() {
   const reports = [
@@ -17,34 +18,53 @@ export default function FieldReports() {
         <p className="text-muted-foreground mt-2">Observer submissions · AI verification · Crowd-sourced intelligence</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-          <CardDescription>Field observer submissions</CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b border-border bg-accent/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Reports</CardTitle>
+              <CardDescription>Field observer submissions</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="text-xs">Total: {reports.length}</Badge>
+              <Badge className="bg-green-500/20 text-green-700 text-xs">Verified: {reports.filter(r => r.status === 'Verified').length}</Badge>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Report ID</TableHead>
-                <TableHead>Observer</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
+                <TableHead className="font-semibold text-foreground">Report ID</TableHead>
+                <TableHead className="font-semibold text-foreground">Observer</TableHead>
+                <TableHead className="font-semibold text-foreground">Location</TableHead>
+                <TableHead className="font-semibold text-foreground">Status</TableHead>
+                <TableHead className="font-semibold text-foreground">Submitted</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reports.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.id}</TableCell>
-                  <TableCell>{r.observer}</TableCell>
-                  <TableCell>{r.location}</TableCell>
+                <TableRow 
+                  key={r.id}
+                  className="border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
+                >
+                  <TableCell className="font-semibold text-sm">{r.id}</TableCell>
+                  <TableCell className="font-medium">{r.observer}</TableCell>
+                  <TableCell className="text-sm">{r.location}</TableCell>
                   <TableCell>
-                    <Badge variant={r.status === 'Verified' ? 'default' : 'secondary'}>
-                      {r.status}
-                    </Badge>
+                    {r.status === 'Verified' ? (
+                      <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30 transition-colors flex items-center gap-1 w-fit">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {r.status}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 transition-colors flex items-center gap-1 w-fit">
+                        <Clock className="h-3 w-3" />
+                        {r.status}
+                      </Badge>
+                    )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{r.time}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{r.time}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

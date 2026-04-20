@@ -63,9 +63,9 @@ export default function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))' }}>
       {/* Sidebar */}
-      <div className="w-64 border-r border-border bg-background flex flex-col overflow-hidden">
+      <div className="w-64 border-r border-border bg-background flex flex-col overflow-hidden shadow-lg">
         {/* Logo */}
-        <div className="px-6 py-4 border-b border-border">
+        <div className="px-6 py-4 border-b border-border hover:bg-accent/30 transition-colors duration-200">
           <div className="flex items-center gap-2 text-lg font-semibold">
             <span className="text-2xl">🦗</span>
             <span>LC-EWS</span>
@@ -79,11 +79,11 @@ export default function App() {
               {section.expandable ? (
                 <button
                   onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group"
                 >
-                  <span>{section.label}</span>
+                  <span className="group-hover:translate-x-0.5 transition-transform">{section.label}</span>
                   <ChevronDown 
-                    className={`h-4 w-4 transition-transform ${expandedSection === section.id ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 transition-all duration-300 ${expandedSection === section.id ? 'rotate-180' : 'group-hover:translate-x-0.5'}`}
                   />
                 </button>
               ) : (
@@ -93,21 +93,25 @@ export default function App() {
               )}
 
               {(!section.expandable || expandedSection === section.id) && (
-                <div className="space-y-1 ml-2">
+                <div className="space-y-1 ml-2 animate-in fade-in slide-in-from-top-1 duration-200">
                   {section.items.map(page => {
                     const Icon = page.icon
+                    const isActive = activeTab === page.id
                     return (
                       <button
                         key={page.id}
                         onClick={() => setActiveTab(page.id)}
-                        className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-3 text-sm transition-all ${
-                          activeTab === page.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-foreground hover:bg-accent/50'
+                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium transition-all duration-200 group ${
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-foreground hover:bg-accent/60 hover:shadow-sm'
                         }`}
                       >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1">{page.label}</span>
+                        <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                        <span className={`flex-1 transition-all duration-200 ${isActive ? 'font-semibold' : 'group-hover:translate-x-0.5'}`}>
+                          {page.label}
+                        </span>
+                        {isActive && <div className="h-2 w-2 rounded-full bg-primary-foreground ml-2 animate-pulse" />}
                       </button>
                     )
                   })}
@@ -118,10 +122,10 @@ export default function App() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="border-t border-border p-3 space-y-3">
-          <div className="px-3 py-2 bg-accent/30 rounded-md">
+        <div className="border-t border-border p-3 space-y-3 bg-accent/20">
+          <div className="px-3 py-3 bg-accent/40 rounded-lg hover:bg-accent/60 transition-all duration-200 group cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold group-hover:scale-110 transition-transform duration-200">
                 SH
               </div>
               <div className="flex-1 min-w-0">
@@ -130,8 +134,8 @@ export default function App() {
               </div>
             </div>
           </div>
-          <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md transition-colors">
-            <LogOut className="h-4 w-4" />
+          <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-lg transition-all duration-200 group font-medium">
+            <LogOut className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
             <span>Sign Out</span>
           </button>
         </div>
