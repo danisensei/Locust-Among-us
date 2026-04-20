@@ -7,13 +7,9 @@ html, body, #app {
   padding: 0;
 }
 
-:root {
-  --mono: 'Space Mono', monospace;
-}
-
 body {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
-
-/* All component styling now handled by HeroUI + Tailwind */

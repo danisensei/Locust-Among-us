@@ -1,53 +1,59 @@
-import { Card } from '@heroui/react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default function Users() {
-  const teamMembers = [
-    { name: 'Dr. Muhammad Ali', role: 'Administrator', status: 'Online' },
-    { name: 'Fatima Khan', role: 'Field Coordinator', status: 'Online' },
-    { name: 'Hassan Ahmed', role: 'Data Analyst', status: 'Offline' },
-    { name: 'Aisha Khalid', role: 'AI Specialist', status: 'Online' },
+  const users = [
+    { id: 1, name: 'Dr. Khalid Ahmad', role: 'Operations Lead', status: 'Online', email: 'khalid@dpp.gov.pk' },
+    { id: 2, name: 'Fatima Khan', role: 'Field Coordinator', status: 'Online', email: 'fatima@dpp.gov.pk' },
+    { id: 3, name: 'Ahmed Hassan', role: 'Drone Pilot', status: 'Offline', email: 'ahmed@dpp.gov.pk' },
+    { id: 4, name: 'Zainab Ali', role: 'Data Analyst', status: 'Online', email: 'zainab@dpp.gov.pk' },
   ]
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-8">
       <div>
-        <div className="font-orbitron text-base text-[#e2e8f0]">Team Management</div>
-        <div className="text-xs text-slate-400 mt-1">User roles · Permissions · Activity logs</div>
+        <h1 className="text-3xl font-bold tracking-tight">Team Members</h1>
+        <p className="text-muted-foreground mt-2">Department of Plant Protection — Locust Division · {users.filter(u => u.status === 'Online').length} online</p>
       </div>
 
-      <Card className="bg-[#0d1423] border-0 p-4">
-        <div className="text-sm font-medium font-space-mono text-slate-100 mb-4">Team Members</div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[rgba(255,255,255,0.07)]">
-                <th className="text-left py-3 px-2 text-xs font-space-mono text-slate-400 font-semibold">Name</th>
-                <th className="text-left py-3 px-2 text-xs font-space-mono text-slate-400 font-semibold">Role</th>
-                <th className="text-left py-3 px-2 text-xs font-space-mono text-slate-400 font-semibold">Status</th>
-                <th className="text-left py-3 px-2 text-xs font-space-mono text-slate-400 font-semibold">Last Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teamMembers.map((m) => (
-                <tr key={m.name} className="border-b border-[rgba(255,255,255,0.05)] hover:bg-[rgba(13,20,33,0.5)] transition-all">
-                  <td className="py-3 px-2 text-sm font-medium">{m.name}</td>
-                  <td className="py-3 px-2 text-sm text-slate-400">{m.role}</td>
-                  <td className="py-3 px-2">
-                    <span className={`inline-block text-xs px-2 py-1 rounded ${
-                      m.status === 'Online'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-current"></span>
-                      {m.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 text-xs text-slate-400">{m.status === 'Online' ? 'now' : '2h ago'}</td>
-                </tr>
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Team</CardTitle>
+          <CardDescription>All authorized personnel</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback>{u.name[0]}</AvatarFallback>
+                    </Avatar>
+                    {u.name}
+                  </TableCell>
+                  <TableCell>{u.role}</TableCell>
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.status === 'Online' ? 'default' : 'secondary'}>
+                      {u.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
     </div>
   )

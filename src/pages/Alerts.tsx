@@ -1,141 +1,79 @@
-import { Card, Chip, Button } from '@heroui/react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Alerts() {
-  const [dismissedAlerts, setDismissedAlerts] = useState<number[]>([])
-  const [isAcknowledging, setIsAcknowledging] = useState<number | null>(null)
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
 
-  const handleAcknowledge = (index: number) => {
-    setIsAcknowledging(index)
-    setTimeout(() => {
-      setDismissedAlerts([...dismissedAlerts, index])
-      setIsAcknowledging(null)
-    }, 1000)
-  }
-
-  const handleEscalate = (index: number) => {
-    alert(`Alert ${index} escalated to operations team!`)
-  }
-  const metrics = [
-    { label: 'Critical', value: '2', color: 'r' },
-    { label: 'High', value: '5', color: 'a' },
-    { label: 'Medium', value: '8', color: 'b' },
-    { label: 'Resolved', value: '124', color: 'g' },
+  const alerts = [
+    { id: 1, type: 'critical', title: 'CRITICAL: Massive Swarm — Balochistan', desc: '2.8M locusts detected', time: '08:42 PKT' },
+    { id: 2, type: 'warning', title: 'HIGH: Wind Alert — Jacobabad', desc: 'Wind speeds 40 km/h, migration risk', time: '07:15 PKT' },
+    { id: 3, type: 'info', title: 'INFO: Drone mission — Complete', desc: 'DPP-Alpha completed 180 ha survey', time: '06:30 PKT' },
   ]
 
+  const handleDismiss = (id: number) => {
+    setDismissedAlerts([...dismissedAlerts, String(id)])
+  }
+
+  const filtered = alerts.filter(a => !dismissedAlerts.includes(String(a.id)))
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-8">
       <div>
-        <div className="font-orbitron text-base text-[#e2e8f0]">Alerts Management</div>
-        <div className="text-xs text-[#64748b] mt-1">Real-time alert aggregation · Auto-escalation · Integration with SMS/Email</div>
+        <h1 className="text-3xl font-bold tracking-tight">Alerts Management</h1>
+        <p className="text-muted-foreground mt-2">Real-time event notification center · {filtered.length} active</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3.5">
-        {metrics.map((m) => (
-          <Card key={m.label} className={`bg-[#0d1423] border-0 p-4 border-l-4 ${
-            m.color === 'r' ? 'border-l-red-500' : 
-            m.color === 'a' ? 'border-l-amber-500' : 
-            m.color === 'b' ? 'border-l-blue-500' : 
-            'border-l-green-500'
-          }`}>
-            <div className={`text-2xl font-black font-orbitron ${
-              m.color === 'r' ? 'text-red-500' : 
-              m.color === 'a' ? 'text-amber-500' : 
-              m.color === 'b' ? 'text-blue-500' : 
-              'text-green-500'
-            }`}>
-              {m.value}
-            </div>
-            <div className="text-xs text-slate-400 font-space-mono mt-0.5">{m.label}</div>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Critical</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">1</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Warnings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">2</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Info</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">1</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="bg-[#0d1423] border-0 p-4">
-        <div className="text-sm font-medium font-space-mono text-slate-100 mb-3.5">Recent Alerts</div>
-        <hr className="mb-4 border border-[rgba(255,255,255,0.07)]" />
-        <div className="space-y-3">
-          {dismissedAlerts.includes(0) ? null : (
-            <>
-              <div className="flex gap-3 p-3 rounded border-l-4 border-l-red-500 bg-slate-900/30">
-                <div className="text-lg flex-shrink-0">🔴</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium font-space-mono text-red-500 mb-1">Swarm Detected — Khuzdar</div>
-                  <div className="text-xs text-slate-400 mb-2">Est. 2.3M locusts, moving NE at 28 km/h</div>
-                  <div className="flex gap-2 mb-2 flex-wrap">
-                    <Chip
-                      size="sm"
-                      variant="secondary"
-                      color="danger"
-                      className="text-xs"
-                    >
-                      CRITICAL
-                    </Chip>
-                    <Button size="sm" variant="secondary" onPress={() => handleAcknowledge(0)} isPending={isAcknowledging === 0}>
-                      {isAcknowledging === 0 ? '✓ Done' : 'Acknowledge'}
-                    </Button>
-                    <Button size="sm" variant="danger" onPress={() => handleEscalate(0)}>
-                      📢 Escalate
-                    </Button>
-                  </div>
-                  <div className="text-xs text-slate-500 font-space-mono">Today, 08:42 PKT</div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Alert Stream</CardTitle>
+          <CardDescription>Newest first</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {filtered.map((a) => (
+            <Alert key={a.id} variant={a.type === 'critical' ? 'destructive' : 'default'}>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{a.title}</AlertTitle>
+              <AlertDescription className="mt-2 flex justify-between items-center">
+                <span>{a.desc}</span>
+                <div className="flex gap-2">
+                  <span className="text-xs">{a.time}</span>
+                  <Button size="sm" variant="ghost" onClick={() => handleDismiss(a.id)}>Dismiss</Button>
                 </div>
-              </div>
-              <hr className="border border-[rgba(255,255,255,0.05)]" />
-            </>
-          )}
-          {dismissedAlerts.includes(1) ? null : (
-            <>
-              <div className="flex gap-3 p-3 rounded border-l-4 border-l-amber-500 bg-slate-900/30">
-                <div className="text-lg flex-shrink-0">🟡</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium font-space-mono text-amber-500 mb-1">High Wind Alert — Jacobabad</div>
-                  <div className="text-xs text-slate-400 mb-2">Wind 34 km/h NE — migration risk elevated</div>
-                  <div className="flex gap-2 mb-2 flex-wrap">
-                    <Chip
-                      size="sm"
-                      variant="secondary"
-                      color="warning"
-                      className="text-xs"
-                    >
-                      HIGH
-                    </Chip>
-                    <Button size="sm" variant="secondary" onPress={() => handleAcknowledge(1)} isPending={isAcknowledging === 1}>
-                      {isAcknowledging === 1 ? '✓ Done' : 'Acknowledge'}
-                    </Button>
-                    <Button size="sm" variant="danger" onPress={() => handleEscalate(1)}>
-                      📢 Escalate
-                    </Button>
-                  </div>
-                  <div className="text-xs text-slate-500 font-space-mono">Today, 07:15 PKT</div>
-                </div>
-              </div>
-              <hr className="border border-[rgba(255,255,255,0.05)]" />
-            </>
-          )}
-          {dismissedAlerts.includes(2) ? null : (
-            <div className="flex gap-3 p-3 rounded border-l-4 border-l-blue-500 bg-slate-900/30">
-              <div className="text-lg flex-shrink-0">🔵</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium font-space-mono text-blue-500 mb-1">Drone Battery Low — DPP-Gamma</div>
-                <div className="text-xs text-slate-400 mb-2">Battery at 15%, returning to base</div>
-                <div className="flex gap-2 mb-2 flex-wrap">
-                  <Chip
-                    size="sm"
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    INFO
-                  </Chip>
-                  <Button size="sm" variant="secondary" onPress={() => handleAcknowledge(2)} isPending={isAcknowledging === 2}>
-                    {isAcknowledging === 2 ? '✓ Done' : 'Acknowledge'}
-                  </Button>
-                </div>
-                <div className="text-xs text-slate-500 font-space-mono">Today, 06:30 PKT</div>
-              </div>
-            </div>
-          )}
-        </div>
+              </AlertDescription>
+            </Alert>
+          ))}
+        </CardContent>
       </Card>
     </div>
   )

@@ -7,20 +7,39 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Dark theme colors from the original CSS
-        'bg': '#060910',
-        'bg-card': '#0d1421',
-        'bg-hover': '#131d2e',
-        'text': '#e2e8f0',
-        'text-dim': '#64748b',
-        'text-muted': '#374151',
-        'amber': '#f59e0b',
-        'amber-glow': 'rgba(245, 158, 11, 0.12)',
-        'green': '#10b981',
-        'red': '#ef4444',
-        'blue': '#3b82f6',
-        'border-color': 'rgba(255, 255, 255, 0.07)',
-        'border-active': 'rgba(245, 158, 11, 0.4)',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
       },
       fontFamily: {
         'orbitron': ['Orbitron', 'monospace'],
