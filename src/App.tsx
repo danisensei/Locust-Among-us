@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import SwarmMap from './pages/SwarmMap'
 import AIPrediction from './pages/AIPrediction'
@@ -9,19 +10,20 @@ import Users from './pages/Users'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [expandedSection, setExpandedSection] = useState<string | null>('platform')
 
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
 
   const pages = [
-    { id: 'dashboard', label: 'Dashboard', emoji: '📊' },
-    { id: 'map', label: 'Swarm Map', emoji: '🗺️' },
-    { id: 'ai', label: 'AI Prediction', emoji: '🤖' },
-    { id: 'drones', label: 'Drone Ops', emoji: '🛸' },
-    { id: 'reports', label: 'Field Reports', emoji: '📋' },
-    { id: 'alerts', label: 'Alerts', emoji: '🔔' },
-    { id: 'users', label: 'Users', emoji: '👥' },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
+    { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
+    { id: 'ai', label: 'AI Prediction', icon: Bot, section: 'platform' },
+    { id: 'drones', label: 'Drone Ops', icon: Zap, section: 'platform' },
+    { id: 'reports', label: 'Field Reports', icon: Inbox, section: 'platform' },
+    { id: 'alerts', label: 'Alerts', icon: Settings, section: 'operations' },
+    { id: 'users', label: 'Users', icon: UsersIcon, section: 'team' },
   ]
 
   const renderPage = () => {
@@ -37,88 +39,117 @@ export default function App() {
     }
   }
 
+  const sections = [
+    {
+      id: 'platform',
+      label: 'Platform',
+      items: pages.filter(p => p.section === 'platform'),
+      expandable: true
+    },
+    {
+      id: 'operations',
+      label: 'Operations',
+      items: pages.filter(p => p.section === 'operations'),
+      expandable: false
+    },
+    {
+      id: 'team',
+      label: 'Team',
+      items: pages.filter(p => p.section === 'team'),
+      expandable: false
+    }
+  ]
+
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))' }}>
       {/* Sidebar */}
-      <div style={{
-        width: '16rem',
-        backgroundColor: 'hsl(var(--background))',
-        borderRight: '1px solid hsl(var(--border))',
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ padding: '1rem', borderBottom: '1px solid hsl(var(--border))' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.125rem', fontWeight: 600 }}>
-            <span style={{ fontSize: '1.5rem' }}>🦗</span>
+      <div className="w-64 border-r border-border bg-background flex flex-col overflow-hidden">
+        {/* Logo */}
+        <div className="px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-2 text-lg font-semibold">
+            <span className="text-2xl">🦗</span>
             <span>LC-EWS</span>
           </div>
         </div>
-        <nav style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1, overflowY: 'auto' }}>
-          {pages.map((page) => (
-            <button
-              key={page.id}
-              onClick={() => setActiveTab(page.id)}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                border: 'none',
-                backgroundColor: activeTab === page.id ? 'hsl(var(--primary))' : 'transparent',
-                color: activeTab === page.id ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.875rem',
-                fontFamily: 'inherit',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== page.id) {
-                  e.currentTarget.style.backgroundColor = 'hsl(var(--accent))'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== page.id) {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }
-              }}
-            >
-              <span style={{ fontSize: '1rem' }}>{page.emoji}</span>
-              <span>{page.label}</span>
-            </button>
+
+        {/* Navigation Sections */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
+          {sections.map(section => (
+            <div key={section.id}>
+              {section.expandable ? (
+                <button
+                  onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
+                >
+                  <span>{section.label}</span>
+                  <ChevronDown 
+                    className={`h-4 w-4 transition-transform ${expandedSection === section.id ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              ) : (
+                <div className="px-3 py-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
+                  {section.label}
+                </div>
+              )}
+
+              {(!section.expandable || expandedSection === section.id) && (
+                <div className="space-y-1 ml-2">
+                  {section.items.map(page => {
+                    const Icon = page.icon
+                    return (
+                      <button
+                        key={page.id}
+                        onClick={() => setActiveTab(page.id)}
+                        className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-3 text-sm transition-all ${
+                          activeTab === page.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-foreground hover:bg-accent/50'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1">{page.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
+
+        {/* User Profile Section */}
+        <div className="border-t border-border p-3 space-y-3">
+          <div className="px-3 py-2 bg-accent/30 rounded-md">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold">
+                SH
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">shadcn</div>
+                <div className="text-xs text-muted-foreground truncate">m@example.com</div>
+              </div>
+            </div>
+          </div>
+          <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md transition-colors">
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header style={{
-          borderBottom: '1px solid hsl(var(--border))',
-          backgroundColor: 'hsl(var(--background))',
-          height: '3.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          paddingLeft: '1rem',
-          gap: '1rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>🦗</span>
-            <h1 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>LC-EWS - Locust Early Warning System</h1>
+        <header className="border-b border-border bg-background h-14 flex items-center px-6 gap-4">
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-2xl">🦗</span>
+            <h1 className="font-semibold text-lg">LC-EWS - Locust Early Warning System</h1>
           </div>
         </header>
 
         {/* Content Area */}
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          backgroundColor: 'hsl(var(--background))',
-          color: 'hsl(var(--foreground))'
-        }}>
-          <div style={{ padding: '1.5rem' }}>
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6">
             {renderPage()}
           </div>
         </main>
