@@ -1,0 +1,79 @@
+{
+  "simulation": {
+    "initial_swarms": {
+      "min": 2,
+      "max": 5
+    },
+    "max_total_swarms": 8,
+    "update_interval_ms": 1000
+  },
+  "swarm_properties": {
+    "size": {
+      "min": 50000,
+      "max": 5000000
+    },
+    "density": {
+      "min": 10,
+      "max": 500
+    },
+    "speed_kmh": {
+      "min": 5,
+      "max": 35
+    },
+    "altitude_m": {
+      "min": 50,
+      "max": 2000
+    },
+    "health": {
+      "min": 0.3,
+      "max": 1.0,
+      "degradation_per_update": 0.02
+    }
+  },
+  "movement": {
+    "heading_change_probability": 0.2,
+    "heading_max_change": 30
+  },
+  "probabilities": {
+    "spawn_new_swarm": 0.1,
+    "death_health_threshold": 0.1,
+    "death_when_below_threshold": 0.05
+  },
+  "hotspots": [
+    {
+      "name": "Khuzdar, Balochistan",
+      "lat": 26.7,
+      "lon": 65.5,
+      "weight": 1.0
+    },
+    {
+      "name": "Quetta, Balochistan",
+      "lat": 30.2,
+      "lon": 67.0,
+      "weight": 1.0
+    },
+    {
+      "name": "Jacobabad, Sindh",
+      "lat": 28.3,
+      "lon": 68.4,
+      "weight": 0.9
+    },
+    {
+      "name": "D.I. Khan, KPK",
+      "lat": 31.9,
+      "lon": 70.9,
+      "weight": 0.8
+    },
+    {
+      "name": "Bahawalpur, Punjab",
+      "lat": 29.4,
+      "lon": 71.7,
+      "weight": 0.7
+    }
+  ],
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "cors_origins": ["*"]
+  }
+}
