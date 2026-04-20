@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 interface SwarmData {
   id: string
   size: number
+  area_km2: number
   density: number
   speed: number
   health: number
@@ -94,7 +95,8 @@ export default function SwarmMap() {
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">Total Locusts</div>
-            <div className="text-3xl font-bold">{stats ? (stats.total_locusts / 1000000).toFixed(1) : 0}M</div>
+            <div className="text-2xl font-bold">{stats ? (stats.total_locusts / 1000000000).toFixed(1) : 0}B</div>
+            <div className="text-xs text-muted-foreground mt-1">Billion locusts</div>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-green-500">
@@ -144,7 +146,9 @@ export default function SwarmMap() {
           ) : (
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground mb-4">
-                <span className="font-semibold">{swarmData.length} active swarms detected</span>
+                <span className="font-semibold">{swarmData.length} active swarm{swarmData.length !== 1 ? 's' : ''} detected</span>
+                <span className="ml-2">•</span>
+                <span className="ml-2">{stats && stats.total_locusts > 0 ? `${(stats.total_locusts / 1000000000).toFixed(1)}B locusts` : 'No data'}</span>
               </div>
               
               {/* Swarm List */}
@@ -155,9 +159,11 @@ export default function SwarmMap() {
                       <div>
                         <div className="font-semibold text-sm">{swarm.id}</div>
                         <div className="text-xs opacity-75">{swarm.center_name}</div>
-                        <div className="text-xs mt-1">
-                          Size: <span className="font-mono">{(swarm.size / 1000000).toFixed(2)}M</span> | 
-                          Speed: <span className="font-mono">{swarm.speed.toFixed(1)} km/h</span>
+                        <div className="text-xs mt-1 space-y-0.5">
+                          <div>Area: <span className="font-mono">{swarm.area_km2.toFixed(1)} km²</span></div>
+                          <div>Population: <span className="font-mono">{(swarm.size / 1000000000).toFixed(2)}B</span> locusts</div>
+                          <div>Density: <span className="font-mono">{(swarm.density / 1000000).toFixed(1)}M</span>/km²</div>
+                          <div>Speed: <span className="font-mono">{swarm.speed.toFixed(1)} km/h</span></div>
                         </div>
                       </div>
                       <Badge className={riskColors[swarm.risk_level]}>

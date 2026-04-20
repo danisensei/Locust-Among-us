@@ -56,88 +56,120 @@ class SwarmSimulator:
         self.initialize_swarms()
 
     def initialize_swarms(self):
-        """Create initial swarms"""
-        num_swarms = random.randint(2, 5)
+        """Create initial swarms with REALISTIC locust data"""
+        num_swarms = random.randint(2, 4)
         for i in range(num_swarms):
             hotspot = random.choice(HOTSPOTS)
+            # Realistic swarm area: 10-500 km² (Schistocerca gregaria swarms)
+            swarm_area_km2 = random.uniform(20, 400)
+            # Realistic density: 40-80 million locusts per km²
+            density_per_km2 = random.uniform(40000000, 80000000)
+            # Total population = area × density
+            total_locusts = int(swarm_area_km2 * density_per_km2)
+            
             self.swarms.append({
                 "id": f"SWARM-{i+1:03d}",
                 "lat": hotspot["lat"] + random.uniform(-0.5, 0.5),
                 "lon": hotspot["lon"] + random.uniform(-0.5, 0.5),
                 "center_name": hotspot["name"],
-                "size": random.randint(100000, 5000000),  # Number of locusts
-                "density": random.uniform(50, 500),  # Locusts per square km
-                "speed": random.uniform(10, 35),  # km/h
+                "area_km2": swarm_area_km2,  # Swarm area in km² (key metric)
+                "size": total_locusts,  # Total number of locusts
+                "density": density_per_km2,  # Locusts per km² (40-80 million)
+                "speed": random.uniform(15, 32),  # km/h (max 34 km/h)
                 "heading": random.uniform(0, 360),  # degrees
-                "altitude": random.uniform(100, 2000),  # meters
-                "health": random.uniform(0.6, 1.0),
+                "altitude": random.uniform(500, 1200),  # meters
+                "health": random.uniform(0.7, 1.0),
+                "age": 0,
                 "last_updated": datetime.now().isoformat(),
-                "risk_level": random.choice(["critical", "high", "medium"]),
+                "risk_level": "critical" if total_locusts > 10000000000 else "high",  # 10B+ = critical
             })
 
     def update_swarms(self):
-        """Update swarm positions and properties"""
+        """Update swarm positions and properties realistically"""
         for swarm in self.swarms:
-            # Update position (movement simulation)
-            lat_change = math.sin(math.radians(swarm["heading"])) * swarm["speed"] / 111  # Convert km to degrees
+            # Increment age
+            swarm["age"] += 1
+            
+            # Movement simulation (locusts can travel 200 km/day = ~8 km/h average)
+            lat_change = math.sin(math.radians(swarm["heading"])) * swarm["speed"] / 111
             lon_change = math.cos(math.radians(swarm["heading"])) * swarm["speed"] / (111 * math.cos(math.radians(swarm["lat"])))
             
-            swarm["lat"] += lat_change * 0.01  # Scale factor for realistic movement
+            swarm["lat"] += lat_change * 0.01
             swarm["lon"] += lon_change * 0.01
             
             # Keep within Pakistan bounds
             swarm["lat"] = max(PAKISTAN_BOUNDS["south"], min(PAKISTAN_BOUNDS["north"], swarm["lat"]))
             swarm["lon"] = max(PAKISTAN_BOUNDS["west"], min(PAKISTAN_BOUNDS["east"], swarm["lon"]))
             
-            # Random heading changes
-            if random.random() > 0.8:
-                swarm["heading"] = (swarm["heading"] + random.uniform(-30, 30)) % 360
+            # Realistic heading changes (wind patterns)
+            if random.random() > 0.85:
+                swarm["heading"] = (swarm["heading"] + random.uniform(-20, 20)) % 360
             
-            # Population fluctuation
-            swarm["size"] = max(50000, swarm["size"] + random.randint(-50000, 100000))
+            # Swarm dispersal (area shrinks as swarm is controlled/ages)
+            # Dispersal rate: 2-5% of area per cycle
+            dispersal_rate = random.uniform(0.02, 0.05)
+            swarm["area_km2"] = max(5, swarm["area_km2"] * (1 - dispersal_rate))
             
-            # Density variation
-            swarm["density"] = max(10, swarm["density"] + random.uniform(-50, 50))
+            # Density slightly decreases (some locusts die from predation/control)
+            # Much slower than area dispersal - density stays high
+            mortality_rate = random.uniform(0.01, 0.03)  # 1-3% daily loss
+            swarm["density"] = max(20000000, swarm["density"] * (1 - mortality_rate))
             
-            # Health degradation (slight)
-            swarm["health"] = max(0.3, swarm["health"] - random.uniform(0, 0.02))
+            # Total size = area × density
+            swarm["size"] = int(swarm["area_km2"] * swarm["density"])
             
-            # Speed variation
-            swarm["speed"] = max(5, swarm["speed"] + random.uniform(-2, 3))
+            # Health degradation (pesticides, weather, exhaustion)
+            swarm["health"] = max(0.1, swarm["health"] - random.uniform(0.03, 0.08))
             
-            # Altitude changes
-            swarm["altitude"] = max(50, swarm["altitude"] + random.uniform(-200, 200))
+            # Speed variation - realistic bounds (15-34 km/h)
+            swarm["speed"] = max(15, min(34, swarm["speed"] + random.uniform(-1, 1.5)))
             
-            # Risk level based on health
-            if swarm["health"] > 0.8:
-                swarm["risk_level"] = random.choice(["high", "critical"])
-            elif swarm["health"] > 0.6:
-                swarm["risk_level"] = random.choice(["medium", "high"])
+            # Altitude changes (realistic: 500-1200m)
+            swarm["altitude"] = max(500, min(1200, swarm["altitude"] + random.uniform(-100, 100)))
+            
+            # Risk level based on health and population size
+            if swarm["health"] > 0.7 and swarm["size"] > 10000000000:  # 10+ billion = CRITICAL
+                swarm["risk_level"] = "critical"
+            elif swarm["health"] > 0.5 and swarm["size"] > 5000000000:  # 5+ billion = HIGH
+                swarm["risk_level"] = "high"
+            elif swarm["health"] > 0.3 or swarm["size"] > 1000000000:  # 1+ billion = MEDIUM
+                swarm["risk_level"] = "medium"
             else:
-                swarm["risk_level"] = random.choice(["low", "medium"])
+                swarm["risk_level"] = "low"
             
             swarm["last_updated"] = datetime.now().isoformat()
         
-        # Randomly spawn new swarms
-        if random.random() > 0.9 and len(self.swarms) < 8:
+        # Spawn new MASSIVE swarms very rarely (realistic: major infestations)
+        if random.random() > 0.99 and len(self.swarms) < 4:
             hotspot = random.choice(HOTSPOTS)
+            new_id = max([int(s["id"].split("-")[1]) for s in self.swarms if s["id"].startswith("SWARM-")], default=0) + 1
+            # New massive swarm: 100-300 km², density 50-80 million/km²
+            new_area = random.uniform(100, 300)
+            new_density = random.uniform(50000000, 80000000)
+            new_size = int(new_area * new_density)
+            
             self.swarms.append({
-                "id": f"SWARM-{len(self.swarms)+1:03d}",
-                "lat": hotspot["lat"] + random.uniform(-0.5, 0.5),
-                "lon": hotspot["lon"] + random.uniform(-0.5, 0.5),
+                "id": f"SWARM-{new_id:03d}",
+                "lat": hotspot["lat"] + random.uniform(-0.3, 0.3),
+                "lon": hotspot["lon"] + random.uniform(-0.3, 0.3),
                 "center_name": hotspot["name"],
-                "size": random.randint(100000, 2000000),
-                "density": random.uniform(50, 300),
-                "speed": random.uniform(10, 30),
+                "area_km2": new_area,
+                "size": new_size,
+                "density": new_density,
+                "speed": random.uniform(20, 32),
                 "heading": random.uniform(0, 360),
-                "altitude": random.uniform(100, 1500),
-                "health": random.uniform(0.7, 1.0),
+                "altitude": random.uniform(600, 1100),
+                "health": random.uniform(0.85, 1.0),
+                "age": 0,
                 "last_updated": datetime.now().isoformat(),
-                "risk_level": random.choice(["high", "critical"]),
+                "risk_level": "critical",
             })
         
-        # Randomly remove weak swarms
-        self.swarms = [s for s in self.swarms if s["health"] > 0.1 or random.random() > 0.95]
+        # Remove dead swarms (area < 2 km² AND health < 0.15, OR age > 100 cycles)
+        self.swarms = [
+            s for s in self.swarms 
+            if not ((s["area_km2"] < 2 and s["health"] < 0.15) or s.get("age", 0) > 150)
+        ]
 
     def get_geojson(self) -> Dict[str, Any]:
         """Convert swarm data to GeoJSON format"""
@@ -154,7 +186,9 @@ class SwarmSimulator:
                 "properties": {
                     "id": swarm["id"],
                     "name": f"{swarm['id']} - {swarm['center_name']}",
+                    "center_name": swarm["center_name"],
                     "size": swarm["size"],
+                    "area_km2": round(swarm["area_km2"], 2),
                     "density": round(swarm["density"], 2),
                     "speed": round(swarm["speed"], 2),
                     "heading": round(swarm["heading"], 2),
@@ -162,7 +196,7 @@ class SwarmSimulator:
                     "health": round(swarm["health"], 2),
                     "risk_level": swarm["risk_level"],
                     "last_updated": swarm["last_updated"],
-                    "intensity": max(0.1, swarm["density"] / 500),  # For heatmap intensity
+                    "intensity": max(0.1, swarm["density"] / 80000000),  # For heatmap intensity (normalized to 80M max density)
                 },
             }
             features.append(feature)
