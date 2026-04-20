@@ -1,0 +1,7 @@
+.mapbox {
+  position: relative;
+  background: #060d18;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+}
