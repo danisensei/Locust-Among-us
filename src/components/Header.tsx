@@ -29,24 +29,24 @@ export default function Header() {
         </div>
         <div>
           <div className="font-orbitron text-xs font-black text-amber-500 tracking-widest">LC-EWS</div>
-          <div className="text-xs text-[#64748b] tracking-wider uppercase">Locust Early Warning System</div>
+          <div className="font-space-mono text-xs text-[#64748b] tracking-wider uppercase">Locust Early Warning System</div>
         </div>
       </div>
 
       <div className="flex items-center gap-3.5">
-        <span className="pill pill-g">
-          <span className="dot"></span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0d1423] border-l border-[#10b981] text-sm text-[#e2e8f0]">
+          <span className="w-2 h-2 rounded-full bg-green-500"></span>
           AI Engine Online
-        </span>
-        <span className="pill pill-a">
-          <span className="dot"></span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0d1423] border-l border-[#f59e0b] text-sm text-[#e2e8f0]">
+          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
           3 Active Swarms
-        </span>
-        <span className="pill pill-g">
-          <span className="dot"></span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0d1423] border-l border-[#10b981] text-sm text-[#e2e8f0]">
+          <span className="w-2 h-2 rounded-full bg-green-500"></span>
           Cloud: AWS-ap-south-1
-        </span>
-        <span className="font-mono-space text-xs text-[#64748b]">{time}</span>
+        </div>
+        <span className="font-space-mono text-xs text-[#64748b]">{time}</span>
       </div>
     </header>
   )

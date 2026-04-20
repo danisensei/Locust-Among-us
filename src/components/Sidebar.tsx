@@ -20,7 +20,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     <nav className="w-56 bg-[rgba(13,20,33,0.7)] border-r border-[rgba(255,255,255,0.07)] py-4 flex-shrink-0 overflow-y-auto">
       {groups.map((group) => (
         <div key={group} className="mb-5">
-          <div className="text-xs font-mono-space font-bold text-[#374151] uppercase tracking-widest px-4.5 mb-1.5">
+          <div className="text-xs font-space-mono font-bold text-[#374151] uppercase tracking-widest px-4.5 mb-1.5">
             {group}
           </div>
           <div>
@@ -41,7 +41,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
                     <span className="text-sm">{item.emoji}</span>
                     <span className="flex-1">{item.label}</span>
                     {item.badge && (
-                      <span className="bg-red-500 text-white text-xs px-1.5 rounded-full font-mono-space">
+                      <span className="bg-red-500 text-white text-xs px-1.5 rounded-full font-space-mono">
                         {item.badge}
                       </span>
                     )}

@@ -1,6 +1,14 @@
-import { Card } from '@heroui/react'
+import { Card, Chip, Button } from '@heroui/react'
+import { useState } from 'react'
 
 export default function Dashboard() {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefreshScore = () => {
+    setIsRefreshing(true)
+    setTimeout(() => setIsRefreshing(false), 1500)
+  }
+
   return (
     <div className="space-y-6 pb-8">
       <div>
@@ -10,33 +18,32 @@ export default function Dashboard() {
 
       {/* STAT GRID */}
       <div className="grid grid-cols-4 gap-3.5">
-        <Card className="scard r bg-[#0d1423] border-0 p-4">
-          <div className="sv text-red-500">3</div>
-          <div className="sl">Active Swarms</div>
-          <div className="sc up">▲ +1 since yesterday</div>
+        <Card className="bg-[#0d1423] border-0 p-4 border-l-4 border-l-red-500">
+          <div className="text-2xl font-black font-orbitron text-red-500">3</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-0.5">Active Swarms</div>
+          <div className="text-xs text-green-500 font-space-mono mt-1.5">▲ +1 since yesterday</div>
         </Card>
-        <Card className="scard a bg-[#0d1423] border-0 p-4">
-          <div className="sv text-amber-500">7</div>
-          <div className="sl">Risk Zones</div>
-          <div className="sc up">▲ Balochistan, Sindh</div>
+        <Card className="bg-[#0d1423] border-0 p-4 border-l-4 border-l-amber-500">
+          <div className="text-2xl font-black font-orbitron text-amber-500">7</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-0.5">Risk Zones</div>
+          <div className="text-xs text-green-500 font-space-mono mt-1.5">▲ Balochistan, Sindh</div>
         </Card>
-        <Card className="scard g bg-[#0d1423] border-0 p-4">
-          <div className="sv text-green-500">12</div>
-          <div className="sl">Drones Deployed</div>
-          <div className="sc dn">● 4 currently on mission</div>
+        <Card className="bg-[#0d1423] border-0 p-4 border-l-4 border-l-green-500">
+          <div className="text-2xl font-black font-orbitron text-green-500">12</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-0.5">Drones Deployed</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-1.5">● 4 currently on mission</div>
         </Card>
-        <Card className="scard b bg-[#0d1423] border-0 p-4">
-          <div className="sv text-blue-500">38</div>
-          <div className="sl">Field Reports Today</div>
-          <div className="sc dn">▼ 94% verified by AI</div>
+        <Card className="bg-[#0d1423] border-0 p-4 border-l-4 border-l-blue-500">
+          <div className="text-2xl font-black font-orbitron text-blue-500">38</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-0.5">Field Reports Today</div>
+          <div className="text-xs text-slate-400 font-space-mono mt-1.5">▼ 94% verified by AI</div>
         </Card>
       </div>
 
       {/* MAIN GRID: MAP + ALERTS + SCORE */}
       <div className="grid grid-cols-7 gap-3.5">
-        <div className="col-span-5">
-          <div className="card">
-            <div className="ctitle">Pakistan Risk Overview</div>
+        <Card className="col-span-5 bg-[#0d1423] border-0 p-4">
+          <div className="text-sm font-medium font-space-mono text-slate-100 mb-3.5">Pakistan Risk Overview</div>
             <div className="bg-[#060d18] rounded-lg overflow-hidden" style={{ height: '270px' }}>
               <svg viewBox="0 0 440 280" style={{ width: '100%', height: '100%' }}>
                 <polygon points="22,240 22,115 82,78 122,58 142,88 162,78 162,138 182,158 142,198 122,240 82,270 42,278" fill="rgba(239,68,68,.18)" stroke="#ef4444" strokeWidth="1.4"/>
@@ -80,88 +87,98 @@ export default function Dashboard() {
                 <text x="323" y="261" fill="#e2e8f0" fontFamily="Space Mono,monospace" fontSize="8.5">Active Swarm</text>
               </svg>
             </div>
-          </div>
-        </div>
+        </Card>
 
         <div className="col-span-2 space-y-3.5">
-          <div className="card">
-            <div className="ctitle">Latest Alerts</div>
-            <div className="aitem cr">
-              <div className="aicon">🔴</div>
-              <div>
-                <div className="atitle text-red-500">Swarm Detected — Khuzdar</div>
-                <div className="adesc">Est. 2.3M locusts, moving NE at 28 km/h</div>
-                <div className="atime">Today, 08:42 PKT</div>
+          <Card className="bg-[#0d1423] border-0 p-4">
+            <div className="text-sm font-medium font-space-mono text-slate-100 mb-3.5">Latest Alerts</div>
+            <div className="flex gap-3 p-3 rounded border-l-4 border-l-red-500 bg-slate-900/30 mb-3 last:mb-0">
+              <div className="text-lg flex-shrink-0">🔴</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium font-space-mono text-red-500 mb-0.5">Swarm Detected — Khuzdar</div>
+                <div className="text-xs text-slate-400 mb-1">Est. 2.3M locusts, moving NE at 28 km/h</div>
+                <div className="text-xs text-slate-500 font-space-mono">Today, 08:42 PKT</div>
               </div>
             </div>
-            <div className="aitem wa">
-              <div className="aicon">🟡</div>
-              <div>
-                <div className="atitle text-amber-500">High Wind Alert — Jacobabad</div>
-                <div className="adesc">Wind 34 km/h NE — migration risk elevated</div>
-                <div className="atime">Today, 07:15 PKT</div>
+            <div className="flex gap-3 p-3 rounded border-l-4 border-l-amber-500 bg-slate-900/30 mb-3 last:mb-0">
+              <div className="text-lg flex-shrink-0">🟡</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium font-space-mono text-amber-500 mb-0.5">High Wind Alert — Jacobabad</div>
+                <div className="text-xs text-slate-400 mb-1">Wind 34 km/h NE — migration risk elevated</div>
+                <div className="text-xs text-slate-500 font-space-mono">Today, 07:15 PKT</div>
               </div>
             </div>
-            <div className="aitem inf">
-              <div className="aicon">🔵</div>
-              <div>
-                <div className="atitle text-blue-500">Drone Mission Complete</div>
-                <div className="adesc">DPP-Alpha covered 180 ha, Khuzdar zone</div>
-                <div className="atime">Today, 06:30 PKT</div>
+            <div className="flex gap-3 p-3 rounded border-l-4 border-l-blue-500 bg-slate-900/30">
+              <div className="text-lg flex-shrink-0">🔵</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium font-space-mono text-blue-500 mb-0.5">Drone Mission Complete</div>
+                <div className="text-xs text-slate-400 mb-1">DPP-Alpha covered 180 ha, Khuzdar zone</div>
+                <div className="text-xs text-slate-500 font-space-mono">Today, 06:30 PKT</div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="card">
-            <div className="ctitle">AI Confidence Score</div>
+          <Card className="bg-[#0d1423] border-0 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-medium font-space-mono text-slate-100">AI Confidence Score</div>
+              <Button 
+                size="sm" 
+                variant="secondary"
+                isPending={isRefreshing}
+                onPress={handleRefreshScore}
+              >
+                {isRefreshing ? '🔄 Recalculating...' : '🔄 Refresh'}
+              </Button>
+            </div>
             <div className="flex items-baseline gap-1.5">
               <span className="font-orbitron text-3xl text-green-500 font-black">87%</span>
               <span className="text-xs text-[#64748b]">72-hr forecast accuracy</span>
             </div>
-            <div className="rbar">
-              <div className="rfill" style={{ width: '87%', background: 'linear-gradient(90deg,#10b981,#34d399)' }}></div>
+            <div className="rounded-full h-1 bg-slate-700 overflow-hidden mt-3">
+              <div style={{ width: '87%', background: 'linear-gradient(90deg,#10b981,#34d399)' }} className="h-full transition-all"></div>
             </div>
-            <div className="text-xs text-[#64748b] mt-2 font-mono-space">Last trained: 2h ago · Model: GeoAI v2.4 · AWS SageMaker</div>
-          </div>
+            <div className="text-xs text-slate-400 mt-2 font-space-mono">Last trained: 2h ago · Model: GeoAI v2.4 · AWS SageMaker</div>
+          </Card>
         </div>
       </div>
 
       {/* WEATHER CARDS */}
-      <div className="card">
-        <div className="ctitle">Weather — Key Monitoring Zones</div>
+      <Card className="bg-[#0d1423] border-0 p-4">
+        <div className="text-sm font-medium font-space-mono text-slate-100 mb-3.5">Weather — Key Monitoring Zones</div>
+        <hr className="mb-4 border border-[rgba(255,255,255,0.07)]" />
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="wc">
-            <div className="wcity">📍 Quetta, Balochistan</div>
-            <div className="wtemp">38°C</div>
-            <div className="wdet">
+          <Card className="bg-[#0a0f1a] border border-slate-700 p-3 rounded">
+            <div className="text-xs text-slate-400 font-space-mono mb-2">📍 Quetta, Balochistan</div>
+            <div className="text-xl font-black font-orbitron mb-2">38°C</div>
+            <div className="text-xs text-slate-400 leading-relaxed font-space-mono mb-3">
               Wind: 28 km/h NE<br/>
               Humidity: 22%<br/>
-              Rainfall: 0 mm<br/>
-              <span className="text-red-500">Risk: CRITICAL</span>
+              Rainfall: 0 mm
             </div>
-          </div>
-          <div className="wc">
-            <div className="wcity">📍 Jacobabad, Sindh</div>
-            <div className="wtemp">41°C</div>
-            <div className="wdet">
+            <Chip size="sm" color="danger" variant="secondary">CRITICAL</Chip>
+          </Card>
+          <Card className="bg-[#0a0f1a] border border-slate-700 p-3 rounded">
+            <div className="text-xs text-slate-400 font-space-mono mb-2">📍 Jacobabad, Sindh</div>
+            <div className="text-xl font-black font-orbitron mb-2">41°C</div>
+            <div className="text-xs text-slate-400 leading-relaxed font-space-mono mb-3">
               Wind: 34 km/h NE<br/>
               Humidity: 18%<br/>
-              Rainfall: 0 mm<br/>
-              <span className="text-amber-500">Risk: HIGH</span>
+              Rainfall: 0 mm
             </div>
-          </div>
-          <div className="wc">
-            <div className="wcity">📍 D.I. Khan, KPK</div>
-            <div className="wtemp">34°C</div>
-            <div className="wdet">
+            <Chip size="sm" color="warning" variant="secondary">HIGH</Chip>
+          </Card>
+          <Card className="bg-[#0a0f1a] border border-slate-700 p-3 rounded">
+            <div className="text-xs text-slate-400 font-space-mono mb-2">📍 D.I. Khan, KPK</div>
+            <div className="text-xl font-black font-orbitron mb-2">34°C</div>
+            <div className="text-xs text-slate-400 leading-relaxed font-space-mono mb-3">
               Wind: 15 km/h SW<br/>
               Humidity: 35%<br/>
-              Rainfall: 2 mm<br/>
-              <span className="text-blue-500">Risk: MEDIUM</span>
+              Rainfall: 2 mm
             </div>
-          </div>
+            <Chip size="sm" variant="secondary">MEDIUM</Chip>
+          </Card>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
