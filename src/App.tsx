@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut } from 'lucide-react'
+import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import SwarmMap from './pages/SwarmMap'
+import PakistanRiskOverview from './pages/PakistanRiskOverview'
 import AIPrediction from './pages/AIPrediction'
 import DroneOps from './pages/DroneOps'
 import FieldReports from './pages/FieldReports'
@@ -19,6 +20,7 @@ export default function App() {
   const pages = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
     { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
+    { id: 'risk', label: 'Risk Overview', icon: Globe, section: 'platform' },
     { id: 'ai', label: 'AI Prediction', icon: Bot, section: 'platform' },
     { id: 'drones', label: 'Drone Ops', icon: Zap, section: 'platform' },
     { id: 'reports', label: 'Field Reports', icon: Inbox, section: 'platform' },
@@ -30,6 +32,7 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard': return <Dashboard />
       case 'map': return <SwarmMap />
+      case 'risk': return <PakistanRiskOverview />
       case 'ai': return <AIPrediction />
       case 'drones': return <DroneOps />
       case 'reports': return <FieldReports />
