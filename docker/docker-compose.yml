@@ -10,7 +10,7 @@ services:
       - "5174:5174"      # Fallback port if 5173 in use
     environment:
       - VITE_HOST=0.0.0.0
-      - VITE_SWARM_API_URL=${VITE_SWARM_API_URL}
+      - VITE_SWARM_API_URL=http://129.151.135.226:8001
     volumes:
       - ../src:/app/src                   # Hot reload source code
       - ../public:/app/public             # Hot reload static files
