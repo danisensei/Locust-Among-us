@@ -21,7 +21,7 @@ interface Stats {
   critical_count: number
 }
 
-const API_URL = 'http://localhost:8001'
+const API_URL = import.meta.env.VITE_SWARM_API_URL || 'http://localhost:8001'
 
 export default function SwarmMap() {
   const [activeOverlay, setActiveOverlay] = useState<'swarms' | 'drones' | 'heatmap' | null>(null)
@@ -60,7 +60,7 @@ export default function SwarmMap() {
     }
 
     fetchData()
-    const interval = setInterval(fetchData, 5000) // Update every 5 seconds
+    const interval = setInterval(fetchData, 1000) 
     return () => clearInterval(interval)
   }, [])
 

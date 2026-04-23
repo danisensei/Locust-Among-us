@@ -51,13 +51,20 @@ check_docker() {
 }
 
 start_services() {
-    print_info "Starting LC-EWS (Swarm Engine + React Frontend)..."
+    print_info "Starting LC-EWS Frontend (React + Vite)..."
     cd "$SCRIPT_DIR"
     docker-compose -f "$COMPOSE_FILE" up -d
-    print_success "Services started!"
+    print_success "Frontend started!"
     echo ""
     print_info "Frontend (lc-ews-frontend): http://localhost:5173"
-    print_info "Backend (lc-ews-swarm-engine): http://localhost:8001/api/swarms/stats"
+    
+    # Read API URL from .env file
+    if [ -f "${PROJECT_DIR}/.env" ]; then
+        API_URL=$(grep VITE_SWARM_API_URL "${PROJECT_DIR}/.env" | cut -d '=' -f2)
+        print_info "Backend API (Cloud Instance): ${API_URL}/api/swarms/stats"
+    else
+        print_info "Backend API: Check .env file for API URL"
+    fi
     echo ""
     print_info "Run '${SCRIPT_DIR}/docker-run.sh logs' to view logs"
 }
@@ -93,7 +100,7 @@ show_help() {
     echo "Usage: ./docker-run.sh [COMMAND]"
     echo ""
     echo "Commands:"
-    echo "  start       Start both services (lc-ews-swarm-engine + lc-ews-frontend)"
+    echo "  start       Start frontend (lc-ews-frontend)"
     echo "  stop        Stop all services"
     echo "  restart     Restart all services"
     echo "  logs        View live logs from all services"

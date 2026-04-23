@@ -49,17 +49,24 @@ echo [OK] Docker is installed
 goto :eof
 
 :start_services
-call :info "Starting LC-EWS (Swarm Engine + React Frontend)..."
+call :info "Starting LC-EWS Frontend (React + Vite)..."
 cd /d "%SCRIPT_DIR%"
 docker-compose -f "%COMPOSE_FILE%" up -d
 if errorlevel 1 (
     call :error "Failed to start services"
     exit /b 1
 )
-call :success "Services started!"
+call :success "Frontend started!"
 echo.
 call :info "Frontend (lc-ews-frontend): http://localhost:5173"
-call :info "Backend (lc-ews-swarm-engine): http://localhost:8001/api/swarms/stats"
+
+REM Read API URL from .env file
+if exist "%PROJECT_DIR%\.env" (
+    for /f "tokens=2 delims==" %%i in ('findstr /R "VITE_SWARM_API_URL" "%PROJECT_DIR%\.env"') do set API_URL=%%i
+    call :info "Backend API (Cloud Instance): !API_URL!/api/swarms/stats"
+) else (
+    call :info "Backend API: Check .env file for API URL"
+)
 echo.
 call :info "Run 'docker-run.bat logs' to view logs"
 goto :eof
@@ -95,7 +102,7 @@ echo.
 echo Usage: docker-run.bat [COMMAND]
 echo.
 echo Commands:
-echo   start       Start both services (lc-ews-swarm-engine + lc-ews-frontend)
+echo   start       Start frontend (lc-ews-frontend)
 echo   stop        Stop all services
 echo   restart     Restart all services
 echo   logs        View live logs from all services
