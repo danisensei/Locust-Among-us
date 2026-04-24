@@ -83,8 +83,11 @@ async def get_current_user(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("sub")
         if user_id is None:
+            print(f"[AUTH DEBUG] Token decoded but 'sub' is None. Payload: {payload}")
             raise exc
-    except JWTError:
+    except JWTError as e:
+        print(f"[AUTH DEBUG] JWT decode failed: {e}. Token (first 20 chars): {token[:20]}...")
+        print(f"[AUTH DEBUG] SECRET_KEY (first 10 chars): {SECRET_KEY[:10]}...")
         raise exc
 
     result = await db.execute(
@@ -92,6 +95,7 @@ async def get_current_user(
     )
     user = result.scalar_one_or_none()
     if user is None:
+        print(f"[AUTH DEBUG] User id={user_id} not found or inactive")
         raise exc
     return user
 
