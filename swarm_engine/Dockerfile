@@ -1,34 +1,34 @@
 # ============================================================================
-# Swarm Engine Dockerfile - Python FastAPI Backend
-# Locust Swarm Simulation Engine
+# Swarm Engine Dockerfile - FastAPI + Auth + PostgreSQL client
 # ============================================================================
 FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system deps (gcc for bcrypt, libpq for asyncpg)
 RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
+    libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
+# Copy backend code (engine.py, auth.py, database.py, models.py, users_api.py)
 COPY . .
 
 # Expose port
 EXPOSE 8001
 
-# Set environment variables
+# Unbuffered logs so docker logs work correctly
 ENV PYTHONUNBUFFERED=1
 
 # Health check
-HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=5s \
-    CMD curl -f http://localhost:8001/api/swarms/stats || exit 1
+HEALTHCHECK --interval=15s --timeout=5s --retries=5 --start-period=15s \
+    CMD curl -f http://localhost:8001/ || exit 1
 
 # Run the application
 CMD ["python", "engine.py"]

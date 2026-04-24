@@ -1,18 +1,43 @@
 """
 Locust Swarm Engine - Realistic swarm simulation with FastAPI
 Generates GeoJSON data for real-time swarm visualization
++ Auth & User management (JWT + PostgreSQL)
 """
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import random
 import math
-import json
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 import uvicorn
+from pathlib import Path
+from dotenv import load_dotenv
 
-app = FastAPI(title="Locust Swarm Engine", version="1.0.0")
+# Single .env at project root
+_root_env = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=_root_env, override=False)
+
+# Local modules (auth, users, db)
+from database import engine as db_engine
+from models import Base
+import auth as auth_module
+import users_api
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Create DB tables on startup (if DB is reachable)."""
+    try:
+        async with db_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("✅ Database tables ready")
+    except Exception as e:
+        print(f"⚠️  DB not connected ({e}) — swarm simulation still runs")
+    yield
+
+
+app = FastAPI(title="LC-EWS Swarm Engine", version="2.0.0", lifespan=lifespan)
 
 # Enable CORS for React app
 app.add_middleware(
@@ -22,6 +47,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount auth & user routers
+app.include_router(auth_module.router)
+app.include_router(users_api.router)
 
 # Pakistan geographic bounds
 PAKISTAN_BOUNDS = {

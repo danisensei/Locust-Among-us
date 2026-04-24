@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe } from 'lucide-react'
+import { useAuth } from './context/AuthContext'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import SwarmMap from './pages/SwarmMap'
 import PakistanRiskOverview from './pages/PakistanRiskOverview'
@@ -10,12 +12,25 @@ import Alerts from './pages/Alerts'
 import Users from './pages/Users'
 
 export default function App() {
+  const { user, logout, isLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedSection, setExpandedSection] = useState<string | null>('platform')
 
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
+
+  // Show nothing while restoring session from localStorage
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#060910] flex items-center justify-center">
+        <div className="text-amber-500 text-2xl animate-pulse">🦗</div>
+      </div>
+    )
+  }
+
+  // Auth gate — unauthenticated users see the login screen
+  if (!user) return <Login />
 
   const pages = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
@@ -128,16 +143,28 @@ export default function App() {
         <div className="border-t border-border p-3 space-y-3 bg-accent/20">
           <div className="px-3 py-3 bg-accent/40 rounded-lg hover:bg-accent/60 transition-all duration-200 group cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold group-hover:scale-110 transition-transform duration-200">
-                SH
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black text-sm font-bold group-hover:scale-110 transition-transform duration-200">
+                {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">shadcn</div>
-                <div className="text-xs text-muted-foreground truncate">m@example.com</div>
+                <div className="text-sm font-medium truncate">{user.name}</div>
+                <div className="text-xs text-muted-foreground truncate">{user.email}</div>
               </div>
             </div>
+            <div className="mt-2 px-0">
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                user.role === 'admin'         ? 'bg-red-500/15 text-red-400' :
+                user.role === 'analyst'       ? 'bg-blue-500/15 text-blue-400' :
+                                               'bg-green-500/15 text-green-400'
+              }`}>
+                {user.role === 'field_officer' ? 'Field Officer' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              </span>
+            </div>
           </div>
-          <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-lg transition-all duration-200 group font-medium">
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-lg transition-all duration-200 group font-medium"
+          >
             <LogOut className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
             <span>Sign Out</span>
           </button>
