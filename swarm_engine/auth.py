@@ -81,10 +81,11 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             print(f"[AUTH DEBUG] Token decoded but 'sub' is None. Payload: {payload}")
             raise exc
+        user_id = int(sub)
     except JWTError as e:
         print(f"[AUTH DEBUG] JWT decode failed: {e}. Token (first 20 chars): {token[:20]}...")
         print(f"[AUTH DEBUG] SECRET_KEY (first 10 chars): {SECRET_KEY[:10]}...")
@@ -132,7 +133,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(user)
 
-    token = create_access_token({"sub": user.id, "role": user.role})
+    token = create_access_token({"sub": str(user.id), "role": user.role})
     return {"access_token": token, "token_type": "bearer", "user": _user_dict(user)}
 
 
@@ -152,7 +153,7 @@ async def login(
             detail="Incorrect email or password",
         )
 
-    token = create_access_token({"sub": user.id, "role": user.role})
+    token = create_access_token({"sub": str(user.id), "role": user.role})
     return {"access_token": token, "token_type": "bearer", "user": _user_dict(user)}
 
 
