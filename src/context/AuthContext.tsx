@@ -41,10 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const _persist = (tok: string, usr: AuthUser) => {
-    setToken(tok)
-    setUser(usr)
+    // Write localStorage FIRST — child components read from here on mount,
+    // and React state updates may trigger re-renders before the next line runs.
     localStorage.setItem('lcews_token', tok)
     localStorage.setItem('lcews_user', JSON.stringify(usr))
+    setToken(tok)
+    setUser(usr)
   }
 
   const login = async (email: string, password: string) => {
@@ -102,10 +104,11 @@ export function useAuth(): AuthContextType {
 
 // ── Authenticated fetch helper ────────────────────────────────
 export function useAuthFetch() {
-  const { token, logout } = useAuth()
-
   return async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const res = await fetch(url, {
+    // Read fresh token each call — avoids stale closure issues
+    const token = localStorage.getItem('lcews_token')
+
+    return fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +116,5 @@ export function useAuthFetch() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     })
-    if (res.status === 401) logout()   // expired token → back to login
-    return res
   }
 }
