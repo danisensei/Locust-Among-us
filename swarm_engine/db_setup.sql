@@ -1,6 +1,6 @@
 -- ============================================================
 -- LC-EWS Database Setup Script
--- Run this ONCE on your Oracle Cloud PostgreSQL instance
+-- Run automatically by Docker on first start via docker-entrypoint-initdb.d
 -- ============================================================
 
 -- 1. Enable PostGIS extension
@@ -19,9 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- 3. Reports table
---    Uses lat/lon floats now; upgrade to PostGIS GEOMETRY later with:
---    ALTER TABLE reports ADD COLUMN location GEOMETRY(Point, 4326);
---    UPDATE reports SET location = ST_SetSRID(ST_MakePoint(lon, lat), 4326);
 CREATE TABLE IF NOT EXISTS reports (
     id            SERIAL PRIMARY KEY,
     report_id     VARCHAR(20)  UNIQUE NOT NULL,
@@ -49,15 +46,7 @@ CREATE TABLE IF NOT EXISTS swarm_events (
 );
 CREATE INDEX IF NOT EXISTS idx_swarm_events_recorded_at ON swarm_events(recorded_at);
 
--- ============================================================
--- Quick-start: insert a default admin account
--- Password is "admin123" (bcrypt hash — change after first login!)
--- ============================================================
-INSERT INTO users (name, email, password_hash, role)
-VALUES (
-    'System Admin',
-    'admin@dpp.gov.pk',
-    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgRmOkCZBM0jJQGBMgzpim',
-    'admin'
-)
-ON CONFLICT (email) DO NOTHING;
+-- NOTE: No hardcoded admin user.
+-- Register your first admin account via:  POST /auth/register
+-- with role: "admin"
+
