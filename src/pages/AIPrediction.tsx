@@ -34,8 +34,8 @@ export default function AIPrediction() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{f.risk}%</div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-3">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${f.risk}%` }}></div>
+              <div className="w-full bg-muted rounded-full h-2 mt-3">
+                <div className="bg-primary h-2 rounded-full" style={{ width: `${f.risk}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Risk Level</p>
             </CardContent>
@@ -53,7 +53,7 @@ export default function AIPrediction() {
             {Array.from({ length: 8 }).map((_, i) => {
               const risk = Math.floor(Math.random() * 100)
               return (
-                <div key={i} className="p-3 border rounded text-center">
+                <div key={i} className="p-3 border border-border bg-card/70 rounded text-center">
                   <p className="text-xs text-muted-foreground mb-2">Day {i + 1}</p>
                   <p className="font-bold">{risk}%</p>
                   <Badge className="mt-2" variant={risk > 70 ? 'destructive' : 'secondary'}>

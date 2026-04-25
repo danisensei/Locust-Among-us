@@ -33,7 +33,7 @@ export default function Alerts() {
             <CardTitle className="text-sm">Critical</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">1</div>
+            <div className="text-2xl font-bold text-red-400">1</div>
           </CardContent>
         </Card>
         <Card>
@@ -41,7 +41,7 @@ export default function Alerts() {
             <CardTitle className="text-sm">Warnings</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">2</div>
+            <div className="text-2xl font-bold text-orange-300">2</div>
           </CardContent>
         </Card>
         <Card>
@@ -49,7 +49,7 @@ export default function Alerts() {
             <CardTitle className="text-sm">Info</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">1</div>
+            <div className="text-2xl font-bold text-sky-300">1</div>
           </CardContent>
         </Card>
       </div>

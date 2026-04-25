@@ -23,8 +23,8 @@ export default function App() {
   // Show nothing while restoring session from localStorage
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#060910] flex items-center justify-center">
-        <div className="text-amber-500 text-2xl animate-pulse">🦗</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-primary text-2xl animate-pulse">🦗</div>
       </div>
     )
   }
@@ -79,7 +79,7 @@ export default function App() {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))' }}>
+    <div className="flex h-screen bg-background text-foreground">
       {/* Sidebar */}
       <div className="w-64 border-r border-border bg-background flex flex-col overflow-hidden shadow-lg">
         {/* Logo */}
@@ -143,7 +143,7 @@ export default function App() {
         <div className="border-t border-border p-3 space-y-3 bg-accent/20">
           <div className="px-3 py-3 bg-accent/40 rounded-lg hover:bg-accent/60 transition-all duration-200 group cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black text-sm font-bold group-hover:scale-110 transition-transform duration-200">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold group-hover:scale-110 transition-transform duration-200">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -174,7 +174,7 @@ export default function App() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="border-b border-border bg-background h-14 flex items-center px-6 gap-4">
+        <header className="border-b border-border bg-background/95 h-14 flex items-center px-6 gap-4">
           <div className="flex-1 flex items-center gap-2">
             <span className="text-2xl">🦗</span>
             <h1 className="font-semibold text-lg">LC-EWS - Locust Early Warning System</h1>

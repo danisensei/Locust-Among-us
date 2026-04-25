@@ -47,21 +47,21 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#060910]">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-background text-foreground">
 
       {/* Ambient grid pattern */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(245,158,11,0.03) 1px,transparent 1px),' +
-            'linear-gradient(90deg,rgba(245,158,11,0.03) 1px,transparent 1px)',
+            'linear-gradient(rgba(214,166,68,0.04) 1px,transparent 1px),' +
+            'linear-gradient(90deg,rgba(214,166,68,0.04) 1px,transparent 1px)',
           backgroundSize: '44px 44px',
         }}
       />
 
       {/* Radial glow behind the card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl" />
+        <div className="w-[600px] h-[600px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
       {/* Card */}
@@ -72,10 +72,10 @@ export default function Login() {
         className="relative z-10 w-full max-w-md mx-4"
       >
         {/* Glassmorphism card */}
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur-xl shadow-2xl overflow-hidden">
+        <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl shadow-2xl overflow-hidden">
 
           {/* Header */}
-          <div className="px-8 pt-8 pb-6 border-b border-white/6 text-center">
+          <div className="px-8 pt-8 pb-6 border-b border-border text-center">
             <motion.div
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1,   opacity: 1 }}
@@ -84,21 +84,21 @@ export default function Login() {
             >
               🦗
             </motion.div>
-            <h1 className="text-xl font-bold text-white tracking-tight">LC-EWS</h1>
-            <p className="text-sm text-white/40 mt-1">Locust Early Warning System</p>
-            <p className="text-xs text-white/25 mt-0.5">Dept. of Plant Protection · Pakistan</p>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">LC-EWS</h1>
+            <p className="text-sm text-muted-foreground mt-1">Locust Early Warning System</p>
+            <p className="text-xs text-muted-foreground/70 mt-0.5">Dept. of Plant Protection · Pakistan</p>
           </div>
 
           {/* Tab switcher */}
-          <div className="flex mx-8 mt-6 bg-white/5 rounded-lg p-1 gap-1">
+          <div className="flex mx-8 mt-6 bg-muted/70 rounded-lg p-1 gap-1">
             {(['login', 'register'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => { setTab(t); setError(null) }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                   tab === t
-                    ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
-                    : 'text-white/50 hover:text-white/80'
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {t === 'login' ? <LogIn className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
@@ -120,13 +120,13 @@ export default function Login() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-1.5 pb-4">
-                    <Label className="text-white/60 text-xs uppercase tracking-wider">Full Name</Label>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wider">Full Name</Label>
                     <Input
                       value={name}
                       onChange={e => setName(e.target.value)}
                       placeholder="e.g. Khalid Ahmad"
                       required={tab === 'register'}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-amber-500/60 focus:ring-amber-500/20 h-11"
+                      className="bg-input/60 border-border text-foreground placeholder:text-muted-foreground/60 focus:border-primary/70 focus:ring-primary/20 h-11"
                     />
                   </div>
                 </motion.div>
@@ -135,20 +135,20 @@ export default function Login() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Email</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Email</Label>
               <Input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@dpp.gov.pk"
                 required
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-amber-500/60 focus:ring-amber-500/20 h-11"
+                className="bg-input/60 border-border text-foreground placeholder:text-muted-foreground/60 focus:border-primary/70 focus:ring-primary/20 h-11"
               />
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Password</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Password</Label>
               <div className="relative">
                 <Input
                   type={showPass ? 'text' : 'password'}
@@ -156,12 +156,12 @@ export default function Login() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-amber-500/60 focus:ring-amber-500/20 h-11 pr-10"
+                  className="bg-input/60 border-border text-foreground placeholder:text-muted-foreground/60 focus:border-primary/70 focus:ring-primary/20 h-11 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -180,7 +180,7 @@ export default function Login() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-2 pt-1">
-                    <Label className="text-white/60 text-xs uppercase tracking-wider">Role</Label>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wider">Role</Label>
                     <div className="grid grid-cols-1 gap-2">
                       {ROLES.map((r) => (
                         <button
@@ -189,14 +189,14 @@ export default function Login() {
                           onClick={() => setRole(r.value)}
                           className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${
                             role === r.value
-                              ? 'border-amber-500/60 bg-amber-500/10'
-                              : 'border-white/8 bg-white/3 hover:border-white/15'
+                              ? 'border-primary/60 bg-primary/10'
+                              : 'border-border bg-muted/40 hover:border-border/80'
                           }`}
                         >
-                          <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${role === r.value ? 'text-amber-400' : 'text-white/30'}`} />
+                          <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${role === r.value ? 'text-primary' : 'text-muted-foreground'}`} />
                           <div>
-                            <p className={`text-sm font-medium ${role === r.value ? 'text-amber-300' : 'text-white/70'}`}>{r.label}</p>
-                            <p className="text-xs text-white/30 mt-0.5">{r.desc}</p>
+                            <p className={`text-sm font-medium ${role === r.value ? 'text-primary' : 'text-foreground/80'}`}>{r.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
                           </div>
                         </button>
                       ))}
@@ -225,7 +225,7 @@ export default function Login() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm shadow-lg shadow-amber-500/20 transition-all duration-200 hover:shadow-amber-500/40 hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/15 transition-all duration-200 hover:shadow-primary/25 hover:scale-[1.01] active:scale-[0.99]"
             >
               {loading
                 ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -236,7 +236,7 @@ export default function Login() {
 
           {/* Footer */}
           <div className="px-8 pb-6 text-center">
-            <p className="text-xs text-white/20">
+            <p className="text-xs text-muted-foreground/70">
               Protected system · Authorized personnel only
             </p>
           </div>

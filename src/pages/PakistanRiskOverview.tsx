@@ -247,7 +247,7 @@ export default function PakistanRiskOverview() {
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-2">
-          <MapPin className="h-8 w-8 text-red-600" />
+          <MapPin className="h-8 w-8 text-red-400" />
           Pakistan Risk Overview
         </h2>
         <p className="text-muted-foreground">Real-time locust swarm risk distribution across Pakistan</p>
@@ -255,76 +255,76 @@ export default function PakistanRiskOverview() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/25">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-700 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-red-300 flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               Critical Zones
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{stats.criticalZones}</div>
-            <p className="text-xs text-red-600 mt-1">Immediate action required</p>
+            <div className="text-3xl font-bold text-red-400">{stats.criticalZones}</div>
+            <p className="text-xs text-red-300 mt-1">Immediate action required</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/25">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Risk Zones</CardTitle>
+            <CardTitle className="text-sm font-medium text-orange-300">Risk Zones</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-600">{stats.totalRiskZones}</div>
-            <p className="text-xs text-orange-600 mt-1">Under monitoring</p>
+            <div className="text-3xl font-bold text-orange-300">{stats.totalRiskZones}</div>
+            <p className="text-xs text-orange-300 mt-1">Under monitoring</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border-violet-500/25">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Active Swarms</CardTitle>
+            <CardTitle className="text-sm font-medium text-violet-300">Active Swarms</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">{stats.totalSwarms}</div>
-            <p className="text-xs text-purple-600 mt-1">Detected in field</p>
+            <div className="text-3xl font-bold text-violet-300">{stats.totalSwarms}</div>
+            <p className="text-xs text-violet-300 mt-1">Detected in field</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-sky-500/10 to-sky-500/5 border-sky-500/25">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-sky-300 flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Avg Intensity
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{stats.avgIntensity}%</div>
-            <p className="text-xs text-blue-600 mt-1">Risk distribution</p>
+            <div className="text-3xl font-bold text-sky-300">{stats.avgIntensity}%</div>
+            <p className="text-xs text-sky-300 mt-1">Risk distribution</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Map Container */}
       <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white pb-3">
+        <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-foreground pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5" />
-              <CardTitle className="text-white">GIS Risk Visualization</CardTitle>
+              <CardTitle className="text-foreground">GIS Risk Visualization</CardTitle>
             </div>
             <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
                 OpenStreetMap + Terrain
               </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
                 leaflet.heat
               </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
                 MarkerCluster
               </Badge>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div ref={mapRef} className="w-full h-96 md:h-[500px] lg:h-[600px] bg-slate-100" />
+          <div ref={mapRef} className="w-full h-96 md:h-[500px] lg:h-[600px] bg-slate-800" />
         </CardContent>
       </Card>
 
@@ -332,7 +332,7 @@ export default function PakistanRiskOverview() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+            <AlertCircle className="h-5 w-5 text-red-400" />
             Active Risk Zones
           </CardTitle>
           <CardDescription>Click any zone on the map to highlight here</CardDescription>
@@ -344,11 +344,11 @@ export default function PakistanRiskOverview() {
                 key={zone.name}
                 className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   activeRiskZone === zone.name
-                    ? 'border-blue-500 bg-blue-50 shadow-lg'
-                    : 'border-l-4 bg-slate-50 hover:bg-slate-100'
+                    ? 'border-sky-500 bg-sky-500/10 shadow-lg'
+                    : 'border-l-4 bg-muted/40 hover:bg-muted/60'
                 }`}
                 style={{
-                  borderLeftColor: activeRiskZone === zone.name ? '#0066ff' : zone.color,
+                  borderLeftColor: activeRiskZone === zone.name ? '#38bdf8' : zone.color,
                   borderLeftWidth: '4px',
                 }}
                 onClick={() => setActiveRiskZone(zone.name)}
@@ -379,7 +379,7 @@ export default function PakistanRiskOverview() {
                     <span className="text-muted-foreground">Swarms:</span>
                     <span className="font-semibold">{zone.swarms}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="w-full bg-muted rounded-full h-2 mt-2">
                     <div
                       className="bg-gradient-to-r from-yellow-400 to-red-600 h-2 rounded-full"
                       style={{ width: `${zone.intensity}%` }}
@@ -393,11 +393,11 @@ export default function PakistanRiskOverview() {
       </Card>
 
       {/* Info Box */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-sky-500/10 border-sky-500/20">
         <CardHeader>
           <CardTitle className="text-sm">📊 What You're Seeing</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm space-y-2 text-blue-900">
+        <CardContent className="text-sm space-y-2 text-sky-100">
           <p>
             <strong>OpenStreetMap Tiles:</strong> Base geographic layer showing Pakistan terrain and cities
           </p>

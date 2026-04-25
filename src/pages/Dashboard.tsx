@@ -23,7 +23,7 @@ export default function Dashboard() {
   return (
     <div className="relative w-full space-y-8">
       {/* Spotlight Background */}
-      <Spotlight className="left-0 top-0 opacity-30" fill="rgba(59, 130, 246, 0.3)" />
+      <Spotlight className="left-0 top-0 opacity-20" fill="rgba(80, 142, 150, 0.28)" />
       
       {/* Header */}
       <div className="relative z-10">
@@ -41,7 +41,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="text-3xl md:text-4xl font-bold tracking-tight text-blue-600">
+                  <div className="text-3xl md:text-4xl font-bold tracking-tight text-sky-300">
                     <NumberTicker value={stat.value} />
                   </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -56,18 +56,18 @@ export default function Dashboard() {
       </div>
 
       {/* Pakistan Risk Overview */}
-      <Card className="relative z-10 border-2 border-blue-500/20 shadow-xl">
+      <Card className="relative z-10 border-2 border-sky-500/20 shadow-xl">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl">Pakistan Risk Overview</CardTitle>
               <CardDescription className="mt-2">GIS terrain-aware risk visualization</CardDescription>
             </div>
-            <Badge className="bg-blue-500/20 text-blue-600">Active</Badge>
+            <Badge className="bg-sky-500/15 text-sky-300 border border-sky-500/20">Active</Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="aspect-video w-full rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-dashed border-blue-200 flex items-center justify-center overflow-hidden">
+          <div className="aspect-video w-full rounded-lg bg-gradient-to-br from-sky-950/40 to-emerald-950/25 border-2 border-dashed border-sky-500/20 flex items-center justify-center overflow-hidden">
             <div className="text-center opacity-50">
               <p className="text-xl font-semibold mb-2">🗺️</p>
               <p className="text-sm text-muted-foreground">Interactive Pakistan Risk Map</p>
@@ -82,14 +82,14 @@ export default function Dashboard() {
         <div className="space-y-3">
           {alerts.map((alert, idx) => (
             <Alert key={idx} className={`border-l-4 ${
-              alert.type === 'critical' ? 'border-l-red-500 bg-red-50/50' :
-              alert.type === 'warning' ? 'border-l-yellow-500 bg-yellow-50/50' :
-              'border-l-blue-500 bg-blue-50/50'
+              alert.type === 'critical' ? 'border-l-red-500 bg-red-500/10' :
+              alert.type === 'warning' ? 'border-l-yellow-500 bg-yellow-500/10' :
+              'border-l-sky-500 bg-sky-500/10'
             }`}>
               <AlertCircle className={`h-4 w-4 ${
                 alert.type === 'critical' ? 'text-red-500' :
                 alert.type === 'warning' ? 'text-yellow-500' :
-                'text-blue-500'
+                'text-sky-400'
               }`} />
               <div className="ml-2 flex-1">
                 <AlertTitle className="font-semibold">{alert.title}</AlertTitle>
@@ -102,7 +102,7 @@ export default function Dashboard() {
       </div>
 
       {/* Weather Card */}
-      <Card className="relative z-10 bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-200">
+      <Card className="relative z-10 bg-gradient-to-br from-sky-500/10 to-emerald-500/10 border-sky-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <span className="text-2xl">🌤️</span>
@@ -111,19 +111,19 @@ export default function Dashboard() {
           <CardDescription>Real-time meteorological data for swarm prediction</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 rounded-lg bg-white/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Temperature</p>
             <p className="text-2xl font-bold">38°C</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-white/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Humidity</p>
             <p className="text-2xl font-bold">42%</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-white/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Wind Speed</p>
             <p className="text-2xl font-bold">18 km/h</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-white/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Visibility</p>
             <p className="text-2xl font-bold">12 km</p>
           </div>

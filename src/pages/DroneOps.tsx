@@ -64,8 +64,8 @@ export default function DroneOps() {
                     <Badge 
                       className={`${
                         drone.status === 'Active' 
-                          ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30' 
-                          : 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'
+                          ? 'bg-green-500/15 text-green-300 hover:bg-green-500/25' 
+                          : 'bg-yellow-500/15 text-yellow-200 hover:bg-yellow-500/25'
                       } transition-colors`}
                     >
                       {drone.status}

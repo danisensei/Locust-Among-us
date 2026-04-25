@@ -65,10 +65,10 @@ export default function SwarmMap() {
   }, [])
 
   const riskColors: Record<string, string> = {
-    critical: 'bg-red-500/20 text-red-700 border-red-200',
-    high: 'bg-orange-500/20 text-orange-700 border-orange-200',
-    medium: 'bg-yellow-500/20 text-yellow-700 border-yellow-200',
-    low: 'bg-green-500/20 text-green-700 border-green-200',
+    critical: 'bg-red-500/15 text-red-300 border-red-500/30',
+    high: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+    medium: 'bg-yellow-500/15 text-yellow-200 border-yellow-500/30',
+    low: 'bg-green-500/15 text-green-300 border-green-500/30',
   }
 
   return (
@@ -89,7 +89,7 @@ export default function SwarmMap() {
         <Card className="border-l-4 border-l-orange-500">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">Critical</div>
-            <div className="text-3xl font-bold text-red-600">{stats?.critical_count || 0}</div>
+            <div className="text-3xl font-bold text-red-400">{stats?.critical_count || 0}</div>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-blue-500">
@@ -102,7 +102,7 @@ export default function SwarmMap() {
         <Card className="border-l-4 border-l-green-500">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">Avg Health</div>
-            <div className="text-3xl font-bold text-green-600">{stats ? (stats.avg_health * 100).toFixed(0) : 0}%</div>
+            <div className="text-3xl font-bold text-green-300">{stats ? (stats.avg_health * 100).toFixed(0) : 0}%</div>
           </CardContent>
         </Card>
       </div>
@@ -127,7 +127,7 @@ export default function SwarmMap() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="bg-slate-50 dark:bg-slate-900 rounded p-6 min-h-96">
+        <CardContent className="bg-muted/30 rounded p-6 min-h-96">
           {loading ? (
             <div className="flex items-center justify-center h-80">
               <div className="text-center text-muted-foreground">
@@ -137,7 +137,7 @@ export default function SwarmMap() {
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-80">
-              <div className="text-center text-red-600">
+              <div className="text-center text-red-400">
                 <div className="text-4xl mb-4">⚠️</div>
                 <p>Connection Error: {error}</p>
                 <p className="text-sm mt-2">Make sure Swarm Engine is running on port 8001</p>
@@ -170,7 +170,7 @@ export default function SwarmMap() {
                         {swarm.risk_level.toUpperCase()}
                       </Badge>
                     </div>
-                    <div className="mt-2 h-1.5 bg-slate-300 rounded-full overflow-hidden">
+                    <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all"
                         style={{ width: `${swarm.health * 100}%` }}
@@ -181,8 +181,8 @@ export default function SwarmMap() {
               </div>
 
               {activeOverlay && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                <div className="mt-4 p-3 bg-sky-500/10 rounded border border-sky-500/20">
+                  <p className="text-sm text-sky-300">
                     {activeOverlay === 'swarms' && '🔴 Swarm markers with clustering enabled'}
                     {activeOverlay === 'drones' && '🛸 Drone positions and patrol routes visible'}
                     {activeOverlay === 'heatmap' && '🌡️ Intensity heatmap showing locust density'}

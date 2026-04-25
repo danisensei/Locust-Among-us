@@ -1,4 +1,77 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root,
+.dark {
+  --background: 218 22% 14%;
+  --foreground: 213 25% 88%;
+  --card: 218 20% 18%;
+  --card-foreground: 213 25% 88%;
+  --popover: 218 20% 17%;
+  --popover-foreground: 213 25% 88%;
+  --primary: 41 63% 58%;
+  --primary-foreground: 220 26% 12%;
+  --secondary: 216 17% 24%;
+  --secondary-foreground: 213 25% 88%;
+  --muted: 216 18% 23%;
+  --muted-foreground: 215 14% 67%;
+  --accent: 165 22% 25%;
+  --accent-foreground: 205 35% 92%;
+  --destructive: 0 72% 62%;
+  --destructive-foreground: 210 30% 96%;
+  --border: 216 17% 30%;
+  --input: 216 16% 27%;
+  --ring: 41 63% 58%;
+  --sidebar: 220 22% 12%;
+  --sidebar-foreground: 213 25% 88%;
+  --sidebar-primary: 41 63% 58%;
+  --sidebar-primary-foreground: 220 26% 12%;
+  --sidebar-accent: 216 18% 23%;
+  --sidebar-accent-foreground: 213 25% 88%;
+  --sidebar-border: 216 17% 28%;
+  --sidebar-ring: 41 63% 58%;
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
 
 html, body, #app {
   width: 100%;
@@ -7,9 +80,15 @@ html, body, #app {
   padding: 0;
 }
 
+html {
+  background: hsl(var(--background));
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
+  min-height: 100vh;
 }

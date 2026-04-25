@@ -27,7 +27,7 @@ export default function FieldReports() {
             </div>
             <div className="flex gap-2">
               <Badge variant="outline" className="text-xs">Total: {reports.length}</Badge>
-              <Badge className="bg-green-500/20 text-green-700 text-xs">Verified: {reports.filter(r => r.status === 'Verified').length}</Badge>
+              <Badge className="bg-green-500/15 text-green-300 text-xs">Verified: {reports.filter(r => r.status === 'Verified').length}</Badge>
             </div>
           </div>
         </CardHeader>
@@ -53,12 +53,12 @@ export default function FieldReports() {
                   <TableCell className="text-sm">{r.location}</TableCell>
                   <TableCell>
                     {r.status === 'Verified' ? (
-                      <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30 transition-colors flex items-center gap-1 w-fit">
+                      <Badge className="bg-green-500/15 text-green-300 hover:bg-green-500/25 transition-colors flex items-center gap-1 w-fit">
                         <CheckCircle2 className="h-3 w-3" />
                         {r.status}
                       </Badge>
                     ) : (
-                      <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 transition-colors flex items-center gap-1 w-fit">
+                      <Badge className="bg-yellow-500/15 text-yellow-200 hover:bg-yellow-500/25 transition-colors flex items-center gap-1 w-fit">
                         <Clock className="h-3 w-3" />
                         {r.status}
                       </Badge>
