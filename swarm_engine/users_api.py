@@ -31,17 +31,20 @@ def _user_out(u: User) -> dict:
 
 def _report_out(r: Report) -> dict:
     return {
-        "id":             r.id,
-        "report_id":      r.report_id,
-        "observer_name":  r.observer_name,
-        "zone":           r.zone,
-        "risk_level":     r.risk_level,
-        "estimated_size": r.estimated_size,
-        "description":    r.description,
-        "status":         r.status,
-        "lat":            r.lat,
-        "lon":            r.lon,
-        "created_at":     r.created_at.isoformat(),
+        "id":                r.id,
+        "report_id":         r.report_id,
+        "observer_name":     r.observer_name,
+        "zone":              r.zone,
+        "risk_level":        r.risk_level,
+        "estimated_size":    r.estimated_size,
+        "description":       r.description,
+        "status":            r.status,
+        "lat":               r.lat,
+        "lon":               r.lon,
+        "reviewer_feedback":  r.reviewer_feedback,
+        "reviewed_by":       r.reviewed_by,
+        "reviewed_at":       r.reviewed_at.isoformat() if r.reviewed_at else None,
+        "created_at":        r.created_at.isoformat(),
     }
 
 
@@ -126,17 +129,30 @@ async def create_report(
     return _report_out(report)
 
 
-@router.patch("/api/reports/{report_id}/verify")
-async def verify_report(
+class ReportReview(BaseModel):
+    status:   str      # "Verified" or "Rejected"
+    feedback: str = ""
+
+
+@router.patch("/api/reports/{report_id}/review")
+async def review_report(
     report_id: str,
+    req: ReportReview,
     current_user: User = Depends(require_role("admin", "analyst")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Admin or Analyst can verify/reject a report."""
+    """Admin or Analyst can approve/reject a report with feedback."""
+    if req.status not in ("Verified", "Rejected"):
+        raise HTTPException(status_code=400, detail="Status must be 'Verified' or 'Rejected'")
+
     result = await db.execute(select(Report).where(Report.report_id == report_id))
     report = result.scalar_one_or_none()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    report.status = "Verified"
+
+    report.status = req.status
+    report.reviewer_feedback = req.feedback or None
+    report.reviewed_by = current_user.name
+    report.reviewed_at = datetime.utcnow()
     await db.commit()
-    return {"status": "verified", "report_id": report_id}
+    return _report_out(report)

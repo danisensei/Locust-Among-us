@@ -37,6 +37,9 @@ async def lifespan(app: FastAPI):
             #    (create_all only creates NEW tables, it won't add columns)
             migrations = [
                 "ALTER TABLE reports ADD COLUMN IF NOT EXISTS estimated_size VARCHAR(50)",
+                "ALTER TABLE reports ADD COLUMN IF NOT EXISTS reviewer_feedback TEXT",
+                "ALTER TABLE reports ADD COLUMN IF NOT EXISTS reviewed_by VARCHAR(255)",
+                "ALTER TABLE reports ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP",
             ]
             from sqlalchemy import text
             for sql in migrations:

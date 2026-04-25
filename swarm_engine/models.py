@@ -35,18 +35,21 @@ class Report(Base):
     """
     __tablename__ = "reports"
 
-    id            = Column(Integer, primary_key=True, index=True)
-    report_id     = Column(String(20), unique=True, index=True)   # RPT-XXXX
-    user_id       = Column(Integer, ForeignKey("users.id"))
-    observer_name = Column(String(255))
-    zone          = Column(String(255))
-    risk_level    = Column(String(50))   # Critical | High | Medium | Low
-    estimated_size = Column(String(50), nullable=True)  # Small | Medium | Large | Massive
-    description   = Column(Text)
-    lat           = Column(Float, nullable=True)
-    lon           = Column(Float, nullable=True)
-    status        = Column(String(50), default="Pending")  # Pending | Verified | Rejected
-    created_at    = Column(DateTime, default=datetime.utcnow)
+    id              = Column(Integer, primary_key=True, index=True)
+    report_id       = Column(String(20), unique=True, index=True)   # RPT-XXXX
+    user_id         = Column(Integer, ForeignKey("users.id"))
+    observer_name   = Column(String(255))
+    zone            = Column(String(255))
+    risk_level      = Column(String(50))   # Critical | High | Medium | Low
+    estimated_size  = Column(String(50), nullable=True)  # Small | Medium | Large | Massive
+    description     = Column(Text)
+    lat             = Column(Float, nullable=True)
+    lon             = Column(Float, nullable=True)
+    status          = Column(String(50), default="Pending")  # Pending | Verified | Rejected
+    reviewer_feedback = Column(Text, nullable=True)
+    reviewed_by     = Column(String(255), nullable=True)
+    reviewed_at     = Column(DateTime, nullable=True)
+    created_at      = Column(DateTime, default=datetime.utcnow)
 
 
 class SwarmEvent(Base):
