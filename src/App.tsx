@@ -4,14 +4,14 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 
 // ── Admin / Analyst pages ─────────────────────────────────
-import Dashboard from './pages/Dashboard'
-import SwarmMap from './pages/SwarmMap'
-import PakistanRiskOverview from './pages/PakistanRiskOverview'
-import AIPrediction from './pages/AIPrediction'
-import DroneOps from './pages/DroneOps'
-import FieldReports from './pages/FieldReports'
-import Alerts from './pages/Alerts'
-import Users from './pages/Users'
+import Dashboard from './pages/AdminUI/Dashboard'
+import SwarmMap from './pages/AdminUI/SwarmMap'
+import PakistanRiskOverview from './pages/AdminUI/PakistanRiskOverview'
+import AIPrediction from './pages/AdminUI/AIPrediction'
+import DroneOps from './pages/AdminUI/DroneOps'
+import FieldReports from './pages/AdminUI/FieldReports'
+import Alerts from './pages/AdminUI/Alerts'
+import Users from './pages/AdminUI/Users'
 
 // ── Field Officer pages ───────────────────────────────────
 import FODashboard from './pages/FieldOfficerUI/Dashboard'
@@ -21,6 +21,15 @@ import FOAIPrediction from './pages/FieldOfficerUI/AIPrediction'
 import FODroneOps from './pages/FieldOfficerUI/DroneOps'
 import FOFieldReports from './pages/FieldOfficerUI/FieldReports'
 import FOAlerts from './pages/FieldOfficerUI/Alerts'
+
+// ── Analyst pages ─────────────────────────────────────────
+import ANDashboard from './pages/AnalystUI/Dashboard'
+import ANSwarmMap from './pages/AnalystUI/SwarmMap'
+import ANRiskOverview from './pages/AnalystUI/PakistanRiskOverview'
+import ANAIPrediction from './pages/AnalystUI/AIPrediction'
+import ANDroneOps from './pages/AnalystUI/DroneOps'
+import ANFieldReports from './pages/AnalystUI/FieldReports'
+import ANAlerts from './pages/AnalystUI/Alerts'
 
 // ── Page definition type ──────────────────────────────────
 interface PageDef {
@@ -52,8 +61,10 @@ export default function App() {
   if (!user) return <Login />
 
   const isFieldOfficer = user.role === 'field_officer'
+  const isAnalyst      = user.role === 'analyst'
+  const isAdmin        = user.role === 'admin'
 
-  // ── Page lists (admin/analyst vs field_officer) ─────────
+  // ── Page lists per role ─────────────────────────────────
   const adminPages: PageDef[] = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
     { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
@@ -63,6 +74,16 @@ export default function App() {
     { id: 'reports', label: 'Field Reports', icon: Inbox, section: 'platform' },
     { id: 'alerts', label: 'Alerts', icon: Settings, section: 'operations' },
     { id: 'users', label: 'Users', icon: UsersIcon, section: 'team' },
+  ]
+
+  const analystPages: PageDef[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
+    { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
+    { id: 'risk', label: 'Risk Overview', icon: Globe, section: 'platform' },
+    { id: 'ai', label: 'AI Prediction', icon: Bot, section: 'platform' },
+    { id: 'drones', label: 'Drone Ops', icon: Zap, section: 'platform' },
+    { id: 'reports', label: 'Field Reports', icon: Inbox, section: 'platform' },
+    { id: 'alerts', label: 'Alerts', icon: Settings, section: 'operations' },
   ]
 
   const foPages: PageDef[] = [
@@ -75,7 +96,7 @@ export default function App() {
     { id: 'alerts', label: 'Alerts', icon: Settings, section: 'operations' },
   ]
 
-  const pages = isFieldOfficer ? foPages : adminPages
+  const pages = isFieldOfficer ? foPages : isAnalyst ? analystPages : adminPages
 
   // ── Page renderer ──────────────────────────────────────
   const renderPage = () => {
@@ -91,6 +112,19 @@ export default function App() {
         default:          return <FODashboard />
       }
     }
+    if (isAnalyst) {
+      switch (activeTab) {
+        case 'dashboard': return <ANDashboard />
+        case 'map':       return <ANSwarmMap />
+        case 'risk':      return <ANRiskOverview />
+        case 'ai':        return <ANAIPrediction />
+        case 'drones':    return <ANDroneOps />
+        case 'reports':   return <ANFieldReports />
+        case 'alerts':    return <ANAlerts />
+        default:          return <ANDashboard />
+      }
+    }
+    // Admin (default)
     switch (activeTab) {
       case 'dashboard': return <Dashboard />
       case 'map':       return <SwarmMap />
@@ -118,8 +152,8 @@ export default function App() {
       items: pages.filter(p => p.section === 'operations'),
       expandable: false,
     },
-    // Only admin/analyst see the Team section
-    ...(!isFieldOfficer
+    // Only admin sees the Team section
+    ...(isAdmin
       ? [{
           id: 'team',
           label: 'Team',
@@ -141,6 +175,9 @@ export default function App() {
           </div>
           {isFieldOfficer && (
             <div className="text-xs text-green-400 mt-1 font-medium">Field Officer Portal</div>
+          )}
+          {isAnalyst && (
+            <div className="text-xs text-blue-400 mt-1 font-medium">Analyst Portal</div>
           )}
         </div>
 
