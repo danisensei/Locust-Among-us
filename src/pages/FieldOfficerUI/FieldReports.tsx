@@ -15,13 +15,34 @@ import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// ── Constants ────────────────────────────────────────────────
-const ZONES = [
-  'Khuzdar Valley', 'Quetta', 'Jacobabad Plains', 'D.I. Khan',
-  'Thar Desert', 'Cholistan Desert', 'Dera Ghazi Khan',
-  'Bahawalpur', 'Lasbela', 'Turbat', 'Gwadar', 'Nushki',
-  'Sibi', 'Nasirabad', 'Sukkur', 'Rahimyar Khan',
-]
+// ── Zone bounding boxes (approx) ─────────────────────────────
+// { south, north, west, east } — generous bounds to allow border observations
+const ZONE_BOUNDS: Record<string, { s: number; n: number; w: number; e: number }> = {
+  'Khuzdar Valley':    { s: 26.5, n: 28.5, w: 65.5, e: 67.5 },
+  'Quetta':            { s: 29.5, n: 31.0, w: 66.0, e: 67.5 },
+  'Jacobabad Plains':  { s: 27.5, n: 29.0, w: 67.5, e: 69.5 },
+  'D.I. Khan':         { s: 31.0, n: 32.5, w: 70.0, e: 71.5 },
+  'Thar Desert':       { s: 24.5, n: 27.5, w: 69.5, e: 71.5 },
+  'Cholistan Desert':  { s: 27.5, n: 30.0, w: 71.0, e: 73.5 },
+  'Dera Ghazi Khan':   { s: 29.0, n: 31.0, w: 69.5, e: 71.0 },
+  'Bahawalpur':        { s: 28.5, n: 30.5, w: 70.5, e: 72.5 },
+  'Lasbela':           { s: 25.0, n: 27.0, w: 65.5, e: 67.5 },
+  'Turbat':            { s: 25.5, n: 27.5, w: 62.5, e: 64.5 },
+  'Gwadar':            { s: 24.5, n: 26.5, w: 61.5, e: 63.0 },
+  'Nushki':            { s: 28.5, n: 30.5, w: 64.5, e: 66.5 },
+  'Sibi':              { s: 28.5, n: 30.5, w: 67.0, e: 68.5 },
+  'Nasirabad':         { s: 27.5, n: 29.0, w: 67.0, e: 68.5 },
+  'Sukkur':            { s: 27.0, n: 28.5, w: 68.5, e: 70.0 },
+  'Rahimyar Khan':     { s: 27.5, n: 29.5, w: 69.5, e: 71.0 },
+}
+
+const ZONES = Object.keys(ZONE_BOUNDS)
+
+function isInsideZone(zoneName: string, lat: number, lon: number): boolean {
+  const b = ZONE_BOUNDS[zoneName]
+  if (!b) return true // unknown zone → no warning
+  return lat >= b.s && lat <= b.n && lon >= b.w && lon <= b.e
+}
 
 const RISK_LEVELS = [
   { value: 'Critical', color: 'bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/25' },
@@ -132,6 +153,7 @@ export default function FieldReports() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [showMismatchConfirm, setShowMismatchConfirm] = useState(false)
 
   // Form state
   const [zone, setZone] = useState('')
@@ -141,6 +163,9 @@ export default function FieldReports() {
   const [lat, setLat] = useState<number | null>(null)
   const [lon, setLon] = useState<number | null>(null)
   const [locationMode, setLocationMode] = useState<'map' | 'manual'>('map')
+
+  // ── Zone / coordinate mismatch check ───────────────────────
+  const zoneMismatch = zone && lat !== null && lon !== null && !isInsideZone(zone, lat, lon)
 
   // ── Fetch reports ──────────────────────────────────────────
   const fetchReports = useCallback(async () => {
@@ -170,14 +195,25 @@ export default function FieldReports() {
     setLocationMode('map')
     setSubmitError(null)
     setSubmitSuccess(false)
+    setShowMismatchConfirm(false)
   }
 
   // ── Submit report ──────────────────────────────────────────
-  const handleSubmit = async () => {
+  const handleSubmitClick = () => {
     if (!zone || !riskLevel || !description) {
       setSubmitError('Please fill in Zone, Risk Level, and Description.')
       return
     }
+    // If there's a mismatch, ask for confirmation first
+    if (zoneMismatch) {
+      setShowMismatchConfirm(true)
+      return
+    }
+    doSubmit()
+  }
+
+  const doSubmit = async () => {
+    setShowMismatchConfirm(false)
 
     setSubmitting(true)
     setSubmitError(null)
@@ -414,6 +450,20 @@ export default function FieldReports() {
                   )}
                 </div>
 
+                {/* Zone / Location mismatch warning */}
+                {zoneMismatch && (
+                  <div className="flex items-start gap-2 text-sm text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2.5">
+                    <span className="text-base mt-0.5">⚠️</span>
+                    <div>
+                      <p className="font-medium">Location mismatch</p>
+                      <p className="text-xs text-yellow-300/80 mt-0.5">
+                        The pinned coordinates ({lat?.toFixed(4)}, {lon?.toFixed(4)}) appear to be outside <strong>{zone}</strong>. 
+                        Please verify the zone or adjust the pin. You can still submit if you're near the border.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error */}
                 {submitError && (
                   <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -428,12 +478,49 @@ export default function FieldReports() {
                 <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
+                <Button onClick={handleSubmitClick} disabled={submitting} className="gap-2">
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {submitting ? 'Submitting…' : 'Submit Report'}
                 </Button>
               </DialogFooter>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Mismatch Confirmation Dialog */}
+        <Dialog open={showMismatchConfirm} onOpenChange={setShowMismatchConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-yellow-400">
+                <MapPin className="h-5 w-5" />
+                Location Mismatch
+              </DialogTitle>
+              <DialogDescription>
+                The coordinates you pinned don't appear to be inside <strong className="text-foreground">{zone}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-sm space-y-1">
+              <p className="text-yellow-300"><strong>Zone:</strong> {zone}</p>
+              <p className="text-yellow-300"><strong>Pinned location:</strong> {lat?.toFixed(4)}, {lon?.toFixed(4)}</p>
+              <p className="text-xs text-yellow-300/70 mt-2">
+                This could mean the wrong zone was selected, or the pin was placed incorrectly.
+                If you're near a zone border, this may be normal.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowMismatchConfirm(false)}>
+                Go Back & Fix
+              </Button>
+              <Button
+                variant="default"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
+                onClick={doSubmit}
+                disabled={submitting}
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                Submit Anyway
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
