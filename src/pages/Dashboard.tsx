@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { HoverEffect } from '@/components/ui/card-hover-effect'
 import { NumberTicker } from '@/components/ui/number-ticker'
 import { Spotlight } from '@/components/ui/spotlight'
@@ -6,7 +7,36 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, TrendingUp } from 'lucide-react'
 
+const WEATHER_REFRESH_MS = 5 * 60 * 1000
+
+type WeatherSnapshot = {
+  temperature: number
+  humidity: number
+  windSpeed: number
+  visibility: number
+}
+
+const randomInt = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min
+
+const createWeatherSnapshot = (): WeatherSnapshot => ({
+  temperature: randomInt(29, 43),
+  humidity: randomInt(28, 68),
+  windSpeed: randomInt(8, 36),
+  visibility: randomInt(6, 15),
+})
+
 export default function Dashboard() {
+  const [weather, setWeather] = useState<WeatherSnapshot>(() => createWeatherSnapshot())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setWeather(createWeatherSnapshot())
+    }, WEATHER_REFRESH_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   const stats = [
     { label: 'Active Swarms', value: 3, description: 'Detected in field zones' },
     { label: 'Risk Zones', value: 7, description: 'High-alert regions' },
@@ -113,19 +143,19 @@ export default function Dashboard() {
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Temperature</p>
-            <p className="text-2xl font-bold">38°C</p>
+            <p className="text-2xl font-bold">{weather.temperature}°C</p>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Humidity</p>
-            <p className="text-2xl font-bold">42%</p>
+            <p className="text-2xl font-bold">{weather.humidity}%</p>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Wind Speed</p>
-            <p className="text-2xl font-bold">18 km/h</p>
+            <p className="text-2xl font-bold">{weather.windSpeed} km/h</p>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-sm text-muted-foreground">Visibility</p>
-            <p className="text-2xl font-bold">12 km</p>
+            <p className="text-2xl font-bold">{weather.visibility} km</p>
           </div>
         </CardContent>
       </Card>
