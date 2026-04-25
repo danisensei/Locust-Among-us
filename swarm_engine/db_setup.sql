@@ -20,17 +20,18 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- 3. Reports table
 CREATE TABLE IF NOT EXISTS reports (
-    id            SERIAL PRIMARY KEY,
-    report_id     VARCHAR(20)  UNIQUE NOT NULL,
-    user_id       INTEGER      REFERENCES users(id),
-    observer_name VARCHAR(255),
-    zone          VARCHAR(255),
-    risk_level    VARCHAR(50),
-    description   TEXT,
-    lat           FLOAT,
-    lon           FLOAT,
-    status        VARCHAR(50)  NOT NULL DEFAULT 'Pending',
-    created_at    TIMESTAMP    NOT NULL DEFAULT NOW()
+    id              SERIAL PRIMARY KEY,
+    report_id       VARCHAR(20)  UNIQUE NOT NULL,
+    user_id         INTEGER      REFERENCES users(id),
+    observer_name   VARCHAR(255),
+    zone            VARCHAR(255),
+    risk_level      VARCHAR(50),
+    estimated_size  VARCHAR(50),
+    description     TEXT,
+    lat             FLOAT,
+    lon             FLOAT,
+    status          VARCHAR(50)  NOT NULL DEFAULT 'Pending',
+    created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 -- 4. Swarm events snapshot table

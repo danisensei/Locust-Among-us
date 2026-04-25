@@ -41,6 +41,7 @@ class Report(Base):
     observer_name = Column(String(255))
     zone          = Column(String(255))
     risk_level    = Column(String(50))   # Critical | High | Medium | Low
+    estimated_size = Column(String(50), nullable=True)  # Small | Medium | Large | Massive
     description   = Column(Text)
     lat           = Column(Float, nullable=True)
     lon           = Column(Float, nullable=True)

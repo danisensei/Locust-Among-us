@@ -31,16 +31,17 @@ def _user_out(u: User) -> dict:
 
 def _report_out(r: Report) -> dict:
     return {
-        "id":            r.id,
-        "report_id":     r.report_id,
-        "observer_name": r.observer_name,
-        "zone":          r.zone,
-        "risk_level":    r.risk_level,
-        "description":   r.description,
-        "status":        r.status,
-        "lat":           r.lat,
-        "lon":           r.lon,
-        "created_at":    r.created_at.isoformat(),
+        "id":             r.id,
+        "report_id":      r.report_id,
+        "observer_name":  r.observer_name,
+        "zone":           r.zone,
+        "risk_level":     r.risk_level,
+        "estimated_size": r.estimated_size,
+        "description":    r.description,
+        "status":         r.status,
+        "lat":            r.lat,
+        "lon":            r.lon,
+        "created_at":     r.created_at.isoformat(),
     }
 
 
@@ -79,11 +80,12 @@ async def delete_user(
 
 # ── Reports ───────────────────────────────────────────────────
 class ReportCreate(BaseModel):
-    zone:        str
-    risk_level:  str
-    description: str
-    lat:         float = None
-    lon:         float = None
+    zone:           str
+    risk_level:     str
+    description:    str
+    estimated_size: str = None
+    lat:            float = None
+    lon:            float = None
 
 
 @router.get("/api/reports")
@@ -112,6 +114,7 @@ async def create_report(
         observer_name=current_user.name,
         zone=req.zone,
         risk_level=req.risk_level,
+        estimated_size=req.estimated_size,
         description=req.description,
         lat=req.lat,
         lon=req.lon,
