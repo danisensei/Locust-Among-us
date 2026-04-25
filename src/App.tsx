@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
+
+// ── Admin / Analyst pages ─────────────────────────────────
 import Dashboard from './pages/Dashboard'
 import SwarmMap from './pages/SwarmMap'
 import PakistanRiskOverview from './pages/PakistanRiskOverview'
@@ -10,6 +12,23 @@ import DroneOps from './pages/DroneOps'
 import FieldReports from './pages/FieldReports'
 import Alerts from './pages/Alerts'
 import Users from './pages/Users'
+
+// ── Field Officer pages ───────────────────────────────────
+import FODashboard from './pages/FieldOfficerUI/Dashboard'
+import FOSwarmMap from './pages/FieldOfficerUI/SwarmMap'
+import FORiskOverview from './pages/FieldOfficerUI/PakistanRiskOverview'
+import FOAIPrediction from './pages/FieldOfficerUI/AIPrediction'
+import FODroneOps from './pages/FieldOfficerUI/DroneOps'
+import FOFieldReports from './pages/FieldOfficerUI/FieldReports'
+import FOAlerts from './pages/FieldOfficerUI/Alerts'
+
+// ── Page definition type ──────────────────────────────────
+interface PageDef {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  section: string
+}
 
 export default function App() {
   const { user, logout, isLoading } = useAuth()
@@ -32,7 +51,10 @@ export default function App() {
   // Auth gate — unauthenticated users see the login screen
   if (!user) return <Login />
 
-  const pages = [
+  const isFieldOfficer = user.role === 'field_officer'
+
+  // ── Page lists (admin/analyst vs field_officer) ─────────
+  const adminPages: PageDef[] = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
     { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
     { id: 'risk', label: 'Risk Overview', icon: Globe, section: 'platform' },
@@ -43,39 +65,68 @@ export default function App() {
     { id: 'users', label: 'Users', icon: UsersIcon, section: 'team' },
   ]
 
+  const foPages: PageDef[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, section: 'platform' },
+    { id: 'map', label: 'Swarm Map', icon: Map, section: 'platform' },
+    { id: 'risk', label: 'Risk Overview', icon: Globe, section: 'platform' },
+    { id: 'ai', label: 'AI Prediction', icon: Bot, section: 'platform' },
+    { id: 'drones', label: 'Drone Ops', icon: Zap, section: 'platform' },
+    { id: 'reports', label: 'Field Reports', icon: Inbox, section: 'platform' },
+    { id: 'alerts', label: 'Alerts', icon: Settings, section: 'operations' },
+  ]
+
+  const pages = isFieldOfficer ? foPages : adminPages
+
+  // ── Page renderer ──────────────────────────────────────
   const renderPage = () => {
+    if (isFieldOfficer) {
+      switch (activeTab) {
+        case 'dashboard': return <FODashboard />
+        case 'map':       return <FOSwarmMap />
+        case 'risk':      return <FORiskOverview />
+        case 'ai':        return <FOAIPrediction />
+        case 'drones':    return <FODroneOps />
+        case 'reports':   return <FOFieldReports />
+        case 'alerts':    return <FOAlerts />
+        default:          return <FODashboard />
+      }
+    }
     switch (activeTab) {
       case 'dashboard': return <Dashboard />
-      case 'map': return <SwarmMap />
-      case 'risk': return <PakistanRiskOverview />
-      case 'ai': return <AIPrediction />
-      case 'drones': return <DroneOps />
-      case 'reports': return <FieldReports />
-      case 'alerts': return <Alerts />
-      case 'users': return <Users />
-      default: return <Dashboard />
+      case 'map':       return <SwarmMap />
+      case 'risk':      return <PakistanRiskOverview />
+      case 'ai':        return <AIPrediction />
+      case 'drones':    return <DroneOps />
+      case 'reports':   return <FieldReports />
+      case 'alerts':    return <Alerts />
+      case 'users':     return <Users />
+      default:          return <Dashboard />
     }
   }
 
+  // ── Sidebar sections ───────────────────────────────────
   const sections = [
     {
       id: 'platform',
       label: 'Platform',
       items: pages.filter(p => p.section === 'platform'),
-      expandable: true
+      expandable: true,
     },
     {
       id: 'operations',
       label: 'Operations',
       items: pages.filter(p => p.section === 'operations'),
-      expandable: false
+      expandable: false,
     },
-    {
-      id: 'team',
-      label: 'Team',
-      items: pages.filter(p => p.section === 'team'),
-      expandable: false
-    }
+    // Only admin/analyst see the Team section
+    ...(!isFieldOfficer
+      ? [{
+          id: 'team',
+          label: 'Team',
+          items: pages.filter(p => p.section === 'team'),
+          expandable: false,
+        }]
+      : []),
   ]
 
   return (
@@ -88,6 +139,9 @@ export default function App() {
             <span className="text-2xl">🦗</span>
             <span>LC-EWS</span>
           </div>
+          {isFieldOfficer && (
+            <div className="text-xs text-green-400 mt-1 font-medium">Field Officer Portal</div>
+          )}
         </div>
 
         {/* Navigation Sections */}
