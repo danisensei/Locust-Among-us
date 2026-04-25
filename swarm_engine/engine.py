@@ -27,11 +27,22 @@ import users_api
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create DB tables on startup (if DB is reachable)."""
+    """Create DB tables on startup and apply schema migrations."""
     try:
         async with db_engine.begin() as conn:
+            # 1. Create any tables that don't exist yet
             await conn.run_sync(Base.metadata.create_all)
-        print("✅ Database tables ready")
+
+            # 2. Apply column-level migrations for existing tables
+            #    (create_all only creates NEW tables, it won't add columns)
+            migrations = [
+                "ALTER TABLE reports ADD COLUMN IF NOT EXISTS estimated_size VARCHAR(50)",
+            ]
+            from sqlalchemy import text
+            for sql in migrations:
+                await conn.execute(text(sql))
+
+        print("✅ Database tables ready (migrations applied)")
     except Exception as e:
         print(f"⚠️  DB not connected ({e}) — swarm simulation still runs")
     yield
