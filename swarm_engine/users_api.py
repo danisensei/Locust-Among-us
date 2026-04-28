@@ -241,6 +241,36 @@ async def update_drone_status(
     return _drone_out(drone)
 
 
+class DroneCreate(BaseModel):
+    drone_id: str
+    model:    str
+    battery:  int = 100
+
+
+@router.post("/api/drones")
+async def create_drone(
+    req: DroneCreate,
+    current_user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin can add a new drone to the fleet."""
+    # Check duplicate drone_id
+    existing = await db.execute(select(Drone).where(Drone.drone_id == req.drone_id))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail=f"Drone ID '{req.drone_id}' already exists")
+
+    drone = Drone(
+        drone_id=req.drone_id,
+        model=req.model,
+        status="Available",
+        battery=max(0, min(100, req.battery)),
+    )
+    db.add(drone)
+    await db.commit()
+    await db.refresh(drone)
+    return _drone_out(drone)
+
+
 # ══════════════════════════════════════════════════════════════
 # ── Missions ──────────────────────────────────────────────────
 # ══════════════════════════════════════════════════════════════

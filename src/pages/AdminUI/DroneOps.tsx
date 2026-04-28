@@ -97,6 +97,14 @@ export default function DroneOps() {
   // Status update loading
   const [updatingMission, setUpdatingMission] = useState<string | null>(null)
 
+  // Add drone dialog
+  const [addDroneOpen, setAddDroneOpen] = useState(false)
+  const [newDroneId, setNewDroneId] = useState('')
+  const [newDroneModel, setNewDroneModel] = useState('')
+  const [newDroneBattery, setNewDroneBattery] = useState(100)
+  const [addingDrone, setAddingDrone] = useState(false)
+  const [addDroneError, setAddDroneError] = useState<string | null>(null)
+
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true)
@@ -136,6 +144,31 @@ export default function DroneOps() {
   const resetForm = () => {
     setSelDrone(''); setSelReport(''); setMissionType('Survey')
     setCoverage(10); setAltitude(500); setNotes(''); setSubmitError(null)
+  }
+
+  const resetDroneForm = () => {
+    setNewDroneId(''); setNewDroneModel(''); setNewDroneBattery(100); setAddDroneError(null)
+  }
+
+  // ── Add drone ─────────────────────────────────────────────
+  const handleAddDrone = async () => {
+    if (!newDroneId.trim() || !newDroneModel.trim()) { setAddDroneError('Drone ID and Model are required'); return }
+    setAddingDrone(true); setAddDroneError(null)
+    try {
+      const res = await authFetch(`${API_URL}/api/drones`, {
+        method: 'POST',
+        body: JSON.stringify({ drone_id: newDroneId.trim(), model: newDroneModel.trim(), battery: newDroneBattery }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Failed (${res.status})`)
+      }
+      setAddDroneOpen(false); resetDroneForm(); await fetchAll()
+    } catch (e) {
+      setAddDroneError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setAddingDrone(false)
+    }
   }
 
   // ── Submit mission ────────────────────────────────────────
@@ -201,6 +234,52 @@ export default function DroneOps() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             Refresh
           </Button>
+
+          {/* Add Drone Dialog */}
+          <Dialog open={addDroneOpen} onOpenChange={(v) => { setAddDroneOpen(v); if (!v) resetDroneForm() }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Plane className="h-4 w-4" /> Add Drone
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plane className="h-5 w-5 text-sky-400" /> Add Drone to Fleet
+                </DialogTitle>
+                <DialogDescription>Register a new drone. It will be set to Available status.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Drone ID *</Label>
+                  <Input value={newDroneId} onChange={e => setNewDroneId(e.target.value)} placeholder="e.g. DPP-Golf" className="dark:bg-input/30" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Model *</Label>
+                  <Input value={newDroneModel} onChange={e => setNewDroneModel(e.target.value)} placeholder="e.g. DJI Matrice 350 RTK" className="dark:bg-input/30" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Battery Level (%)</Label>
+                  <div className="flex items-center gap-3">
+                    <input type="range" min={0} max={100} value={newDroneBattery} onChange={e => setNewDroneBattery(parseInt(e.target.value))} className="flex-1 accent-sky-500" />
+                    <span className="text-sm font-semibold w-10 text-right">{newDroneBattery}%</span>
+                  </div>
+                </div>
+                {addDroneError && (
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">⚠️ {addDroneError}</div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setAddDroneOpen(false); resetDroneForm() }}>Cancel</Button>
+                <Button onClick={handleAddDrone} disabled={addingDrone || !newDroneId.trim() || !newDroneModel.trim()} className="gap-2">
+                  {addingDrone && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {addingDrone ? 'Adding…' : 'Add Drone'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Assign Mission Dialog */}
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
             <DialogTrigger asChild>
               <Button className="gap-2 shadow-lg">
