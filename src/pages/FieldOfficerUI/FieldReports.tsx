@@ -10,7 +10,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2 } from 'lucide-react'
+import { CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2, Map as MapIcon, Eye } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -139,6 +139,52 @@ function MapPicker({ lat, lon, onChange }: {
   )
 }
 
+// ── Map Viewer Component ─────────────────────────────────────
+function MapViewer({ lat, lon, zone }: { lat: number; lon: number; zone: string }) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<L.Map | null>(null)
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstance.current) return
+
+    const map = L.map(mapRef.current).setView([lat, lon], 12)
+
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18,
+    })
+
+    const satelliteLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles &copy; Esri', maxZoom: 18 }
+    )
+
+    streetLayer.addTo(map)
+
+    L.control.layers(
+      { 'Street': streetLayer, 'Satellite': satelliteLayer },
+      {},
+      { position: 'topright' }
+    ).addTo(map)
+
+    const marker = L.marker([lat, lon]).addTo(map)
+    marker.bindPopup(`
+      <div style="font-family: system-ui; font-size: 12px;">
+        <strong>${zone}</strong><br/>
+        <span style="color: #666;">Lat: ${lat.toFixed(6)}</span><br/>
+        <span style="color: #666;">Lon: ${lon.toFixed(6)}</span>
+      </div>
+    `).openPopup()
+
+    mapInstance.current = map
+    setTimeout(() => map.invalidateSize(), 300)
+
+    return () => { map.remove(); mapInstance.current = null }
+  }, [lat, lon, zone])
+
+  return <div ref={mapRef} className="w-full h-80 rounded-lg border border-border overflow-hidden" />
+}
+
 // ── Main Component ───────────────────────────────────────────
 export default function FieldReports() {
   const authFetch = useAuthFetch()
@@ -163,6 +209,10 @@ export default function FieldReports() {
   const [lat, setLat] = useState<number | null>(null)
   const [lon, setLon] = useState<number | null>(null)
   const [locationMode, setLocationMode] = useState<'map' | 'manual'>('map')
+
+  // Map viewer dialog state
+  const [mapViewOpen, setMapViewOpen] = useState(false)
+  const [mapViewReport, setMapViewReport] = useState<ReportData | null>(null)
 
   // ── Zone / coordinate mismatch check ───────────────────────
   const zoneMismatch = zone && lat !== null && lon !== null && !isInsideZone(zone, lat, lon)
@@ -612,8 +662,20 @@ export default function FieldReports() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground font-mono">
-                      {r.lat && r.lon ? `${r.lat.toFixed(4)}, ${r.lon.toFixed(4)}` : '—'}
+                    <TableCell className="text-xs text-muted-foreground">
+                      {r.lat && r.lon ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono">{r.lat.toFixed(4)}, {r.lon.toFixed(4)}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 text-[10px] gap-1 px-1.5 text-sky-400 hover:text-sky-300"
+                            onClick={() => { setMapViewReport(r); setMapViewOpen(true) }}
+                          >
+                            <Eye className="h-3 w-3" /> View
+                          </Button>
+                        </div>
+                      ) : '—'}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{formatTime(r.created_at)}</TableCell>
                   </TableRow>
@@ -623,6 +685,25 @@ export default function FieldReports() {
           )}
         </CardContent>
       </Card>
+      {/* Map Viewer Dialog */}
+      <Dialog open={mapViewOpen} onOpenChange={(v) => { setMapViewOpen(v); if (!v) setMapViewReport(null) }}>
+        <DialogContent className="sm:max-w-2xl">
+          {mapViewReport && mapViewReport.lat && mapViewReport.lon && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MapIcon className="h-5 w-5 text-sky-400" />
+                  Report Location — {mapViewReport.report_id}
+                </DialogTitle>
+                <DialogDescription>
+                  {mapViewReport.zone} · {mapViewReport.lat.toFixed(6)}, {mapViewReport.lon.toFixed(6)} · Toggle layers in the top-right corner
+                </DialogDescription>
+              </DialogHeader>
+              <MapViewer lat={mapViewReport.lat} lon={mapViewReport.lon} zone={mapViewReport.zone} />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
