@@ -67,3 +67,42 @@ class SwarmEvent(Base):
     size        = Column(Float)
     risk_level  = Column(String(50))
     recorded_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Drone(Base):
+    """
+    Physical drone in the DPP fleet.
+    Status: Available | On Mission | Maintenance | Charging
+    """
+    __tablename__ = "drones"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    drone_id    = Column(String(50), unique=True, nullable=False, index=True)
+    model       = Column(String(100), nullable=False)
+    status      = Column(String(50), nullable=False, default="Available")
+    battery     = Column(Integer, nullable=False, default=100)
+    lat         = Column(Float, nullable=True)
+    lon         = Column(Float, nullable=True)
+    created_at  = Column(DateTime, default=datetime.utcnow)
+
+
+class Mission(Base):
+    """
+    Links a drone to a verified field report for monitoring/spraying.
+    Status: Assigned | In Progress | Completed | Aborted
+    """
+    __tablename__ = "missions"
+
+    id             = Column(Integer, primary_key=True, index=True)
+    mission_id     = Column(String(20), unique=True, nullable=False, index=True)
+    drone_id       = Column(Integer, ForeignKey("drones.id"), nullable=False)
+    report_id      = Column(Integer, ForeignKey("reports.id"), nullable=False)
+    mission_type   = Column(String(50), nullable=False)       # Survey | Spray | Monitor | Patrol
+    coverage_km    = Column(Float, nullable=False, default=10.0)
+    altitude_m     = Column(Float, nullable=False, default=500.0)
+    status         = Column(String(50), nullable=False, default="Assigned")
+    notes          = Column(Text, nullable=True)
+    assigned_by    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    started_at     = Column(DateTime, nullable=True)
+    completed_at   = Column(DateTime, nullable=True)
+    created_at     = Column(DateTime, default=datetime.utcnow)

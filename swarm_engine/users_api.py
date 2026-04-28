@@ -1,24 +1,25 @@
 """
-Users & Reports API router for LC-EWS.
+Users, Reports, Drones & Missions API router for LC-EWS.
 Mounted on the main FastAPI app in engine.py.
 """
 import random
 import string
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from database import get_db
-from models import User, Report
+from models import User, Report, Drone, Mission
 from auth import get_current_user, require_role
 
 router = APIRouter(tags=["users-reports"])
 
 
-# ── Helper ────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────
 def _user_out(u: User) -> dict:
     return {
         "id":         u.id,
@@ -46,6 +47,42 @@ def _report_out(r: Report) -> dict:
         "reviewed_at":       r.reviewed_at.isoformat() if r.reviewed_at else None,
         "created_at":        r.created_at.isoformat(),
     }
+
+
+def _drone_out(d: Drone) -> dict:
+    return {
+        "id":         d.id,
+        "drone_id":   d.drone_id,
+        "model":      d.model,
+        "status":     d.status,
+        "battery":    d.battery,
+        "lat":        d.lat,
+        "lon":        d.lon,
+        "created_at": d.created_at.isoformat(),
+    }
+
+
+def _mission_out(m: Mission, drone: Drone = None, report: Report = None) -> dict:
+    out = {
+        "id":            m.id,
+        "mission_id":    m.mission_id,
+        "drone_id":      m.drone_id,
+        "report_id":     m.report_id,
+        "mission_type":  m.mission_type,
+        "coverage_km":   m.coverage_km,
+        "altitude_m":    m.altitude_m,
+        "status":        m.status,
+        "notes":         m.notes,
+        "assigned_by":   m.assigned_by,
+        "started_at":    m.started_at.isoformat() if m.started_at else None,
+        "completed_at":  m.completed_at.isoformat() if m.completed_at else None,
+        "created_at":    m.created_at.isoformat(),
+    }
+    if drone:
+        out["drone"] = _drone_out(drone)
+    if report:
+        out["report"] = _report_out(report)
+    return out
 
 
 # ── Users ─────────────────────────────────────────────────────
@@ -156,3 +193,189 @@ async def review_report(
     report.reviewed_at = datetime.utcnow()
     await db.commit()
     return _report_out(report)
+
+
+# ══════════════════════════════════════════════════════════════
+# ── Drones ────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+
+@router.get("/api/drones")
+async def list_drones(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all drones in the fleet."""
+    result = await db.execute(select(Drone).order_by(Drone.drone_id))
+    return [_drone_out(d) for d in result.scalars().all()]
+
+
+class DroneStatusUpdate(BaseModel):
+    status:  Optional[str] = None
+    battery: Optional[int] = None
+
+
+@router.patch("/api/drones/{drone_id}/status")
+async def update_drone_status(
+    drone_id: str,
+    req: DroneStatusUpdate,
+    current_user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin can update drone status/battery."""
+    valid_statuses = {"Available", "On Mission", "Maintenance", "Charging"}
+    if req.status and req.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Status must be one of {valid_statuses}")
+
+    result = await db.execute(select(Drone).where(Drone.drone_id == drone_id))
+    drone = result.scalar_one_or_none()
+    if not drone:
+        raise HTTPException(status_code=404, detail="Drone not found")
+
+    if req.status is not None:
+        drone.status = req.status
+    if req.battery is not None:
+        drone.battery = max(0, min(100, req.battery))
+
+    await db.commit()
+    await db.refresh(drone)
+    return _drone_out(drone)
+
+
+# ══════════════════════════════════════════════════════════════
+# ── Missions ──────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+
+@router.get("/api/missions")
+async def list_missions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all missions with expanded drone and report data."""
+    result = await db.execute(
+        select(Mission).order_by(Mission.created_at.desc()).limit(100)
+    )
+    missions = result.scalars().all()
+
+    out = []
+    for m in missions:
+        # Fetch related drone and report
+        drone_res = await db.execute(select(Drone).where(Drone.id == m.drone_id))
+        drone = drone_res.scalar_one_or_none()
+        report_res = await db.execute(select(Report).where(Report.id == m.report_id))
+        report = report_res.scalar_one_or_none()
+        out.append(_mission_out(m, drone=drone, report=report))
+
+    return out
+
+
+class MissionCreate(BaseModel):
+    drone_id:     int           # drones.id
+    report_id:    int           # reports.id
+    mission_type: str           # Survey | Spray | Monitor | Patrol
+    coverage_km:  float = 10.0
+    altitude_m:   float = 500.0
+    notes:        str = ""
+
+
+@router.post("/api/missions")
+async def create_mission(
+    req: MissionCreate,
+    current_user: User = Depends(require_role("admin", "analyst")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Assign a drone to a verified report. Admin or Analyst only."""
+    valid_types = {"Survey", "Spray", "Monitor", "Patrol"}
+    if req.mission_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"mission_type must be one of {valid_types}")
+
+    # Validate drone exists and is available
+    drone_res = await db.execute(select(Drone).where(Drone.id == req.drone_id))
+    drone = drone_res.scalar_one_or_none()
+    if not drone:
+        raise HTTPException(status_code=404, detail="Drone not found")
+    if drone.status != "Available":
+        raise HTTPException(status_code=400, detail=f"Drone {drone.drone_id} is not available (current: {drone.status})")
+
+    # Validate report exists and is verified
+    report_res = await db.execute(select(Report).where(Report.id == req.report_id))
+    report = report_res.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if report.status != "Verified":
+        raise HTTPException(status_code=400, detail="Only verified reports can have missions assigned")
+
+    # Generate unique mission ID
+    msn_id = "MSN-" + "".join(random.choices(string.digits, k=4))
+
+    mission = Mission(
+        mission_id=msn_id,
+        drone_id=drone.id,
+        report_id=report.id,
+        mission_type=req.mission_type,
+        coverage_km=req.coverage_km,
+        altitude_m=req.altitude_m,
+        status="Assigned",
+        notes=req.notes or None,
+        assigned_by=current_user.id,
+    )
+    db.add(mission)
+
+    # Mark drone as on mission and set its position to report coordinates
+    drone.status = "On Mission"
+    if report.lat and report.lon:
+        drone.lat = report.lat
+        drone.lon = report.lon
+
+    await db.commit()
+    await db.refresh(mission)
+
+    return _mission_out(mission, drone=drone, report=report)
+
+
+class MissionStatusUpdate(BaseModel):
+    status: str   # "In Progress" | "Completed" | "Aborted"
+
+
+@router.patch("/api/missions/{mission_id}/status")
+async def update_mission_status(
+    mission_id: str,
+    req: MissionStatusUpdate,
+    current_user: User = Depends(require_role("admin", "analyst")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update mission status. Returns drone to Available when completed/aborted."""
+    valid = {"In Progress", "Completed", "Aborted"}
+    if req.status not in valid:
+        raise HTTPException(status_code=400, detail=f"Status must be one of {valid}")
+
+    result = await db.execute(select(Mission).where(Mission.mission_id == mission_id))
+    mission = result.scalar_one_or_none()
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    if mission.status in ("Completed", "Aborted"):
+        raise HTTPException(status_code=400, detail="Mission already finalized")
+
+    mission.status = req.status
+
+    if req.status == "In Progress":
+        mission.started_at = datetime.utcnow()
+    elif req.status in ("Completed", "Aborted"):
+        mission.completed_at = datetime.utcnow()
+        # Return drone to Available
+        drone_res = await db.execute(select(Drone).where(Drone.id == mission.drone_id))
+        drone = drone_res.scalar_one_or_none()
+        if drone:
+            drone.status = "Available"
+            drone.lat = None
+            drone.lon = None
+
+    await db.commit()
+
+    # Fetch expanded data for response
+    drone_res = await db.execute(select(Drone).where(Drone.id == mission.drone_id))
+    drone = drone_res.scalar_one_or_none()
+    report_res = await db.execute(select(Report).where(Report.id == mission.report_id))
+    report = report_res.scalar_one_or_none()
+
+    return _mission_out(mission, drone=drone, report=report)

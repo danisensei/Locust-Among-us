@@ -27,7 +27,7 @@ import users_api
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create DB tables on startup and apply schema migrations."""
+    """Create DB tables on startup, apply migrations, and seed drones."""
     try:
         async with db_engine.begin() as conn:
             # 1. Create any tables that don't exist yet
@@ -44,6 +44,26 @@ async def lifespan(app: FastAPI):
             from sqlalchemy import text
             for sql in migrations:
                 await conn.execute(text(sql))
+
+        # 3. Seed drones if table is empty
+        from database import AsyncSessionLocal
+        from models import Drone
+        from sqlalchemy import select, func
+
+        async with AsyncSessionLocal() as session:
+            count = await session.scalar(select(func.count()).select_from(Drone))
+            if count == 0:
+                seed_drones = [
+                    Drone(drone_id="DPP-Alpha",   model="DJI Matrice 350 RTK",   status="Available", battery=92),
+                    Drone(drone_id="DPP-Beta",    model="DJI Matrice 350 RTK",   status="Available", battery=85),
+                    Drone(drone_id="DPP-Gamma",   model="DJI Agras T40",         status="Available", battery=78),
+                    Drone(drone_id="DPP-Delta",   model="DJI Agras T40",         status="Available", battery=95),
+                    Drone(drone_id="DPP-Echo",    model="DJI Mavic 3 Enterprise", status="Maintenance", battery=40),
+                    Drone(drone_id="DPP-Foxtrot", model="DJI Mavic 3 Enterprise", status="Available", battery=100),
+                ]
+                session.add_all(seed_drones)
+                await session.commit()
+                print("🛩️  Seeded 6 drones into fleet")
 
         print("✅ Database tables ready (migrations applied)")
     except Exception as e:
