@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   # ── PostgreSQL + PostGIS ─────────────────────────────────────
@@ -50,10 +48,25 @@ services:
       retries: 5
       start_period: 15s
 
+  # ── Vite Frontend (nginx) ───────────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+        VITE_SWARM_API_URL: ${VITE_SWARM_API_URL:-http://localhost:8001}
+    container_name: lc-ews-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      swarm-engine:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata:
 
 networks:
   default:
     driver: bridge
-
