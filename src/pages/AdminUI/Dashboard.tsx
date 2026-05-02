@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, TrendingUp } from 'lucide-react'
 
-const WEATHER_REFRESH_MS = 5 * 60 * 1000
+const WEATHER_REFRESH_MS = 60 * 1000
 
 type WeatherSnapshot = {
   temperature: number
