@@ -34,6 +34,7 @@ def _report_out(r: Report) -> dict:
     return {
         "id":                r.id,
         "report_id":         r.report_id,
+        "user_id":           r.user_id,
         "observer_name":     r.observer_name,
         "zone":              r.zone,
         "risk_level":        r.risk_level,

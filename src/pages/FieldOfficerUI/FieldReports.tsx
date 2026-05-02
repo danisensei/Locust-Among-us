@@ -10,8 +10,8 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2, Map as MapIcon, Eye } from 'lucide-react'
-import { useAuthFetch, API_URL } from '@/context/AuthContext'
+import { CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2, Map as MapIcon, Eye, XCircle, MessageSquare } from 'lucide-react'
+import { useAuth, useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -62,6 +62,7 @@ const SIZE_OPTIONS = [
 interface ReportData {
   id: number
   report_id: string
+  user_id: number
   observer_name: string
   zone: string
   risk_level: string
@@ -70,6 +71,9 @@ interface ReportData {
   status: string
   lat: number | null
   lon: number | null
+  reviewer_feedback: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
   created_at: string
 }
 
@@ -188,6 +192,7 @@ function MapViewer({ lat, lon, zone }: { lat: number; lon: number; zone: string 
 // ── Main Component ───────────────────────────────────────────
 export default function FieldReports() {
   const authFetch = useAuthFetch()
+  const { user } = useAuth()
 
   // Reports list
   const [reports, setReports] = useState<ReportData[]>([])
@@ -213,6 +218,10 @@ export default function FieldReports() {
   // Map viewer dialog state
   const [mapViewOpen, setMapViewOpen] = useState(false)
   const [mapViewReport, setMapViewReport] = useState<ReportData | null>(null)
+
+  // Detail dialog state
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailReport, setDetailReport] = useState<ReportData | null>(null)
 
   // ── Zone / coordinate mismatch check ───────────────────────
   const zoneMismatch = zone && lat !== null && lon !== null && !isInsideZone(zone, lat, lon)
@@ -575,33 +584,146 @@ export default function FieldReports() {
         </Dialog>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Reports</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{reports.length}</div></CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Verified</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-400">{reports.filter(r => r.status === 'Verified').length}</div></CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Pending</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-yellow-300">{reports.filter(r => r.status === 'Pending').length}</div></CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Critical</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-red-400">{reports.filter(r => r.risk_level === 'Critical').length}</div></CardContent>
-        </Card>
-      </div>
+      {/* My Reports Stats */}
+      {(() => {
+        const myReports = reports.filter(r => r.observer_name === user?.name)
+        const myVerified = myReports.filter(r => r.status === 'Verified').length
+        const myPending = myReports.filter(r => r.status === 'Pending').length
+        const myRejected = myReports.filter(r => r.status === 'Rejected').length
+        return (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">My Reports</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{myReports.length}</div></CardContent>
+              </Card>
+              <Card className="border-l-4 border-l-green-500">
+                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Verified</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-green-400">{myVerified}</div></CardContent>
+              </Card>
+              <Card className="border-l-4 border-l-yellow-500">
+                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Pending</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-yellow-300">{myPending}</div></CardContent>
+              </Card>
+              <Card className="border-l-4 border-l-red-500">
+                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Rejected</CardTitle></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-red-400">{myRejected}</div></CardContent>
+              </Card>
+            </div>
 
-      {/* Reports Table */}
+            {/* My Submitted Reports Table */}
+            <Card className="overflow-hidden">
+              <CardHeader className="border-b border-border bg-accent/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>My Submitted Reports</CardTitle>
+                    <CardDescription>Reports you have submitted · Click a row to view details and feedback</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={fetchReports} disabled={loadingReports}>
+                    {loadingReports ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {listError ? (
+                  <div className="p-8 text-center text-red-400">
+                    <p>⚠️ {listError}</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={fetchReports}>Retry</Button>
+                  </div>
+                ) : loadingReports ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    <p>Loading reports…</p>
+                  </div>
+                ) : myReports.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <p className="text-lg mb-1">No reports yet</p>
+                    <p className="text-sm">Click "New Report" to submit your first observation.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
+                        <TableHead className="font-semibold text-foreground">Report ID</TableHead>
+                        <TableHead className="font-semibold text-foreground">Zone</TableHead>
+                        <TableHead className="font-semibold text-foreground">Risk</TableHead>
+                        <TableHead className="font-semibold text-foreground">Size</TableHead>
+                        <TableHead className="font-semibold text-foreground">Status</TableHead>
+                        <TableHead className="font-semibold text-foreground">Location</TableHead>
+                        <TableHead className="font-semibold text-foreground">Submitted</TableHead>
+                        <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myReports.map((r) => (
+                        <TableRow
+                          key={r.report_id}
+                          className="border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
+                          onClick={() => { setDetailReport(r); setDetailOpen(true) }}
+                        >
+                          <TableCell className="font-semibold text-sm">{r.report_id}</TableCell>
+                          <TableCell className="text-sm">{r.zone}</TableCell>
+                          <TableCell>
+                            <Badge className={`${riskBadgeColor(r.risk_level)} text-xs`}>{r.risk_level}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{r.estimated_size || '—'}</TableCell>
+                          <TableCell>
+                            {r.status === 'Verified' ? (
+                              <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Verified
+                              </Badge>
+                            ) : r.status === 'Rejected' ? (
+                              <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
+                                <XCircle className="h-3 w-3" />
+                                Rejected
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
+                                <Clock className="h-3 w-3" />
+                                Pending
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {r.lat && r.lon ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono">{r.lat.toFixed(4)}, {r.lon.toFixed(4)}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 text-[10px] gap-1 px-1.5 text-sky-400 hover:text-sky-300"
+                                  onClick={(e) => { e.stopPropagation(); setMapViewReport(r); setMapViewOpen(true) }}
+                                >
+                                  <Eye className="h-3 w-3" /> View
+                                </Button>
+                              </div>
+                            ) : '—'}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{formatTime(r.created_at)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setDetailReport(r); setDetailOpen(true) }}>
+                              <Eye className="h-3 w-3" /> Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )
+      })()}
+
+      {/* All Reports Table */}
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-border bg-accent/30">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Recent Reports</CardTitle>
-              <CardDescription>Your submitted field observations</CardDescription>
+              <CardTitle>All Field Reports</CardTitle>
+              <CardDescription>Reports from all field officers across the network</CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={fetchReports} disabled={loadingReports}>
               {loadingReports ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
@@ -622,16 +744,16 @@ export default function FieldReports() {
           ) : reports.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <p className="text-lg mb-1">No reports yet</p>
-              <p className="text-sm">Click "New Report" to submit your first observation.</p>
+              <p className="text-sm">Reports submitted by field officers will appear here.</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
                   <TableHead className="font-semibold text-foreground">Report ID</TableHead>
+                  <TableHead className="font-semibold text-foreground">Observer</TableHead>
                   <TableHead className="font-semibold text-foreground">Zone</TableHead>
                   <TableHead className="font-semibold text-foreground">Risk</TableHead>
-                  <TableHead className="font-semibold text-foreground">Size</TableHead>
                   <TableHead className="font-semibold text-foreground">Status</TableHead>
                   <TableHead className="font-semibold text-foreground">Location</TableHead>
                   <TableHead className="font-semibold text-foreground">Submitted</TableHead>
@@ -641,24 +763,32 @@ export default function FieldReports() {
                 {reports.map((r) => (
                   <TableRow
                     key={r.report_id}
-                    className="border-b border-border hover:bg-accent/40 transition-colors duration-150"
+                    className={`border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer ${r.observer_name === user?.name ? 'bg-sky-500/5' : ''}`}
+                    onClick={() => { setDetailReport(r); setDetailOpen(true) }}
                   >
                     <TableCell className="font-semibold text-sm">{r.report_id}</TableCell>
+                    <TableCell className="text-sm">
+                      {r.observer_name}
+                      {r.observer_name === user?.name && (
+                        <Badge className="ml-1.5 bg-sky-500/15 text-sky-300 text-[10px] px-1.5 py-0">You</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm">{r.zone}</TableCell>
                     <TableCell>
                       <Badge className={`${riskBadgeColor(r.risk_level)} text-xs`}>{r.risk_level}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{r.estimated_size || '—'}</TableCell>
                     <TableCell>
                       {r.status === 'Verified' ? (
                         <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {r.status}
+                          <CheckCircle2 className="h-3 w-3" /> Verified
+                        </Badge>
+                      ) : r.status === 'Rejected' ? (
+                        <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
+                          <XCircle className="h-3 w-3" /> Rejected
                         </Badge>
                       ) : (
                         <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
-                          <Clock className="h-3 w-3" />
-                          {r.status}
+                          <Clock className="h-3 w-3" /> Pending
                         </Badge>
                       )}
                     </TableCell>
@@ -670,7 +800,7 @@ export default function FieldReports() {
                             variant="ghost"
                             size="sm"
                             className="h-5 text-[10px] gap-1 px-1.5 text-sky-400 hover:text-sky-300"
-                            onClick={() => { setMapViewReport(r); setMapViewOpen(true) }}
+                            onClick={(e) => { e.stopPropagation(); setMapViewReport(r); setMapViewOpen(true) }}
                           >
                             <Eye className="h-3 w-3" /> View
                           </Button>
@@ -685,6 +815,117 @@ export default function FieldReports() {
           )}
         </CardContent>
       </Card>
+
+      {/* Report Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          {detailReport && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-sky-400" />
+                  Report Details — {detailReport.report_id}
+                </DialogTitle>
+                <DialogDescription>
+                  Submitted {formatTime(detailReport.created_at)}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Zone</label>
+                    <p className="text-sm font-medium">{detailReport.zone}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Risk Level</label>
+                    <Badge className={`${riskBadgeColor(detailReport.risk_level)} text-xs`}>
+                      {detailReport.risk_level}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Estimated Size</label>
+                    <p className="text-sm">{detailReport.estimated_size || '—'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Location</label>
+                    {detailReport.lat && detailReport.lon ? (
+                      <p className="text-sm font-mono flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-green-400" />
+                        {detailReport.lat.toFixed(4)}, {detailReport.lon.toFixed(4)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not provided</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Description</label>
+                  <div className="bg-muted/40 rounded-lg p-3 text-sm leading-relaxed">
+                    {detailReport.description}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Current Status</label>
+                  <div>
+                    {detailReport.status === 'Verified' ? (
+                      <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
+                        <CheckCircle2 className="h-3 w-3" /> Verified
+                      </Badge>
+                    ) : detailReport.status === 'Rejected' ? (
+                      <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
+                        <XCircle className="h-3 w-3" /> Rejected
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
+                        <Clock className="h-3 w-3" /> Pending
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Analyst Feedback Section */}
+                {detailReport.reviewed_by ? (
+                  <div className={`rounded-lg p-3 space-y-1 border ${
+                    detailReport.status === 'Verified'
+                      ? 'bg-green-500/10 border-green-500/20'
+                      : detailReport.status === 'Rejected'
+                        ? 'bg-red-500/10 border-red-500/20'
+                        : 'bg-sky-500/10 border-sky-500/20'
+                  }`}>
+                    <p className={`text-xs font-medium ${
+                      detailReport.status === 'Verified' ? 'text-green-300'
+                        : detailReport.status === 'Rejected' ? 'text-red-300'
+                        : 'text-sky-300'
+                    }`}>Analyst Review</p>
+                    <p className="text-sm">
+                      Reviewed by <strong>{detailReport.reviewed_by}</strong>
+                      {detailReport.reviewed_at ? ` · ${formatTime(detailReport.reviewed_at)}` : ''}
+                    </p>
+                    {detailReport.reviewer_feedback && (
+                      <div className="bg-background/40 rounded-md p-2 mt-2">
+                        <p className="text-sm text-muted-foreground italic">"{detailReport.reviewer_feedback}"</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-muted/30 border border-border rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground">⏳ Awaiting analyst review…</p>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDetailOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Map Viewer Dialog */}
       <Dialog open={mapViewOpen} onOpenChange={(v) => { setMapViewOpen(v); if (!v) setMapViewReport(null) }}>
         <DialogContent className="sm:max-w-2xl">
