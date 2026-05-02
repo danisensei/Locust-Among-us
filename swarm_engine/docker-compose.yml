@@ -52,7 +52,7 @@ services:
   frontend:
     build:
       context: ..
-      dockerfile: Dockerfile.frontend
+      dockerfile: swarm_engine/docker_frontend/Dockerfile.frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
         VITE_SWARM_API_URL: ${VITE_SWARM_API_URL:-http://localhost:8001}
