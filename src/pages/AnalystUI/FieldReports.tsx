@@ -329,7 +329,7 @@ export default function FieldReports() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-sky-400" />
-                  {selectedReport.status === 'Pending' ? 'Review Report' : 'Report Details'} — {selectedReport.report_id}
+                  {selectedReport.status === 'Pending' ? 'Review Report' : 'Re-Review Report'} — {selectedReport.report_id}
                 </DialogTitle>
                 <DialogDescription>
                   Submitted by <strong>{selectedReport.observer_name}</strong> · {formatTime(selectedReport.created_at)}
@@ -429,26 +429,69 @@ export default function FieldReports() {
                 <Button variant="outline" onClick={() => setReviewOpen(false)}>
                   Cancel
                 </Button>
-                <Button
-                  variant="default"
-                  className="bg-red-600 hover:bg-red-700 text-white gap-2"
-                  onClick={() => handleReview('Rejected')}
-                  disabled={submitting}
-                >
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  <XCircle className="h-4 w-4" />
-                  Reject
-                </Button>
-                <Button
-                  variant="default"
-                  className="bg-green-600 hover:bg-green-700 text-white gap-2"
-                  onClick={() => handleReview('Verified')}
-                  disabled={submitting}
-                >
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  <CheckCircle2 className="h-4 w-4" />
-                  Approve
-                </Button>
+                {/* Pending: show Reject + Approve */}
+                {selectedReport.status === 'Pending' && (
+                  <>
+                    <Button
+                      variant="default"
+                      className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                      onClick={() => handleReview('Rejected')}
+                      disabled={submitting}
+                    >
+                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      <XCircle className="h-4 w-4" />
+                      Reject
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      onClick={() => handleReview('Verified')}
+                      disabled={submitting}
+                    >
+                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      <CheckCircle2 className="h-4 w-4" />
+                      Approve
+                    </Button>
+                  </>
+                )}
+                {/* Verified: show Reject + Re-Approve */}
+                {selectedReport.status === 'Verified' && (
+                  <>
+                    <Button
+                      variant="default"
+                      className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                      onClick={() => handleReview('Rejected')}
+                      disabled={submitting}
+                    >
+                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      <XCircle className="h-4 w-4" />
+                      Reject
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      onClick={() => handleReview('Verified')}
+                      disabled={submitting}
+                    >
+                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      <CheckCircle2 className="h-4 w-4" />
+                      Re-Approve
+                    </Button>
+                  </>
+                )}
+                {/* Rejected: show Re-Reject + Approve */}
+                {selectedReport.status === 'Rejected' && (
+                  <Button
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                    onClick={() => handleReview('Verified')}
+                    disabled={submitting}
+                  >
+                    {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    <CheckCircle2 className="h-4 w-4" />
+                    Approve
+                  </Button>
+                )}
               </DialogFooter>
             </>
           )}
