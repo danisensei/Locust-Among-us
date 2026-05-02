@@ -130,10 +130,13 @@ class SwarmSimulator:
             # Total population = area × density
             total_locusts = int(swarm_area_km2 * density_per_km2)
             
+            init_lat = hotspot["lat"] + random.uniform(-0.5, 0.5)
+            init_lon = hotspot["lon"] + random.uniform(-0.5, 0.5)
+            
             self.swarms.append({
                 "id": f"SWARM-{i+1:03d}",
-                "lat": hotspot["lat"] + random.uniform(-0.5, 0.5),
-                "lon": hotspot["lon"] + random.uniform(-0.5, 0.5),
+                "lat": init_lat,
+                "lon": init_lon,
                 "center_name": hotspot["name"],
                 "area_km2": swarm_area_km2,  # Swarm area in km² (key metric)
                 "size": total_locusts,  # Total number of locusts
@@ -145,6 +148,7 @@ class SwarmSimulator:
                 "age": 0,
                 "last_updated": datetime.now().isoformat(),
                 "risk_level": "critical" if total_locusts > 10000000000 else "high",  # 10B+ = critical
+                "trail": [[init_lat, init_lon]],  # Position history for trail rendering
             })
 
     def update_swarms(self):
@@ -163,6 +167,11 @@ class SwarmSimulator:
             # Keep within Pakistan bounds
             swarm["lat"] = max(PAKISTAN_BOUNDS["south"], min(PAKISTAN_BOUNDS["north"], swarm["lat"]))
             swarm["lon"] = max(PAKISTAN_BOUNDS["west"], min(PAKISTAN_BOUNDS["east"], swarm["lon"]))
+            
+            # Track trail (keep last 20 positions)
+            swarm["trail"].append([swarm["lat"], swarm["lon"]])
+            if len(swarm["trail"]) > 20:
+                swarm["trail"] = swarm["trail"][-20:]
             
             # Realistic heading changes (wind patterns)
             if random.random() > 0.85:
@@ -210,11 +219,13 @@ class SwarmSimulator:
             new_area = random.uniform(100, 300)
             new_density = random.uniform(50000000, 80000000)
             new_size = int(new_area * new_density)
+            new_lat = hotspot["lat"] + random.uniform(-0.3, 0.3)
+            new_lon = hotspot["lon"] + random.uniform(-0.3, 0.3)
             
             self.swarms.append({
                 "id": f"SWARM-{new_id:03d}",
-                "lat": hotspot["lat"] + random.uniform(-0.3, 0.3),
-                "lon": hotspot["lon"] + random.uniform(-0.3, 0.3),
+                "lat": new_lat,
+                "lon": new_lon,
                 "center_name": hotspot["name"],
                 "area_km2": new_area,
                 "size": new_size,
@@ -226,6 +237,7 @@ class SwarmSimulator:
                 "age": 0,
                 "last_updated": datetime.now().isoformat(),
                 "risk_level": "critical",
+                "trail": [[new_lat, new_lon]],
             })
         
         # Remove dead swarms (area < 2 km² AND health < 0.15, OR age > 100 cycles)
@@ -259,7 +271,8 @@ class SwarmSimulator:
                     "health": round(swarm["health"], 2),
                     "risk_level": swarm["risk_level"],
                     "last_updated": swarm["last_updated"],
-                    "intensity": max(0.1, swarm["density"] / 80000000),  # For heatmap intensity (normalized to 80M max density)
+                    "intensity": max(0.1, swarm["density"] / 80000000),
+                    "trail": swarm.get("trail", []),
                 },
             }
             features.append(feature)
