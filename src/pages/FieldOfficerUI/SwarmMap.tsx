@@ -13,6 +13,9 @@ interface SwarmProps {
   id: string
   name: string
   center_name: string
+  mission_id: string
+  report_id: string
+  observer_name: string
   size: number
   area_km2: number
   density: number
@@ -217,12 +220,14 @@ export default function SwarmMap() {
 
           // Popup content
           const popupHtml = `
-            <div style="font-family: system-ui; font-size: 12px; min-width: 240px;">
+            <div style="font-family: system-ui; font-size: 12px; min-width: 250px;">
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                 <strong style="font-size:14px;">${p.id}</strong>
                 <span style="background:${color}22; color:${color}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${p.risk_level.toUpperCase()}</span>
               </div>
-              <div style="color:#999; margin-bottom:8px;">${p.center_name}</div>
+              <div style="color:#999; margin-bottom:4px;">${p.center_name}</div>
+              ${p.report_id ? `<div style="font-size:11px; color:#888; margin-bottom:2px;">📋 Report: <strong>${p.report_id}</strong></div>` : ''}
+              ${p.observer_name ? `<div style="font-size:11px; color:#888; margin-bottom:6px;">👤 Submitted by: <strong>${p.observer_name}</strong></div>` : ''}
               <table style="width:100%; font-size:11px; border-collapse:collapse;">
                 <tr><td style="padding:2px 0; color:#888;">Area</td><td style="text-align:right; font-weight:600;">${p.area_km2.toFixed(1)} km²</td></tr>
                 <tr><td style="padding:2px 0; color:#888;">Population</td><td style="text-align:right; font-weight:600;">${(p.size / 1e9).toFixed(2)}B</td></tr>

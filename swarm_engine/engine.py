@@ -94,174 +94,151 @@ PAKISTAN_BOUNDS = {
     "west": 60.8,
 }
 
-# Major locust-prone regions in Pakistan
-HOTSPOTS = [
-    {"name": "Khuzdar, Balochistan", "lat": 26.7, "lon": 65.5},
-    {"name": "Quetta, Balochistan", "lat": 30.2, "lon": 67.0},
-    {"name": "Jacobabad, Sindh", "lat": 28.3, "lon": 68.4},
-    {"name": "D.I. Khan, KPK", "lat": 31.9, "lon": 70.9},
-    {"name": "Bahawalpur, Punjab", "lat": 29.4, "lon": 71.7},
-]
-
-# Global swarm state
-swarm_state = {
-    "swarms": [],
-    "last_update": datetime.now(),
-    "update_count": 0,
-}
-
 
 class SwarmSimulator:
-    """Simulates realistic locust swarm behavior"""
+    """
+    DB-driven swarm simulation.
+    Swarms only exist for missions with status 'In Progress'.
+    Each swarm is keyed by mission_id and spawns at the report's coordinates.
+    """
 
     def __init__(self):
-        self.swarms = []
-        self.initialize_swarms()
+        # { mission_id: swarm_dict }
+        self.swarms: Dict[str, Dict[str, Any]] = {}
 
-    def initialize_swarms(self):
-        """Create initial swarms with REALISTIC locust data"""
-        num_swarms = random.randint(2, 4)
-        for i in range(num_swarms):
-            hotspot = random.choice(HOTSPOTS)
-            # Realistic swarm area: 10-500 km² (Schistocerca gregaria swarms)
-            swarm_area_km2 = random.uniform(20, 400)
-            # Realistic density: 40-80 million locusts per km²
-            density_per_km2 = random.uniform(40000000, 80000000)
-            # Total population = area × density
-            total_locusts = int(swarm_area_km2 * density_per_km2)
-            
-            init_lat = hotspot["lat"] + random.uniform(-0.5, 0.5)
-            init_lon = hotspot["lon"] + random.uniform(-0.5, 0.5)
-            
-            self.swarms.append({
-                "id": f"SWARM-{i+1:03d}",
-                "lat": init_lat,
-                "lon": init_lon,
-                "center_name": hotspot["name"],
-                "area_km2": swarm_area_km2,  # Swarm area in km² (key metric)
-                "size": total_locusts,  # Total number of locusts
-                "density": density_per_km2,  # Locusts per km² (40-80 million)
-                "speed": random.uniform(15, 32),  # km/h (max 34 km/h)
-                "heading": random.uniform(0, 360),  # degrees
-                "altitude": random.uniform(500, 1200),  # meters
-                "health": random.uniform(0.7, 1.0),
-                "age": 0,
-                "last_updated": datetime.now().isoformat(),
-                "risk_level": "critical" if total_locusts > 10000000000 else "high",  # 10B+ = critical
-                "trail": [[init_lat, init_lon]],  # Position history for trail rendering
-            })
+    def sync_from_missions(self, active_missions: List[Dict[str, Any]]):
+        """
+        Sync swarms with the current set of active (In Progress) missions.
+        - New missions → spawn a swarm at the report's location
+        - Removed missions → remove the swarm
+        - Existing missions → keep the swarm (it keeps moving)
+        """
+        active_ids = {m["mission_id"] for m in active_missions}
+
+        # Remove swarms for missions that are no longer active
+        dead = [mid for mid in self.swarms if mid not in active_ids]
+        for mid in dead:
+            del self.swarms[mid]
+
+        # Add new swarms for missions that don't have one yet
+        for m in active_missions:
+            mid = m["mission_id"]
+            if mid not in self.swarms:
+                lat = m.get("lat") or 30.0
+                lon = m.get("lon") or 69.0
+                zone = m.get("zone", "Unknown Zone")
+                risk = m.get("risk_level", "high")
+
+                # Derive realistic parameters from report risk
+                if risk.lower() == "critical":
+                    area = random.uniform(150, 400)
+                    density = random.uniform(60000000, 80000000)
+                elif risk.lower() == "high":
+                    area = random.uniform(80, 200)
+                    density = random.uniform(50000000, 70000000)
+                elif risk.lower() == "medium":
+                    area = random.uniform(30, 100)
+                    density = random.uniform(40000000, 60000000)
+                else:
+                    area = random.uniform(10, 50)
+                    density = random.uniform(30000000, 50000000)
+
+                self.swarms[mid] = {
+                    "id": mid,
+                    "mission_id": mid,
+                    "report_id": m.get("report_id", ""),
+                    "observer_name": m.get("observer_name", ""),
+                    "lat": lat + random.uniform(-0.02, 0.02),
+                    "lon": lon + random.uniform(-0.02, 0.02),
+                    "origin_lat": lat,
+                    "origin_lon": lon,
+                    "center_name": zone,
+                    "area_km2": area,
+                    "size": int(area * density),
+                    "density": density,
+                    "speed": random.uniform(15, 32),
+                    "heading": random.uniform(0, 360),
+                    "altitude": random.uniform(500, 1200),
+                    "health": random.uniform(0.7, 1.0),
+                    "age": 0,
+                    "risk_level": risk.lower(),
+                    "last_updated": datetime.now().isoformat(),
+                    "trail": [[lat, lon]],
+                }
 
     def update_swarms(self):
-        """Update swarm positions and properties realistically"""
-        for swarm in self.swarms:
-            # Increment age
+        """Update swarm positions and properties (same realistic logic)."""
+        for swarm in self.swarms.values():
             swarm["age"] += 1
-            
-            # Movement simulation (locusts can travel 200 km/day = ~8 km/h average)
+
+            # Movement
             lat_change = math.sin(math.radians(swarm["heading"])) * swarm["speed"] / 111
-            lon_change = math.cos(math.radians(swarm["heading"])) * swarm["speed"] / (111 * math.cos(math.radians(swarm["lat"])))
-            
+            lon_change = math.cos(math.radians(swarm["heading"])) * swarm["speed"] / (
+                111 * math.cos(math.radians(swarm["lat"]))
+            )
             swarm["lat"] += lat_change * 0.01
             swarm["lon"] += lon_change * 0.01
-            
+
             # Keep within Pakistan bounds
             swarm["lat"] = max(PAKISTAN_BOUNDS["south"], min(PAKISTAN_BOUNDS["north"], swarm["lat"]))
             swarm["lon"] = max(PAKISTAN_BOUNDS["west"], min(PAKISTAN_BOUNDS["east"], swarm["lon"]))
-            
-            # Track trail (keep last 20 positions)
+
+            # Trail
             swarm["trail"].append([swarm["lat"], swarm["lon"]])
             if len(swarm["trail"]) > 20:
                 swarm["trail"] = swarm["trail"][-20:]
-            
-            # Realistic heading changes (wind patterns)
+
+            # Heading changes
             if random.random() > 0.85:
                 swarm["heading"] = (swarm["heading"] + random.uniform(-20, 20)) % 360
-            
-            # Swarm dispersal (area shrinks as swarm is controlled/ages)
-            # Dispersal rate: 2-5% of area per cycle
+
+            # Dispersal
             dispersal_rate = random.uniform(0.02, 0.05)
             swarm["area_km2"] = max(5, swarm["area_km2"] * (1 - dispersal_rate))
-            
-            # Density slightly decreases (some locusts die from predation/control)
-            # Much slower than area dispersal - density stays high
-            mortality_rate = random.uniform(0.01, 0.03)  # 1-3% daily loss
+
+            # Mortality
+            mortality_rate = random.uniform(0.01, 0.03)
             swarm["density"] = max(20000000, swarm["density"] * (1 - mortality_rate))
-            
-            # Total size = area × density
             swarm["size"] = int(swarm["area_km2"] * swarm["density"])
-            
-            # Health degradation (pesticides, weather, exhaustion)
+
+            # Health
             swarm["health"] = max(0.1, swarm["health"] - random.uniform(0.03, 0.08))
-            
-            # Speed variation - realistic bounds (15-34 km/h)
+
+            # Speed
             swarm["speed"] = max(15, min(34, swarm["speed"] + random.uniform(-1, 1.5)))
-            
-            # Altitude changes (realistic: 500-1200m)
+
+            # Altitude
             swarm["altitude"] = max(500, min(1200, swarm["altitude"] + random.uniform(-100, 100)))
-            
-            # Risk level based on health and population size
-            if swarm["health"] > 0.7 and swarm["size"] > 10000000000:  # 10+ billion = CRITICAL
+
+            # Risk level
+            if swarm["health"] > 0.7 and swarm["size"] > 10000000000:
                 swarm["risk_level"] = "critical"
-            elif swarm["health"] > 0.5 and swarm["size"] > 5000000000:  # 5+ billion = HIGH
+            elif swarm["health"] > 0.5 and swarm["size"] > 5000000000:
                 swarm["risk_level"] = "high"
-            elif swarm["health"] > 0.3 or swarm["size"] > 1000000000:  # 1+ billion = MEDIUM
+            elif swarm["health"] > 0.3 or swarm["size"] > 1000000000:
                 swarm["risk_level"] = "medium"
             else:
                 swarm["risk_level"] = "low"
-            
+
             swarm["last_updated"] = datetime.now().isoformat()
-        
-        # Spawn new MASSIVE swarms very rarely (realistic: major infestations)
-        if random.random() > 0.99 and len(self.swarms) < 4:
-            hotspot = random.choice(HOTSPOTS)
-            new_id = max([int(s["id"].split("-")[1]) for s in self.swarms if s["id"].startswith("SWARM-")], default=0) + 1
-            # New massive swarm: 100-300 km², density 50-80 million/km²
-            new_area = random.uniform(100, 300)
-            new_density = random.uniform(50000000, 80000000)
-            new_size = int(new_area * new_density)
-            new_lat = hotspot["lat"] + random.uniform(-0.3, 0.3)
-            new_lon = hotspot["lon"] + random.uniform(-0.3, 0.3)
-            
-            self.swarms.append({
-                "id": f"SWARM-{new_id:03d}",
-                "lat": new_lat,
-                "lon": new_lon,
-                "center_name": hotspot["name"],
-                "area_km2": new_area,
-                "size": new_size,
-                "density": new_density,
-                "speed": random.uniform(20, 32),
-                "heading": random.uniform(0, 360),
-                "altitude": random.uniform(600, 1100),
-                "health": random.uniform(0.85, 1.0),
-                "age": 0,
-                "last_updated": datetime.now().isoformat(),
-                "risk_level": "critical",
-                "trail": [[new_lat, new_lon]],
-            })
-        
-        # Remove dead swarms (area < 2 km² AND health < 0.15, OR age > 100 cycles)
-        self.swarms = [
-            s for s in self.swarms 
-            if not ((s["area_km2"] < 2 and s["health"] < 0.15) or s.get("age", 0) > 150)
-        ]
 
     def get_geojson(self) -> Dict[str, Any]:
-        """Convert swarm data to GeoJSON format"""
+        """Convert swarm data to GeoJSON format."""
         features = []
-        
-        for swarm in self.swarms:
-            # Main swarm marker
-            feature = {
+        for swarm in self.swarms.values():
+            features.append({
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [swarm["lon"], swarm["lat"]],  # GeoJSON uses [lon, lat]
+                    "coordinates": [swarm["lon"], swarm["lat"]],
                 },
                 "properties": {
                     "id": swarm["id"],
-                    "name": f"{swarm['id']} - {swarm['center_name']}",
+                    "name": f"{swarm['id']} — {swarm['center_name']}",
                     "center_name": swarm["center_name"],
+                    "mission_id": swarm["mission_id"],
+                    "report_id": swarm.get("report_id", ""),
+                    "observer_name": swarm.get("observer_name", ""),
                     "size": swarm["size"],
                     "area_km2": round(swarm["area_km2"], 2),
                     "density": round(swarm["density"], 2),
@@ -274,42 +251,60 @@ class SwarmSimulator:
                     "intensity": max(0.1, swarm["density"] / 80000000),
                     "trail": swarm.get("trail", []),
                 },
-            }
-            features.append(feature)
-        
-        return {
-            "type": "FeatureCollection",
-            "features": features,
-        }
+            })
+        return {"type": "FeatureCollection", "features": features}
 
     def get_heatmap_data(self) -> List[List[float]]:
-        """Get data for leaflet.heat visualization (lat, lon, intensity)"""
+        """Get data for leaflet.heat visualization."""
         heatmap_points = []
-        
-        for swarm in self.swarms:
-            # Main point
+        for swarm in self.swarms.values():
             intensity = (swarm["density"] / 500) * (swarm["size"] / 1000000)
-            heatmap_points.append([
-                swarm["lat"],
-                swarm["lon"],
-                min(1.0, intensity),  # Cap at 1.0
-            ])
-            
-            # Add surrounding points for better heat spread
+            heatmap_points.append([swarm["lat"], swarm["lon"], min(1.0, intensity)])
             for _ in range(int(swarm["size"] / 500000)):
-                offset_lat = swarm["lat"] + random.uniform(-0.3, 0.3)
-                offset_lon = swarm["lon"] + random.uniform(-0.3, 0.3)
                 heatmap_points.append([
-                    offset_lat,
-                    offset_lon,
+                    swarm["lat"] + random.uniform(-0.3, 0.3),
+                    swarm["lon"] + random.uniform(-0.3, 0.3),
                     intensity * random.uniform(0.3, 0.7),
                 ])
-        
         return heatmap_points
 
 
-# Initialize simulator
+# Initialize simulator (starts empty — swarms come from missions)
 simulator = SwarmSimulator()
+
+
+# ── Helper: fetch active missions from DB ─────────────────────
+async def _sync_swarms():
+    """Query DB for In Progress missions and sync the simulator."""
+    from database import AsyncSessionLocal
+    from models import Mission, Report
+    from sqlalchemy import select
+
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(Mission, Report)
+                .join(Report, Mission.report_id == Report.id)
+                .where(Mission.status == "In Progress")
+            )
+            rows = result.all()
+
+            active = []
+            for mission, report in rows:
+                active.append({
+                    "mission_id": mission.mission_id,
+                    "report_id": report.report_id,
+                    "observer_name": report.observer_name,
+                    "zone": report.zone,
+                    "risk_level": report.risk_level,
+                    "lat": report.lat,
+                    "lon": report.lon,
+                })
+            simulator.sync_from_missions(active)
+    except Exception as e:
+        print(f"⚠️  Swarm sync error: {e}")
+
+    simulator.update_swarms()
 
 
 @app.get("/")
@@ -328,16 +323,16 @@ def root():
 
 
 @app.get("/api/swarms/geojson")
-def get_swarms_geojson():
-    """Get all swarms as GeoJSON for marker clustering"""
-    simulator.update_swarms()  # Update on each request
+async def get_swarms_geojson():
+    """Get all swarms as GeoJSON — only shows swarms for In Progress missions."""
+    await _sync_swarms()
     return simulator.get_geojson()
 
 
 @app.get("/api/swarms/heatmap")
-def get_swarms_heatmap():
-    """Get heatmap data (for leaflet.heat)"""
-    simulator.update_swarms()  # Update on each request
+async def get_swarms_heatmap():
+    """Get heatmap data (for leaflet.heat)."""
+    await _sync_swarms()
     return {
         "points": simulator.get_heatmap_data(),
         "timestamp": datetime.now().isoformat(),
@@ -345,24 +340,25 @@ def get_swarms_heatmap():
 
 
 @app.get("/api/swarms/stats")
-def get_swarms_stats():
-    """Get overall statistics"""
-    simulator.update_swarms()  # Update on each request
-    
-    if not simulator.swarms:
+async def get_swarms_stats():
+    """Get overall statistics."""
+    await _sync_swarms()
+
+    swarm_list = list(simulator.swarms.values())
+    if not swarm_list:
         return {
             "total_swarms": 0,
             "total_locusts": 0,
             "avg_health": 0,
             "critical_count": 0,
         }
-    
-    total_locusts = sum(s["size"] for s in simulator.swarms)
-    avg_health = sum(s["health"] for s in simulator.swarms) / len(simulator.swarms)
-    critical_count = sum(1 for s in simulator.swarms if s["risk_level"] == "critical")
-    
+
+    total_locusts = sum(s["size"] for s in swarm_list)
+    avg_health = sum(s["health"] for s in swarm_list) / len(swarm_list)
+    critical_count = sum(1 for s in swarm_list if s["risk_level"] == "critical")
+
     return {
-        "total_swarms": len(simulator.swarms),
+        "total_swarms": len(swarm_list),
         "total_locusts": total_locusts,
         "avg_health": round(avg_health, 2),
         "critical_count": critical_count,
@@ -371,9 +367,9 @@ def get_swarms_stats():
 
 
 @app.post("/api/swarms/update")
-def update_swarms():
-    """Trigger a simulation update"""
-    simulator.update_swarms()
+async def update_swarms_endpoint():
+    """Trigger a simulation update."""
+    await _sync_swarms()
     return {
         "status": "updated",
         "swarm_count": len(simulator.swarms),
@@ -382,10 +378,11 @@ def update_swarms():
 
 
 @app.get("/api/swarms/raw")
-def get_swarms_raw():
-    """Get raw swarm data"""
+async def get_swarms_raw():
+    """Get raw swarm data."""
+    await _sync_swarms()
     return {
-        "swarms": simulator.swarms,
+        "swarms": list(simulator.swarms.values()),
         "timestamp": datetime.now().isoformat(),
     }
 
@@ -399,5 +396,5 @@ if __name__ == "__main__":
     print("   - Stats: http://localhost:8001/api/swarms/stats")
     print("   - Update: POST http://localhost:8001/api/swarms/update")
     print("   - Raw: http://localhost:8001/api/swarms/raw")
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8001)
