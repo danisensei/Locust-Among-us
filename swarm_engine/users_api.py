@@ -196,6 +196,37 @@ async def review_report(
     return _report_out(report)
 
 
+@router.delete("/api/reports/{report_id}")
+async def delete_report(
+    report_id: str,
+    current_user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin can permanently delete a report. Blocked if active missions reference it."""
+    result = await db.execute(select(Report).where(Report.report_id == report_id))
+    report = result.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    # Block deletion if linked missions are still active
+    active_missions = await db.execute(
+        select(func.count(Mission.id)).where(
+            Mission.report_id == report.id,
+            Mission.status.in_(["Assigned", "In Progress"]),
+        )
+    )
+    active_count = active_missions.scalar()
+    if active_count:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete: {active_count} active mission(s) linked to this report",
+        )
+
+    await db.delete(report)
+    await db.commit()
+    return {"status": "deleted", "report_id": report_id}
+
+
 # ══════════════════════════════════════════════════════════════
 # ── Drones ────────────────────────────────────────────────────
 # ══════════════════════════════════════════════════════════════

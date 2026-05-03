@@ -8,7 +8,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { CheckCircle2, Clock, XCircle, Eye, Loader2, MapPin, MessageSquare } from 'lucide-react'
+import { CheckCircle2, Clock, XCircle, Eye, Loader2, MapPin, MessageSquare, Trash2, AlertTriangle } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 
 // ── Types ────────────────────────────────────────────────────
@@ -41,6 +41,12 @@ export default function FieldReports() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailReport, setDetailReport] = useState<ReportData | null>(null)
 
+  // Delete confirmation dialog
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<ReportData | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
   // Filter
   const [filter, setFilter] = useState<'all' | 'Pending' | 'Verified' | 'Rejected'>('all')
 
@@ -60,6 +66,32 @@ export default function FieldReports() {
   }, [authFetch])
 
   useEffect(() => { fetchReports() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Delete handler ─────────────────────────────────────────
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return
+    try {
+      setDeleting(true)
+      setDeleteError(null)
+      const res = await authFetch(`${API_URL}/api/reports/${deleteTarget.report_id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ detail: `Failed (${res.status})` }))
+        throw new Error(body.detail || `Failed (${res.status})`)
+      }
+      setDeleteOpen(false)
+      setDeleteTarget(null)
+      // Close detail dialog too if it was showing this report
+      if (detailReport?.report_id === deleteTarget.report_id) {
+        setDetailOpen(false)
+        setDetailReport(null)
+      }
+      fetchReports()
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Delete failed')
+    } finally {
+      setDeleting(false)
+    }
+  }, [deleteTarget, authFetch, detailReport, fetchReports])
 
   // ── Helpers ────────────────────────────────────────────────
   const formatTime = (iso: string) => {
@@ -211,9 +243,19 @@ export default function FieldReports() {
                     <TableCell>{statusBadge(r.status)}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{formatTime(r.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setDetailReport(r); setDetailOpen(true) }}>
-                        <Eye className="h-3 w-3" /> View
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setDetailReport(r); setDetailOpen(true) }}>
+                          <Eye className="h-3 w-3" /> View
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(r); setDeleteError(null); setDeleteOpen(true) }}
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -310,13 +352,52 @@ export default function FieldReports() {
                 )}
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex sm:justify-between gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => { setDeleteTarget(detailReport); setDeleteError(null); setDeleteOpen(true) }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete Report
+                </Button>
                 <Button variant="outline" onClick={() => setDetailOpen(false)}>
                   Close
                 </Button>
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteOpen} onOpenChange={(open) => { if (!deleting) { setDeleteOpen(open); if (!open) setDeleteError(null) } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Report
+            </DialogTitle>
+            <DialogDescription>
+              You are about to permanently delete report <strong className="text-foreground">{deleteTarget?.report_id}</strong> from <strong className="text-foreground">{deleteTarget?.observer_name}</strong>. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400">
+              ⚠️ {deleteError}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" disabled={deleting} onClick={() => { setDeleteOpen(false); setDeleteError(null) }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={handleDelete} className="gap-1">
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              {deleting ? 'Deleting…' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
