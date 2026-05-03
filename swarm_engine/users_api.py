@@ -222,6 +222,12 @@ async def delete_report(
             detail=f"Cannot delete: {active_count} active mission(s) linked to this report",
         )
 
+    # Remove completed/cancelled missions linked to this report
+    from sqlalchemy import delete as sql_delete
+    await db.execute(
+        sql_delete(Mission).where(Mission.report_id == report.id)
+    )
+
     await db.delete(report)
     await db.commit()
     return {"status": "deleted", "report_id": report_id}
