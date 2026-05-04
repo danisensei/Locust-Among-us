@@ -52,6 +52,26 @@ function riskIntensity(risk: string): number {
   }
 }
 
+// ── Zone center coordinates (fallback for reports without lat/lon) ──
+const ZONE_CENTERS: Record<string, { lat: number; lon: number }> = {
+  'Khuzdar Valley':    { lat: 27.5, lon: 66.5 },
+  'Quetta':            { lat: 30.25, lon: 66.75 },
+  'Jacobabad Plains':  { lat: 28.25, lon: 68.5 },
+  'D.I. Khan':         { lat: 31.75, lon: 70.75 },
+  'Thar Desert':       { lat: 26.0, lon: 70.5 },
+  'Cholistan Desert':  { lat: 28.75, lon: 72.25 },
+  'Dera Ghazi Khan':   { lat: 30.0, lon: 70.25 },
+  'Bahawalpur':        { lat: 29.5, lon: 71.5 },
+  'Lasbela':           { lat: 26.0, lon: 66.5 },
+  'Turbat':            { lat: 26.5, lon: 63.5 },
+  'Gwadar':            { lat: 25.5, lon: 62.25 },
+  'Nushki':            { lat: 29.5, lon: 65.5 },
+  'Sibi':              { lat: 29.5, lon: 67.75 },
+  'Nasirabad':         { lat: 28.25, lon: 67.75 },
+  'Sukkur':            { lat: 27.75, lon: 69.25 },
+  'Rahimyar Khan':     { lat: 28.5, lon: 70.25 },
+}
+
 // ── Time formatter ───────────────────────────────────────────
 function formatTime(iso: string): string {
   const d = new Date(iso)
@@ -76,10 +96,16 @@ export default function PakistanRiskOverview() {
   const [activeReport, setActiveReport] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
 
-  // Only verified reports with coordinates
-  const verifiedReports = reports.filter(
-    r => r.status === 'Verified' && r.lat !== null && r.lon !== null
-  )
+  // Verified reports — use zone center as fallback when lat/lon missing
+  const verifiedReports = reports
+    .filter(r => r.status === 'Verified')
+    .map(r => {
+      if (r.lat !== null && r.lon !== null) return { ...r, _approxLocation: false }
+      const center = ZONE_CENTERS[r.zone]
+      if (center) return { ...r, lat: center.lat, lon: center.lon, _approxLocation: true }
+      return null  // no coords and unknown zone — skip
+    })
+    .filter((r): r is ReportData & { _approxLocation: boolean } => r !== null)
 
   // ── Stats from real data ───────────────────────────────────
   const stats = {
@@ -186,14 +212,16 @@ export default function PakistanRiskOverview() {
 
       const color = riskColor(report.risk_level)
       const intensity = riskIntensity(report.risk_level)
+      const isApprox = (report as any)._approxLocation
 
       const marker = L.circleMarker([report.lat, report.lon], {
         radius: 6 + intensity * 8,
         fillColor: color,
-        color: '#fff',
+        color: isApprox ? color : '#fff',
         weight: 2,
         opacity: 1,
-        fillOpacity: 0.75,
+        fillOpacity: isApprox ? 0.45 : 0.75,
+        dashArray: isApprox ? '4 4' : undefined,
       })
 
       marker.bindPopup(`
@@ -203,6 +231,7 @@ export default function PakistanRiskOverview() {
             <span style="background: ${color}22; color: ${color}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${report.risk_level}</span>
           </div>
           <div style="color: #999; margin-bottom: 8px; font-size: 11px;">${report.zone}</div>
+          ${isApprox ? '<div style="background: #fbbf2422; color: #fbbf24; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-bottom: 8px; border: 1px solid #fbbf2433;">📍 Approximate location (zone center) — no GPS coordinates submitted</div>' : ''}
           <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; margin-bottom: 8px; color: #333; line-height: 1.4;">
             ${report.description.length > 150 ? report.description.substring(0, 150) + '…' : report.description}
           </div>
@@ -215,7 +244,7 @@ export default function PakistanRiskOverview() {
             ${report.reviewer_feedback ? `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #eee;"><strong>Feedback:</strong> ${report.reviewer_feedback}</div>` : ''}
           </div>
           <div style="margin-top: 6px; font-size: 10px; color: #aaa;">
-            📍 ${report.lat!.toFixed(6)}, ${report.lon!.toFixed(6)}
+            📍 ${report.lat!.toFixed(6)}, ${report.lon!.toFixed(6)}${isApprox ? ' (approx)' : ''}
           </div>
         </div>
       `)
