@@ -82,9 +82,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount auth & user routers
+# Mount auth, user & AI routers
 app.include_router(auth_module.router)
 app.include_router(users_api.router)
+import ai_module
+app.include_router(ai_module.router)
 
 # Pakistan geographic bounds
 PAKISTAN_BOUNDS = {
