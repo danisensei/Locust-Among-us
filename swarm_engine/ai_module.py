@@ -274,7 +274,7 @@ def a_star_path(start: str, goal: str) -> Dict[str, Any]:
                 "explored_order": explored_order,
                 "zone_coords": {z: ZONES[z] for z in set(explored_order + path)},
             }
-            
+
         for neighbor in ADJACENCY.get(current, []):
             c1 = ZONES[current]
             c2 = ZONES[neighbor]
@@ -299,3 +299,17 @@ def a_star_path(start: str, goal: str) -> Dict[str, Any]:
         "zone_coords": {},
         "error": "No path found",
     }
+
+class AStarRequest(BaseModel):
+    start_zone: str
+    goal_zone: str
+
+
+@router.post("/api/ai/astar")
+async def run_astar(req: AStarRequest):
+    """Find shortest path between two zones using A* search."""
+    try:
+        result = a_star_path(req.start_zone, req.goal_zone)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
