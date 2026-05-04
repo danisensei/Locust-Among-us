@@ -274,3 +274,28 @@ def a_star_path(start: str, goal: str) -> Dict[str, Any]:
                 "explored_order": explored_order,
                 "zone_coords": {z: ZONES[z] for z in set(explored_order + path)},
             }
+            
+        for neighbor in ADJACENCY.get(current, []):
+            c1 = ZONES[current]
+            c2 = ZONES[neighbor]
+            tentative_g = g_score[current] + haversine(c1["lat"], c1["lon"], c2["lat"], c2["lon"])
+
+            if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                g_score[neighbor] = tentative_g
+                f = tentative_g + haversine(c2["lat"], c2["lon"], goal_coords["lat"], goal_coords["lon"])
+                heapq.heappush(open_set, (f, neighbor))
+                came_from[neighbor] = current
+
+    return {
+        "algorithm": "A*",
+        "start_zone": start,
+        "goal_zone": goal,
+        "path": [],
+        "path_length": 0,
+        "total_distance_km": 0,
+        "segments": [],
+        "nodes_explored": len(explored_order),
+        "explored_order": explored_order,
+        "zone_coords": {},
+        "error": "No path found",
+    }
