@@ -247,10 +247,10 @@ export default function AIPrediction() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Network className="h-8 w-8 text-violet-400" />
-          AI Swarm Spread Prediction
+          AI Spread Prediction
         </h1>
         <p className="text-muted-foreground mt-2">
-          BFS on Pakistan's zone adjacency graph · Predicts zone-by-zone locust spread
+          Locust migration forecasting · Zone-by-zone risk analysis across Pakistan
         </p>
       </div>
 
@@ -258,28 +258,28 @@ export default function AIPrediction() {
       <Card className="bg-violet-500/5 border-violet-500/20">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
-            <GitBranch className="h-4 w-4" /> Problem Formulation
+            <GitBranch className="h-4 w-4" /> How This Model Works
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-1.5 text-muted-foreground">
-          <p><strong>Initial State:</strong> Zone where the swarm / report is located.</p>
-          <p><strong>Goal State:</strong> Identify all zones reachable from the initial zone (spread prediction).</p>
-          <p><strong>Actions:</strong> Swarm migrates from one zone to an adjacent zone (one time step).</p>
-          <p><strong>State Space:</strong> Undirected graph — {Object.keys(zones).length} zones, edges = geographic adjacency.</p>
-          <p><strong>Algorithm:</strong> Breadth-First Search (BFS) — explores all neighbors at depth <em>d</em> before depth <em>d+1</em>, giving a time-stepped spread prediction.</p>
+          <p><strong>Starting Point:</strong> Zone where the swarm or verified report is located.</p>
+          <p><strong>Objective:</strong> Predict all zones at risk of locust migration from the starting point.</p>
+          <p><strong>Migration Rule:</strong> Swarms spread from one zone to neighboring zones, one time step at a time.</p>
+          <p><strong>Coverage:</strong> {Object.keys(zones).length} monitored zones across Pakistan's locust-prone belt.</p>
+          <p><strong>Model:</strong> Breadth-First Spread Analysis (BFS) — forecasts layer-by-layer propagation to generate a time-stepped risk timeline.</p>
         </CardContent>
       </Card>
 
       {/* Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Run BFS Spread Prediction</CardTitle>
-          <CardDescription>Select a source zone and run BFS to predict swarm migration</CardDescription>
+          <CardTitle className="text-sm">Run Spread Prediction</CardTitle>
+          <CardDescription>Select a source zone and run the prediction model to forecast swarm migration</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3 items-end">
             <div className="w-64">
-              <label className="text-xs text-muted-foreground mb-1 block">Source Zone (Initial State)</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Source Zone</label>
               <Select value={selectedZone} onValueChange={setSelectedZone}>
                 <SelectTrigger><SelectValue placeholder="Select zone…" /></SelectTrigger>
                 <SelectContent>
@@ -292,7 +292,7 @@ export default function AIPrediction() {
 
             <Button onClick={runBFS} disabled={loading || !selectedZone} className="gap-2">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-              Run BFS
+              Run Prediction
             </Button>
 
             {bfsResult && (
@@ -302,14 +302,14 @@ export default function AIPrediction() {
                   disabled={!bfsResult || animStep >= bfsResult.levels.length - 1}
                   onClick={() => setAnimStep(s => Math.min(s + 1, bfsResult!.levels.length - 1))}
                 >
-                  <SkipForward className="h-3.5 w-3.5" /> Step
+                  <SkipForward className="h-3.5 w-3.5" /> Next Step
                 </Button>
                 <Button
                   variant={autoPlay ? 'destructive' : 'secondary'}
                   size="sm" className="gap-1"
                   onClick={() => setAutoPlay(!autoPlay)}
                 >
-                  {autoPlay ? 'Stop' : '▶ Auto Play'}
+                  {autoPlay ? 'Pause' : '▶ Simulate'}
                 </Button>
                 <Button variant="ghost" size="sm" className="gap-1" onClick={reset}>
                   <RotateCcw className="h-3.5 w-3.5" /> Reset
@@ -323,7 +323,7 @@ export default function AIPrediction() {
               onClick={() => setShowGraph(!showGraph)}
             >
               <Network className="h-3.5 w-3.5" />
-              {showGraph ? 'Hide Graph' : 'Show Graph'}
+              {showGraph ? 'Hide Network' : 'Show Network'}
             </Button>
           </div>
         </CardContent>
@@ -334,11 +334,11 @@ export default function AIPrediction() {
         <CardHeader className="bg-gradient-to-r from-violet-900/40 to-slate-800 pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-foreground flex items-center gap-2">
-              🗺️ Zone Adjacency Graph & BFS Visualization
+              🗺️ Migration Risk Map & Spread Visualization
             </CardTitle>
             {bfsResult && (
               <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
-                Step {animStep} / {bfsResult.levels.length - 1}
+                Time Step {animStep} / {bfsResult.levels.length - 1}
               </Badge>
             )}
           </div>
@@ -354,8 +354,8 @@ export default function AIPrediction() {
           {/* Levels */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">BFS Exploration Levels</CardTitle>
-              <CardDescription>Each depth = one time step of predicted swarm spread</CardDescription>
+              <CardTitle className="text-sm">Spread Timeline</CardTitle>
+              <CardDescription>Each level represents one time step of predicted swarm migration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {bfsResult.levels.map((level, i) => {
@@ -377,7 +377,7 @@ export default function AIPrediction() {
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground mb-1">
-                        {level.depth === 0 ? 'Origin (Initial State)' : `Time Step ${level.depth}`}
+                        {level.depth === 0 ? 'Swarm Origin' : `Time Step ${level.depth} — Zones at risk`}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {level.zones.map(z => (
@@ -405,31 +405,31 @@ export default function AIPrediction() {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">BFS Statistics</CardTitle>
+                <CardTitle className="text-sm">Prediction Summary</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-muted-foreground">Algorithm</div>
-                  <div className="font-bold text-lg">{bfsResult.algorithm}</div>
+                  <div className="text-muted-foreground">Model</div>
+                  <div className="font-bold text-lg">Spread Analysis (BFS)</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">Start Zone</div>
+                  <div className="text-muted-foreground">Origin Zone</div>
                   <div className="font-bold">{bfsResult.start_zone}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">Total Zones Affected</div>
+                  <div className="text-muted-foreground">Zones at Risk</div>
                   <div className="font-bold text-lg text-red-400">{bfsResult.total_zones_affected} / {Object.keys(zones).length}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">Max Depth</div>
-                  <div className="font-bold text-lg">{bfsResult.max_depth_reached} steps</div>
+                  <div className="text-muted-foreground">Spread Horizon</div>
+                  <div className="font-bold text-lg">{bfsResult.max_depth_reached} time steps</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">Edges Traversed</div>
+                  <div className="text-muted-foreground">Migration Paths</div>
                   <div className="font-bold text-lg">{bfsResult.edges_traversed.length}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground">Current Step</div>
+                  <div className="text-muted-foreground">Current Time Step</div>
                   <div className="font-bold text-lg text-violet-400">{animStep} / {bfsResult.max_depth_reached}</div>
                 </div>
               </CardContent>
@@ -437,8 +437,8 @@ export default function AIPrediction() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Visit Order (Queue)</CardTitle>
-                <CardDescription>The order BFS visits each zone (FIFO queue)</CardDescription>
+                <CardTitle className="text-sm">Predicted Spread Sequence</CardTitle>
+                <CardDescription>Order in which zones are predicted to be affected</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1.5">
@@ -464,12 +464,12 @@ export default function AIPrediction() {
             {/* Legend */}
             <Card className="bg-violet-500/5 border-violet-500/20">
               <CardContent className="pt-4">
-                <div className="text-xs font-semibold mb-2">Depth Legend</div>
+                <div className="text-xs font-semibold mb-2">Risk Timeline Legend</div>
                 <div className="flex flex-wrap gap-2">
                   {DEPTH_COLORS.map((c, i) => (
                     <div key={i} className="flex items-center gap-1 text-xs">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
-                      <span className="text-muted-foreground">{i === 0 ? 'Origin' : `Step ${i}`}{i === DEPTH_COLORS.length - 1 ? '+' : ''}</span>
+                      <span className="text-muted-foreground">{i === 0 ? 'Origin' : `Time Step ${i}`}{i === DEPTH_COLORS.length - 1 ? '+' : ''}</span>
                     </div>
                   ))}
                 </div>
