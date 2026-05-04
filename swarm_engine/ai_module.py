@@ -212,3 +212,65 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
          math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
          math.sin(dlon / 2) ** 2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def a_star_path(start: str, goal: str) -> Dict[str, Any]:
+    """
+    A* search from start zone to goal zone.
+    - g(n) = cumulative distance from start
+    - h(n) = straight line distance to goal (admissible heuristic)
+    - f(n) = g(n) + h(n)
+    """
+    if start not in ZONES:
+        raise ValueError(f"Unknown start zone: {start}")
+    if goal not in ZONES:
+        raise ValueError(f"Unknown goal zone: {goal}")
+
+    goal_coords = ZONES[goal]
+
+    """priority queue: (f_cost, zone_name)"""
+    open_set: list[tuple[float, str]] = []
+    heapq.heappush(open_set, (0.0, start))
+
+    came_from: Dict[str, Optional[str]] = {start: None}
+    g_score: Dict[str, float] = {start: 0.0}
+    explored_order: List[str] = []
+
+    while open_set:
+        current_f, current = heapq.heappop(open_set)
+
+        explored_order.append(current)
+
+        if current == goal:
+            path = []
+            node = goal
+            while node is not None:
+                path.append(node)
+                node = came_from[node]
+            path.reverse()
+
+            total_dist = 0.0
+            segments = []
+            for i in range(len(path) - 1):
+                c1 = ZONES[path[i]]
+                c2 = ZONES[path[i + 1]]
+                d = haversine(c1["lat"], c1["lon"], c2["lat"], c2["lon"])
+                total_dist += d
+                segments.append({
+                    "from": path[i],
+                    "to": path[i + 1],
+                    "distance_km": round(d, 1),
+                })
+
+            return {
+                "algorithm": "A*",
+                "start_zone": start,
+                "goal_zone": goal,
+                "path": path,
+                "path_length": len(path),
+                "total_distance_km": round(total_dist, 1),
+                "segments": segments,
+                "nodes_explored": len(explored_order),
+                "explored_order": explored_order,
+                "zone_coords": {z: ZONES[z] for z in set(explored_order + path)},
+            }
