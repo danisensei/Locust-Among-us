@@ -296,7 +296,7 @@ export default function AIPrediction() {
       </div>
 
       <Tabs defaultValue="bfs" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList>
           <TabsTrigger value="bfs">Spread Prediction (BFS)</TabsTrigger>
           <TabsTrigger value="astar">Route Finder (A*)</TabsTrigger>
         </TabsList>
