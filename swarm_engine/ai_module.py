@@ -197,3 +197,18 @@ async def get_zones():
         "total_zones": len(ZONES),
         "total_edges": sum(len(v) for v in ADJACENCY.values()) // 2,
     }
+
+import heapq, math
+
+def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Heuristic function: straight-line distance (km) between two lat/lon points.
+    This is admissible because it never overestimates the actual travel distance.
+    """
+    R = 6371  # For the Earth radius in km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dlon / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
