@@ -193,6 +193,7 @@ async def review_report(
     report.reviewed_by = current_user.name
     report.reviewed_at = datetime.utcnow()
     await db.commit()
+    await db.refresh(report)
     return _report_out(report)
 
 

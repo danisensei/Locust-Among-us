@@ -110,6 +110,7 @@ export function useAuthFetch() {
 
     return fetch(url, {
       ...options,
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         ...(options.headers || {}),

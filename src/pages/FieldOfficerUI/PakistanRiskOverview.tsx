@@ -93,7 +93,8 @@ export default function PakistanRiskOverview() {
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await authFetch(`${API_URL}/api/reports`)
+      // Cache-busting param ensures we always get fresh data from the server
+      const res = await authFetch(`${API_URL}/api/reports?_t=${Date.now()}`)
       if (!res.ok) throw new Error(`Failed (${res.status})`)
       const all: ReportData[] = await res.json()
       setReports(all)
@@ -105,7 +106,7 @@ export default function PakistanRiskOverview() {
     }
   }, [authFetch])
 
-  useEffect(() => { fetchReports() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchReports() }, [fetchReports])
 
   // ── Initialize base map ────────────────────────────────────
   useEffect(() => {
