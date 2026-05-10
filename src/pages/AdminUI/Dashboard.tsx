@@ -8,11 +8,15 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import {
   Bug, Radar, Plane, FileText, Thermometer, Droplets, Wind, Eye,
   ArrowUpRight, ArrowDownRight, Activity, Shield, Navigation, MapPin,
-  Clock, Zap
+  Clock, Zap, Map, Globe, Brain, ClipboardList, Bell
 } from 'lucide-react'
 import { Area, AreaChart, XAxis, CartesianGrid, Bar, BarChart } from 'recharts'
 import { AnimateDigits } from '@/components/unlumen-ui/animate-digits'
 import { Tilt } from '@/components/unlumen-ui/tilt'
+import {
+  MotionNavigationMenu, MotionNavigationMenuList, MotionNavigationMenuItem,
+  MotionNavigationMenuTrigger, MotionNavigationMenuContent, MotionNavigationMenuLink,
+} from '@/components/unlumen-ui/motion-navigation-menu'
 import type { ChartConfig } from '@/components/ui/chart'
 
 /* ─── Constants ─── */
@@ -100,23 +104,98 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider>
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-        {/* ━━━ HEADER ━━━ */}
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Command Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Dept. of Plant Protection — Pakistan · AI risk scoring active
-            </p>
+        {/* ━━━ HEADER + NAV ━━━ */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                Command Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Real-time swarm intelligence · AI-powered risk assessment
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-medium tabular-nums tracking-wider" style={{ fontFamily: "'Space Mono', monospace" }}>
+                {now.toLocaleTimeString('en-US', { hour12: false })}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} · PKT
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-mono font-bold tabular-nums tracking-wider">
-              {now.toLocaleTimeString('en-US', { hour12: false })}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} · PKT
-            </div>
+
+          {/* Nav bar inline */}
+          <div className="flex items-center gap-3">
+            <MotionNavigationMenu>
+              <MotionNavigationMenuList>
+                <MotionNavigationMenuItem value="monitoring">
+                  <MotionNavigationMenuTrigger className="text-xs gap-1.5 h-8">
+                    <Radar className="h-3.5 w-3.5 text-emerald-400" /> Monitoring
+                  </MotionNavigationMenuTrigger>
+                  <MotionNavigationMenuContent className="w-[300px]">
+                    <div className="space-y-0.5">
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <Map className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">Swarm Map</div>
+                          <div className="text-[10px] text-muted-foreground">Live cluster tracking</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <Globe className="h-4 w-4 text-sky-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">Risk Overview</div>
+                          <div className="text-[10px] text-muted-foreground">GIS heatmap</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <Brain className="h-4 w-4 text-violet-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">AI Prediction</div>
+                          <div className="text-[10px] text-muted-foreground">BFS · A* pathfinding</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                    </div>
+                  </MotionNavigationMenuContent>
+                </MotionNavigationMenuItem>
+
+                <MotionNavigationMenuItem value="operations">
+                  <MotionNavigationMenuTrigger className="text-xs gap-1.5 h-8">
+                    <Zap className="h-3.5 w-3.5 text-amber-400" /> Operations
+                  </MotionNavigationMenuTrigger>
+                  <MotionNavigationMenuContent className="w-[300px]">
+                    <div className="space-y-0.5">
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <Plane className="h-4 w-4 text-sky-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">Drone Ops</div>
+                          <div className="text-[10px] text-muted-foreground">Fleet management</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <ClipboardList className="h-4 w-4 text-cyan-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">Field Reports</div>
+                          <div className="text-[10px] text-muted-foreground">Observer submissions</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
+                        <Bell className="h-4 w-4 text-red-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium">Alerts</div>
+                          <div className="text-[10px] text-muted-foreground">Active notifications</div>
+                        </div>
+                      </MotionNavigationMenuLink>
+                    </div>
+                  </MotionNavigationMenuContent>
+                </MotionNavigationMenuItem>
+              </MotionNavigationMenuList>
+            </MotionNavigationMenu>
+            <Separator orientation="vertical" className="h-5" />
+            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">LC-EWS v2.0</span>
           </div>
         </div>
 
@@ -232,7 +311,7 @@ export default function Dashboard() {
         </div>
 
         {/* ━━━ BOTTOM GRID: Alerts + Weather + Quick Nav ━━━ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Alerts — 1 col */}
           <Card className="lg:col-span-1">
@@ -316,40 +395,6 @@ export default function Dashboard() {
               <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Quetta, Pakistan</span>
                 <span>Last sync: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Navigation — 1 col */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Navigation className="h-4 w-4 text-violet-400" />
-                Quick Navigation
-              </CardTitle>
-              <CardDescription className="text-xs">Jump to any module</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Swarm Map', icon: '🗺️', desc: 'Live tracking', accent: 'hover:border-emerald-500/40' },
-                  { label: 'AI Predict', icon: '🤖', desc: 'BFS / A*', accent: 'hover:border-violet-500/40' },
-                  { label: 'Drone Ops', icon: '✈️', desc: '12 active', accent: 'hover:border-sky-500/40' },
-                  { label: 'Risk Map', icon: '🌍', desc: 'Heatmap', accent: 'hover:border-amber-500/40' },
-                  { label: 'Reports', icon: '📋', desc: '38 today', accent: 'hover:border-cyan-500/40' },
-                  { label: 'Alerts', icon: '⚡', desc: '4 active', accent: 'hover:border-red-500/40' },
-                ].map(item => (
-                  <Tooltip key={item.label}>
-                    <TooltipTrigger asChild>
-                      <div className={`group cursor-pointer rounded-lg border border-border/50 p-3 transition-all duration-200 hover:bg-accent/50 hover:shadow-sm ${item.accent}`}>
-                        <div className="text-lg mb-1">{item.icon}</div>
-                        <div className="text-xs font-medium">{item.label}</div>
-                        <div className="text-[10px] text-muted-foreground">{item.desc}</div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Navigate to {item.label}</TooltipContent>
-                  </Tooltip>
-                ))}
               </div>
             </CardContent>
           </Card>
