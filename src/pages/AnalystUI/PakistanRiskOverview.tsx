@@ -1,8 +1,14 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Layers, MapPin, TrendingUp, Loader2, RefreshCw } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
+import { Progress } from '@/components/ui/progress'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  AlertTriangle, Layers, MapPin, Loader2, RefreshCw, Shield, Clock,
+  User, FileText, ChevronRight, Eye, Globe
+} from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -52,6 +58,20 @@ function riskIntensity(risk: string): number {
   }
 }
 
+const RISK_BADGE: Record<string, string> = {
+  Critical: 'bg-red-500/15 text-red-400 border-red-500/30',
+  High: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  Medium: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+  Low: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+}
+
+const RISK_DOT: Record<string, string> = {
+  Critical: 'bg-red-500',
+  High: 'bg-orange-500',
+  Medium: 'bg-yellow-500',
+  Low: 'bg-emerald-500',
+}
+
 // ── Time formatter ───────────────────────────────────────────
 function formatTime(iso: string): string {
   const d = new Date(iso)
@@ -76,16 +96,16 @@ export default function PakistanRiskOverview() {
   const [activeReport, setActiveReport] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
 
-  // Only verified reports with coordinates
   const verifiedReports = reports.filter(
     r => r.status === 'Verified' && r.lat !== null && r.lon !== null
   )
 
-  // ── Stats from real data ───────────────────────────────────
   const stats = {
     totalReports: verifiedReports.length,
     criticalZones: verifiedReports.filter(r => r.risk_level === 'Critical').length,
     highZones: verifiedReports.filter(r => r.risk_level === 'High').length,
+    mediumZones: verifiedReports.filter(r => r.risk_level === 'Medium').length,
+    lowZones: verifiedReports.filter(r => r.risk_level === 'Low').length,
     zones: [...new Set(verifiedReports.map(r => r.zone))].length,
   }
 
@@ -113,26 +133,22 @@ export default function PakistanRiskOverview() {
 
     const map = L.map(mapRef.current).setView([30.2, 69.3], 6)
 
-    // Street layer (default)
     const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18,
     })
     streetLayer.addTo(map)
 
-    // Satellite layer
     const satelliteLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       { attribution: 'Tiles &copy; Esri', maxZoom: 18 }
     )
 
-    // Terrain hillshade overlay
     const terrainLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
       { attribution: 'Tiles &copy; Esri', maxZoom: 13, opacity: 0.3 }
     )
 
-    // Marker cluster group
     const markerClusterGroup = new (MarkerClusterGroup || (L as any).MarkerClusterGroup)({
       maxClusterRadius: 80,
       iconCreateFunction: (cluster: any) => {
@@ -148,7 +164,6 @@ export default function PakistanRiskOverview() {
     map.addLayer(markerClusterGroup)
     markersRef.current = markerClusterGroup
 
-    // Layer control
     L.control.layers(
       { 'Street': streetLayer, 'Satellite': satelliteLayer },
       { 'Terrain Overlay': terrainLayer, 'Report Clusters': markerClusterGroup },
@@ -158,7 +173,12 @@ export default function PakistanRiskOverview() {
     mapInstanceRef.current = map
     setMapReady(true)
 
-    return () => { map.remove(); mapInstanceRef.current = null; setMapReady(false) }
+    setTimeout(() => map.invalidateSize(), 100)
+    setTimeout(() => map.invalidateSize(), 300)
+    const ro = new ResizeObserver(() => map.invalidateSize())
+    ro.observe(mapRef.current)
+
+    return () => { ro.disconnect(); map.remove(); mapInstanceRef.current = null; setMapReady(false) }
   }, [])
 
   // ── Update map markers when data changes ───────────────────
@@ -168,10 +188,8 @@ export default function PakistanRiskOverview() {
     const map = mapInstanceRef.current
     const clusterGroup = markersRef.current
 
-    // Clear old markers
     clusterGroup.clearLayers()
 
-    // Remove old heat layer
     if (heatLayerRef.current) {
       map.removeLayer(heatLayerRef.current)
       heatLayerRef.current = null
@@ -179,7 +197,6 @@ export default function PakistanRiskOverview() {
 
     if (verifiedReports.length === 0) return
 
-    // Add markers for each verified report
     verifiedReports.forEach((report) => {
       if (!report.lat || !report.lon) return
 
@@ -196,25 +213,24 @@ export default function PakistanRiskOverview() {
       })
 
       marker.bindPopup(`
-        <div style="font-family: system-ui; font-size: 12px; min-width: 220px;">
+        <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 12px; min-width: 220px;">
           <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
             <strong style="font-size: 14px;">${report.report_id}</strong>
             <span style="background: ${color}22; color: ${color}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${report.risk_level}</span>
           </div>
           <div style="color: #999; margin-bottom: 8px; font-size: 11px;">${report.zone}</div>
-          <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; margin-bottom: 8px; color: #333; line-height: 1.4;">
+          <div style="background: #1a1a2e; padding: 8px; border-radius: 6px; margin-bottom: 8px; color: #ccc; line-height: 1.4;">
             ${report.description.length > 150 ? report.description.substring(0, 150) + '…' : report.description}
           </div>
-          <div style="font-size: 11px; space-y: 2px;">
-            ${report.estimated_size ? `<div><strong>Estimated Size:</strong> ${report.estimated_size}</div>` : ''}
-            <div><strong>Submitted by:</strong> ${report.observer_name}</div>
+          <div style="font-size: 11px;">
+            ${report.estimated_size ? `<div><strong>Size:</strong> ${report.estimated_size}</div>` : ''}
+            <div><strong>Observer:</strong> ${report.observer_name}</div>
             <div><strong>Submitted:</strong> ${formatTime(report.created_at)}</div>
             ${report.reviewed_by ? `<div><strong>Verified by:</strong> ${report.reviewed_by}</div>` : ''}
-            ${report.reviewed_at ? `<div><strong>Verified:</strong> ${formatTime(report.reviewed_at)}</div>` : ''}
-            ${report.reviewer_feedback ? `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #eee;"><strong>Feedback:</strong> ${report.reviewer_feedback}</div>` : ''}
+            ${report.reviewer_feedback ? `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #333;"><strong>Feedback:</strong> ${report.reviewer_feedback}</div>` : ''}
           </div>
-          <div style="margin-top: 6px; font-size: 10px; color: #aaa;">
-            📍 ${report.lat!.toFixed(6)}, ${report.lon!.toFixed(6)}
+          <div style="margin-top: 6px; font-size: 10px; color: #666;">
+            ${report.lat!.toFixed(6)}, ${report.lon!.toFixed(6)}
           </div>
         </div>
       `)
@@ -223,7 +239,6 @@ export default function PakistanRiskOverview() {
       clusterGroup.addLayer(marker)
     })
 
-    // Heat layer from verified reports
     const heatData = verifiedReports
       .filter(r => r.lat && r.lon)
       .map(r => [r.lat!, r.lon!, riskIntensity(r.risk_level)] as [number, number, number])
@@ -249,210 +264,247 @@ export default function PakistanRiskOverview() {
     }
   }, [verifiedReports, mapReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const focusReport = (report: ReportData) => {
+    setActiveReport(report.report_id)
+    if (mapInstanceRef.current && report.lat && report.lon) {
+      mapInstanceRef.current.setView([report.lat, report.lon], 10, { animate: true })
+    }
+  }
+
+  const selectedReport = verifiedReports.find(r => r.report_id === activeReport)
+
+  // Risk distribution bar
+  const riskTotal = stats.totalReports || 1
+
   return (
-    <div className="w-full space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-2">
-            <MapPin className="h-8 w-8 text-red-400" />
-            Pakistan Risk Overview
-          </h2>
-          <p className="text-muted-foreground">
-            Verified field report locations · Live risk distribution across Pakistan
-          </p>
+    <TooltipProvider>
+      <div className="w-full space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+
+        {/* ━━━ HEADER ━━━ */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <Globe className="h-6 w-6 text-sky-400" />
+              Risk Overview
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Verified field reports · GIS risk heatmap · {stats.zones} affected zones
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={`text-[10px] gap-1 ${loading ? 'border-amber-500/40 text-amber-400' : 'border-emerald-500/40 text-emerald-400'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+              {loading ? 'Loading' : `${stats.totalReports} reports`}
+            </Badge>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={fetchReports} disabled={loading}>
+              {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Refresh
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={fetchReports} disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Refresh
-        </Button>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/25">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-300 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Critical Reports
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-400">{stats.criticalZones}</div>
-            <p className="text-xs text-red-300 mt-1">Immediate action required</p>
-          </CardContent>
-        </Card>
+        {/* ━━━ STATS BAR ━━━ */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'Critical', value: stats.criticalZones, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
+            { label: 'High Risk', value: stats.highZones, icon: Shield, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+            { label: 'Verified Reports', value: stats.totalReports, icon: Eye, color: 'text-sky-400', bg: 'bg-sky-500/10' },
+            { label: 'Affected Zones', value: stats.zones, icon: MapPin, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+          ].map(s => {
+            const Icon = s.icon
+            return (
+              <div key={s.label} className="rounded-lg border border-border/50 p-3 flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${s.bg}`}>
+                  <Icon className={`h-4 w-4 ${s.color}`} />
+                </div>
+                <div>
+                  <div className="text-lg font-bold tabular-nums leading-tight">{s.value}</div>
+                  <div className="text-[10px] text-muted-foreground">{s.label}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/25">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-300">High Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-orange-300">{stats.highZones}</div>
-            <p className="text-xs text-orange-300 mt-1">Elevated risk areas</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border-violet-500/25">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-violet-300">Verified Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-violet-300">{stats.totalReports}</div>
-            <p className="text-xs text-violet-300 mt-1">With location data</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-sky-500/10 to-sky-500/5 border-sky-500/25">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-sky-300 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Affected Zones
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-sky-300">{stats.zones}</div>
-            <p className="text-xs text-sky-300 mt-1">Distinct zones reported</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Map Container */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-foreground pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Layers className="h-5 w-5" />
-              <CardTitle className="text-foreground">GIS Risk Visualization</CardTitle>
+        {/* ━━━ RISK DISTRIBUTION BAR ━━━ */}
+        {stats.totalReports > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>Risk Distribution</span>
+              <span>{stats.totalReports} total</span>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
-                Verified Reports Only
-              </Badge>
-              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
-                {verifiedReports.length} points
-              </Badge>
+            <div className="flex h-2 rounded-full overflow-hidden bg-muted/30">
+              {stats.criticalZones > 0 && <div className="bg-red-500 transition-all" style={{ width: `${(stats.criticalZones / riskTotal) * 100}%` }} />}
+              {stats.highZones > 0 && <div className="bg-orange-500 transition-all" style={{ width: `${(stats.highZones / riskTotal) * 100}%` }} />}
+              {stats.mediumZones > 0 && <div className="bg-yellow-500 transition-all" style={{ width: `${(stats.mediumZones / riskTotal) * 100}%` }} />}
+              {stats.lowZones > 0 && <div className="bg-emerald-500 transition-all" style={{ width: `${(stats.lowZones / riskTotal) * 100}%` }} />}
+            </div>
+            <div className="flex gap-4 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Critical {stats.criticalZones}</span>
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> High {stats.highZones}</span>
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-yellow-500" /> Medium {stats.mediumZones}</span>
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Low {stats.lowZones}</span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0 relative">
-          <div ref={mapRef} className="w-full h-96 md:h-[500px] lg:h-[600px] bg-slate-800" />
-          {loading && (
-            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-sky-400" />
-                <p className="text-sm text-muted-foreground">Loading reports…</p>
-              </div>
-            </div>
-          )}
-          {!loading && verifiedReports.length === 0 && (
-            <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
-              <div className="text-center bg-background/80 rounded-lg p-6 border border-border">
-                <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                <p className="font-medium">No verified reports with coordinates</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Reports approved by analysts will appear here as risk markers.
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Verified Reports List */}
-      {verifiedReports.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              Verified Risk Reports
-            </CardTitle>
-            <CardDescription>Click any report on the map to highlight it below</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {verifiedReports.map((report) => (
-                <div
-                  key={report.report_id}
-                  className={`p-4 rounded-lg border-l-4 cursor-pointer transition-all ${
-                    activeReport === report.report_id
-                      ? 'border-sky-500 bg-sky-500/10 shadow-lg ring-1 ring-sky-500/30'
-                      : 'bg-muted/40 hover:bg-muted/60'
-                  }`}
-                  style={{ borderLeftColor: activeReport === report.report_id ? '#38bdf8' : riskColor(report.risk_level) }}
-                  onClick={() => {
-                    setActiveReport(report.report_id)
-                    if (mapInstanceRef.current && report.lat && report.lon) {
-                      mapInstanceRef.current.setView([report.lat, report.lon], 10, { animate: true })
-                    }
-                  }}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-bold text-sm">{report.report_id}</h4>
-                      <p className="text-xs text-muted-foreground">{report.zone}</p>
-                    </div>
-                    <Badge
-                      className={`text-xs ${
-                        report.risk_level === 'Critical' ? 'bg-red-500/15 text-red-400' :
-                        report.risk_level === 'High' ? 'bg-orange-500/15 text-orange-400' :
-                        report.risk_level === 'Medium' ? 'bg-yellow-500/15 text-yellow-300' :
-                        'bg-green-500/15 text-green-400'
-                      }`}
-                    >
-                      {report.risk_level}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{report.description}</p>
-                  <div className="space-y-1 text-xs">
-                    {report.estimated_size && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Size:</span>
-                        <span className="font-semibold">{report.estimated_size}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">By:</span>
-                      <span className="font-semibold">{report.observer_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Submitted:</span>
-                      <span className="font-semibold">{formatTime(report.created_at)}</span>
-                    </div>
-                    {report.reviewed_by && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Verified by:</span>
-                        <span className="font-semibold">{report.reviewed_by}</span>
-                      </div>
-                    )}
+        {/* ━━━ MAP + SIDEBAR ━━━ */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+          {/* Map — 3 cols */}
+          <Card className="lg:col-span-3 overflow-hidden">
+            <CardContent className="p-0 relative">
+              <div ref={mapRef} className="w-full h-[520px] bg-slate-900" />
+
+              {/* Overlay badges */}
+              <div className="absolute top-3 left-3 z-[400] flex gap-1.5">
+                <Badge className="bg-background/80 backdrop-blur-sm text-foreground border-border/50 text-[10px] gap-1">
+                  <Layers className="h-3 w-3" />
+                  {verifiedReports.length} reports
+                </Badge>
+              </div>
+
+              {loading && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[500]">
+                  <div className="text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-sky-400" />
+                    <p className="text-xs text-muted-foreground">Loading reports…</p>
                   </div>
                 </div>
+              )}
+              {!loading && verifiedReports.length === 0 && (
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-[500]">
+                  <div className="text-center bg-background/90 rounded-lg p-6 border border-border/50">
+                    <MapPin className="h-6 w-6 text-muted-foreground/40 mx-auto mb-2" />
+                    <p className="text-sm font-medium">No verified reports</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Verified reports with coordinates appear here.</p>
+                  </div>
+                </div>
+              )}
+              {error && !loading && (
+                <div className="absolute bottom-3 left-3 right-3 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-2.5 text-xs text-red-400 z-[500] flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {error}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Sidebar — 1 col */}
+          <div className="lg:col-span-1 space-y-3">
+
+            {/* Selected report detail */}
+            {selectedReport ? (
+              <Card className="border-border/50">
+                <CardHeader className="pb-2 pt-3 px-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xs font-medium">{selectedReport.report_id}</CardTitle>
+                    <Badge className={`text-[10px] ${RISK_BADGE[selectedReport.risk_level] || ''}`}>
+                      {selectedReport.risk_level}
+                    </Badge>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{selectedReport.zone}</p>
+                </CardHeader>
+                <CardContent className="px-3 pb-3 space-y-2.5">
+                  <Separator />
+                  <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-3">
+                    {selectedReport.description}
+                  </p>
+                  <Separator />
+                  <div className="space-y-1.5">
+                    {selectedReport.estimated_size && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><FileText className="h-3 w-3" /> Size</span>
+                        <span className="font-mono font-medium text-[11px]">{selectedReport.estimated_size}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-muted-foreground"><User className="h-3 w-3" /> Observer</span>
+                      <span className="font-medium text-[11px]">{selectedReport.observer_name}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-muted-foreground"><Clock className="h-3 w-3" /> Submitted</span>
+                      <span className="font-mono text-[11px]">{formatTime(selectedReport.created_at)}</span>
+                    </div>
+                    {selectedReport.reviewed_by && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Shield className="h-3 w-3" /> Verified by</span>
+                        <span className="font-medium text-[11px]">{selectedReport.reviewed_by}</span>
+                      </div>
+                    )}
+                  </div>
+                  {selectedReport.reviewer_feedback && (
+                    <>
+                      <Separator />
+                      <div>
+                        <div className="text-[10px] text-muted-foreground mb-1">Analyst Feedback</div>
+                        <p className="text-[11px] leading-relaxed">{selectedReport.reviewer_feedback}</p>
+                      </div>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="w-full text-xs h-7" onClick={() => setActiveReport(null)}>
+                    Clear selection
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border/50 p-4 text-center">
+                <MapPin className="h-5 w-5 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">Click a report to inspect</p>
+              </div>
+            )}
+
+            {/* Report list */}
+            <div className="space-y-1 max-h-[360px] overflow-y-auto pr-1">
+              {verifiedReports.map(r => (
+                <Tooltip key={r.report_id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => focusReport(r)}
+                      className={`w-full text-left rounded-lg border p-2.5 transition-all text-xs ${
+                        activeReport === r.report_id
+                          ? 'border-sky-500/40 bg-sky-500/5'
+                          : 'border-border/40 hover:border-border hover:bg-accent/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full shrink-0 ${RISK_DOT[r.risk_level] || 'bg-gray-500'}`} />
+                          <span className="font-medium">{r.report_id}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span className="text-[10px]">{formatTime(r.created_at)}</span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5 pl-4 flex items-center gap-1">
+                        {r.zone}
+                        <ChevronRight className="h-2.5 w-2.5 ml-auto" />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs max-w-[200px]">
+                    <div className="font-medium">{r.observer_name}</div>
+                    <div className="text-muted-foreground line-clamp-2">{r.description}</div>
+                  </TooltipContent>
+                </Tooltip>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Info Box */}
-      <Card className="bg-sky-500/10 border-sky-500/20">
-        <CardHeader>
-          <CardTitle className="text-sm">📊 What You're Seeing</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2 text-sky-100">
-          <p>
-            <strong>Risk Markers:</strong> Each dot represents a verified field report. Dot size and color reflect risk level (Critical → red, High → orange, Medium → yellow, Low → green).
-          </p>
-          <p>
-            <strong>Heatmap Layer:</strong> Color gradient from blue (low) → yellow → red (critical) showing intensity distribution across the region.
-          </p>
-          <p>
-            <strong>Marker Clusters:</strong> Reports in the same area are grouped — zoom in to see individual reports.
-          </p>
-          <p>
-            <strong>Click a marker</strong> to see full report details: observer name, submission time, description, verification status, and analyst feedback.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </div>
+
+        {/* ━━━ LEGEND ━━━ */}
+        <div className="flex items-center gap-4 text-[10px] text-muted-foreground px-1">
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" /> Critical</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> High</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" /> Medium</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Low</span>
+          <Separator orientation="vertical" className="h-3" />
+          <span>Dot size = risk intensity · Heatmap = density gradient · Clusters = grouped reports</span>
+        </div>
+
+      </div>
+    </TooltipProvider>
   )
 }
