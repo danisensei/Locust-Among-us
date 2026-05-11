@@ -187,8 +187,6 @@ class SwarmSimulator:
 
             # Trail
             swarm["trail"].append([swarm["lat"], swarm["lon"]])
-            if len(swarm["trail"]) > 20:
-                swarm["trail"] = swarm["trail"][-20:]
 
             # Heading changes
             if random.random() > 0.85:

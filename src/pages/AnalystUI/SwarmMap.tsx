@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader2, Pause, Play, Navigation } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
+import { Progress } from '@/components/ui/progress'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Loader2, Pause, Play, Navigation, Bug, AlertTriangle,
+  Users, HeartPulse, Compass, Gauge, Mountain, Maximize2, Layers
+} from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 // @ts-ignore
@@ -54,10 +60,17 @@ const RISK_COLORS: Record<string, string> = {
 }
 
 const RISK_BADGE: Record<string, string> = {
-  critical: 'bg-red-500/15 text-red-300 border-red-500/30',
-  high: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  medium: 'bg-yellow-500/15 text-yellow-200 border-yellow-500/30',
-  low: 'bg-green-500/15 text-green-300 border-green-500/30',
+  critical: 'bg-red-500/15 text-red-400 border-red-500/30',
+  high: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  medium: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+  low: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+}
+
+const RISK_DOT: Record<string, string> = {
+  critical: 'bg-red-500',
+  high: 'bg-orange-500',
+  medium: 'bg-yellow-500',
+  low: 'bg-emerald-500',
 }
 
 // ── Pulsing CSS animation (injected once) ────────────────────
@@ -147,9 +160,19 @@ export default function SwarmMap() {
       { position: 'topright' }
     ).addTo(map)
 
+
     mapInstance.current = map
 
+    // Force Leaflet to recalculate after CSS grid layout settles
+    setTimeout(() => map.invalidateSize(), 100)
+    setTimeout(() => map.invalidateSize(), 300)
+
+    // Also watch for container resizes
+    const ro = new ResizeObserver(() => map.invalidateSize())
+    ro.observe(mapRef.current)
+
     return () => {
+      ro.disconnect()
       map.remove()
       mapInstance.current = null
       markersRef.current.clear()
@@ -220,14 +243,14 @@ export default function SwarmMap() {
 
           // Popup content
           const popupHtml = `
-            <div style="font-family: system-ui; font-size: 12px; min-width: 250px;">
+            <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 12px; min-width: 250px;">
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                 <strong style="font-size:14px;">${p.id}</strong>
                 <span style="background:${color}22; color:${color}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${p.risk_level.toUpperCase()}</span>
               </div>
               <div style="color:#999; margin-bottom:4px;">${p.center_name}</div>
-              ${p.report_id ? `<div style="font-size:11px; color:#888; margin-bottom:2px;">📋 Report: <strong>${p.report_id}</strong></div>` : ''}
-              ${p.observer_name ? `<div style="font-size:11px; color:#888; margin-bottom:6px;">👤 Submitted by: <strong>${p.observer_name}</strong></div>` : ''}
+              ${p.report_id ? `<div style="font-size:11px; color:#888; margin-bottom:2px;">Report: <strong>${p.report_id}</strong></div>` : ''}
+              ${p.observer_name ? `<div style="font-size:11px; color:#888; margin-bottom:6px;">Observer: <strong>${p.observer_name}</strong></div>` : ''}
               <table style="width:100%; font-size:11px; border-collapse:collapse;">
                 <tr><td style="padding:2px 0; color:#888;">Area</td><td style="text-align:right; font-weight:600;">${p.area_km2.toFixed(1)} km²</td></tr>
                 <tr><td style="padding:2px 0; color:#888;">Population</td><td style="text-align:right; font-weight:600;">${(p.size / 1e9).toFixed(2)}B</td></tr>
@@ -237,12 +260,12 @@ export default function SwarmMap() {
                 <tr><td style="padding:2px 0; color:#888;">Altitude</td><td style="text-align:right; font-weight:600;">${p.altitude.toFixed(0)} m</td></tr>
                 <tr><td style="padding:2px 0; color:#888;">Health</td><td style="text-align:right; font-weight:600;">${(p.health * 100).toFixed(0)}%</td></tr>
               </table>
-              <div style="margin-top:6px; padding-top:6px; border-top:1px solid #eee;">
-                <div style="background:#f5f5f5; border-radius:4px; height:6px; overflow:hidden;">
+              <div style="margin-top:6px; padding-top:6px; border-top:1px solid #333;">
+                <div style="background:#222; border-radius:4px; height:6px; overflow:hidden;">
                   <div style="height:100%; background:linear-gradient(to right, #22c55e, #dc2626); width:${p.health * 100}%;"></div>
                 </div>
               </div>
-              <div style="margin-top:4px; font-size:10px; color:#aaa;">📍 ${lat.toFixed(6)}, ${lon.toFixed(6)}</div>
+              <div style="margin-top:4px; font-size:10px; color:#666;">${lat.toFixed(6)}, ${lon.toFixed(6)}</div>
             </div>
           `
 
@@ -321,156 +344,202 @@ export default function SwarmMap() {
     }
   }
 
+  const selectedData = swarms.find(s => s.id === selectedSwarm)
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Swarm Map</h1>
-          <p className="text-muted-foreground mt-2">
-            Live swarm tracking · Positions update every 3s · {tickCount > 0 ? `Tick #${tickCount}` : 'Connecting…'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={paused ? 'default' : 'outline'}
-            size="sm"
-            className="gap-2"
-            onClick={() => setPaused(!paused)}
-          >
-            {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-            {paused ? 'Resume' : 'Pause'}
-          </Button>
-        </div>
-      </div>
+    <TooltipProvider>
+      <div className="space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="pt-5 pb-4">
-            <div className="text-sm text-muted-foreground">Active Swarms</div>
-            <div className="text-3xl font-bold">{stats?.total_swarms ?? '—'}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="pt-5 pb-4">
-            <div className="text-sm text-muted-foreground">Critical</div>
-            <div className="text-3xl font-bold text-red-400">{stats?.critical_count ?? '—'}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="pt-5 pb-4">
-            <div className="text-sm text-muted-foreground">Total Locusts</div>
-            <div className="text-2xl font-bold">{stats ? `${(stats.total_locusts / 1e9).toFixed(1)}B` : '—'}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="pt-5 pb-4">
-            <div className="text-sm text-muted-foreground">Avg Health</div>
-            <div className="text-3xl font-bold text-green-300">{stats ? `${(stats.avg_health * 100).toFixed(0)}%` : '—'}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Map */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-foreground pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-foreground flex items-center gap-2">
-              🗺️ Live Swarm Tracker
-            </CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
-                {paused ? '⏸ Paused' : '🔴 LIVE'}
-              </Badge>
-              <Badge variant="secondary" className="bg-white/10 text-foreground border-white/20">
-                {swarms.length} swarm{swarms.length !== 1 ? 's' : ''}
-              </Badge>
-            </div>
+        {/* ━━━ HEADER ━━━ */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Swarm Map
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Live tracking · 3s polling · {tickCount > 0 ? `Tick #${tickCount}` : 'Connecting…'}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="p-0 relative">
-          <div ref={mapRef} className="w-full h-96 md:h-[500px] lg:h-[600px] bg-slate-900" />
-          {loading && (
-            <div className="absolute inset-0 bg-background/70 flex items-center justify-center z-[500]">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-sky-400" />
-                <p className="text-sm">Connecting to Swarm Engine…</p>
-              </div>
-            </div>
-          )}
-          {error && !loading && (
-            <div className="absolute bottom-4 left-4 right-4 bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 z-[500]">
-              ⚠️ {error} — Make sure the Swarm Engine is running on the server
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={`text-[10px] gap-1 ${paused ? 'border-amber-500/40 text-amber-400' : 'border-emerald-500/40 text-emerald-400'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${paused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+              {paused ? 'Paused' : 'Live'}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setPaused(!paused)}
+            >
+              {paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+              {paused ? 'Resume' : 'Pause'}
+            </Button>
+          </div>
+        </div>
 
-      {/* Swarm Details Panel */}
-      {swarms.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              🦗 Active Swarms
-              <span className="text-xs text-muted-foreground font-normal ml-auto">Click a card to focus on the map</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {swarms.map((s) => (
-                <div
-                  key={s.id}
-                  className={`p-4 rounded-lg border-l-4 cursor-pointer transition-all ${
-                    selectedSwarm === s.id
-                      ? 'bg-sky-500/10 ring-1 ring-sky-500/30 shadow-lg'
-                      : 'bg-muted/40 hover:bg-muted/60'
-                  }`}
-                  style={{ borderLeftColor: RISK_COLORS[s.risk_level] || '#6b7280' }}
-                  onClick={() => focusSwarm(s.id)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-bold text-sm flex items-center gap-1.5">
-                        {s.id}
-                        <Navigation className="h-3 w-3 text-muted-foreground" style={{ transform: `rotate(${s.heading}deg)` }} />
-                      </h4>
-                      <p className="text-xs text-muted-foreground">{s.center_name}</p>
+        {/* ━━━ STATS BAR ━━━ */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'Active Swarms', value: stats?.total_swarms ?? '—', icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10' },
+            { label: 'Critical', value: stats?.critical_count ?? '—', icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+            { label: 'Total Locusts', value: stats ? `${(stats.total_locusts / 1e9).toFixed(1)}B` : '—', icon: Users, color: 'text-sky-400', bg: 'bg-sky-500/10' },
+            { label: 'Avg Health', value: stats ? `${(stats.avg_health * 100).toFixed(0)}%` : '—', icon: HeartPulse, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          ].map(s => {
+            const Icon = s.icon
+            return (
+              <div key={s.label} className="rounded-lg border border-border/50 p-3 flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${s.bg}`}>
+                  <Icon className={`h-4 w-4 ${s.color}`} />
+                </div>
+                <div>
+                  <div className="text-lg font-bold tabular-nums leading-tight">{s.value}</div>
+                  <div className="text-[10px] text-muted-foreground">{s.label}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* ━━━ MAP + SIDEBAR ━━━ */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+          {/* Map — 3 cols */}
+          <Card className="lg:col-span-3 overflow-hidden">
+            <CardContent className="p-0 relative">
+              <div ref={mapRef} className="w-full h-[520px] bg-slate-900" />
+
+              {/* Overlay: status indicator */}
+              <div className="absolute top-3 left-3 z-[400] flex gap-1.5">
+                <Badge className="bg-background/80 backdrop-blur-sm text-foreground border-border/50 text-[10px] gap-1">
+                  <Layers className="h-3 w-3" />
+                  {swarms.length} swarm{swarms.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+
+              {loading && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[500]">
+                  <div className="text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-sky-400" />
+                    <p className="text-xs text-muted-foreground">Connecting to Swarm Engine…</p>
+                  </div>
+                </div>
+              )}
+              {error && !loading && (
+                <div className="absolute bottom-3 left-3 right-3 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-2.5 text-xs text-red-400 z-[500] flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {error} — Ensure the Swarm Engine is running
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Sidebar — Selected swarm detail or swarm list */}
+          <div className="lg:col-span-1 space-y-3">
+
+            {/* Selected swarm detail */}
+            {selectedData ? (
+              <Card className="border-border/50">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{selectedData.id}</CardTitle>
+                    <Badge className={`text-[10px] ${RISK_BADGE[selectedData.risk_level]}`}>
+                      {selectedData.risk_level.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{selectedData.center_name}</p>
+                </CardHeader>
+                <CardContent className="px-4 pb-4 space-y-3">
+                  <Separator />
+                  <div className="space-y-2">
+                    {[
+                      { icon: Maximize2, label: 'Area', value: `${selectedData.area_km2.toFixed(1)} km²` },
+                      { icon: Users, label: 'Population', value: `${(selectedData.size / 1e9).toFixed(2)}B` },
+                      { icon: Gauge, label: 'Speed', value: `${selectedData.speed.toFixed(1)} km/h` },
+                      { icon: Compass, label: 'Heading', value: `${selectedData.heading.toFixed(0)}°` },
+                      { icon: Mountain, label: 'Altitude', value: `${selectedData.altitude.toFixed(0)} m` },
+                    ].map(row => {
+                      const RIcon = row.icon
+                      return (
+                        <div key={row.label} className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <RIcon className="h-3 w-3" /> {row.label}
+                          </span>
+                          <span className="font-mono font-medium tabular-nums">{row.value}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <Separator />
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground flex items-center gap-1"><HeartPulse className="h-3 w-3" /> Health</span>
+                      <span className="font-mono font-medium">{(selectedData.health * 100).toFixed(0)}%</span>
                     </div>
-                    <Badge className={RISK_BADGE[s.risk_level]}>{s.risk_level.toUpperCase()}</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mt-2">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Area</span><span className="font-mono font-semibold">{s.area_km2.toFixed(1)} km²</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Pop</span><span className="font-mono font-semibold">{(s.size / 1e9).toFixed(2)}B</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Speed</span><span className="font-mono font-semibold">{s.speed.toFixed(1)} km/h</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Alt</span><span className="font-mono font-semibold">{s.altitude.toFixed(0)} m</span></div>
-                  </div>
-                  <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-500"
-                      style={{ width: `${s.health * 100}%` }}
+                    <Progress
+                      value={selectedData.health * 100}
+                      className={`h-1.5 ${selectedData.health > 0.6 ? '[&>div]:bg-emerald-500' : selectedData.health > 0.3 ? '[&>div]:bg-amber-500' : '[&>div]:bg-red-500'}`}
                     />
                   </div>
-                  <div className="text-[10px] text-muted-foreground mt-1 text-right">Health: {(s.health * 100).toFixed(0)}%</div>
-                </div>
+                  <Button variant="ghost" size="sm" className="w-full text-xs h-7" onClick={() => setSelectedSwarm(null)}>
+                    Clear selection
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border/50 p-4 text-center">
+                <Navigation className="h-5 w-5 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">Click a swarm to inspect</p>
+              </div>
+            )}
+
+            {/* Swarm list */}
+            <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1">
+              {swarms.map(s => (
+                <Tooltip key={s.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => focusSwarm(s.id)}
+                      className={`w-full text-left rounded-lg border p-2.5 transition-all text-xs ${
+                        selectedSwarm === s.id
+                          ? 'border-sky-500/40 bg-sky-500/5'
+                          : 'border-border/40 hover:border-border hover:bg-accent/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${RISK_DOT[s.risk_level] || 'bg-gray-500'}`} />
+                          <span className="font-medium">{s.id}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Navigation className="h-2.5 w-2.5" style={{ transform: `rotate(${s.heading}deg)` }} />
+                          <span className="font-mono tabular-nums">{s.speed.toFixed(0)} km/h</span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5 pl-4">{s.center_name}</div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs">
+                    <div>{s.area_km2.toFixed(1)} km² · {(s.size / 1e9).toFixed(2)}B locusts</div>
+                    <div>Health: {(s.health * 100).toFixed(0)}%</div>
+                  </TooltipContent>
+                </Tooltip>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Legend */}
-      <Card className="bg-sky-500/10 border-sky-500/20">
-        <CardHeader>
-          <CardTitle className="text-sm">📊 Map Legend</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2 text-sky-100">
-          <p><strong>🦗 Pulsing markers:</strong> Each swarm is a pulsing dot — size reflects swarm area, color reflects risk level. The white arrow shows heading direction.</p>
-          <p><strong>- - - Dashed trails:</strong> Show the swarm's recent movement path (last 20 positions).</p>
-          <p><strong>🌡️ Heatmap:</strong> Background heat layer visualizes swarm density concentration.</p>
-          <p><strong>⏸ Pause/Play:</strong> Stop polling to inspect the map without updates.</p>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </div>
+
+        {/* ━━━ LEGEND ━━━ */}
+        <div className="flex items-center gap-6 text-[11px] text-muted-foreground px-1">
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" /> Critical</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" /> High</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-yellow-500" /> Medium</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Low</span>
+          <Separator orientation="vertical" className="h-3" />
+          <span className="flex items-center gap-1">Pulsing dot = swarm · Dashed line = trail · Background heat = density</span>
+        </div>
+
+      </div>
+    </TooltipProvider>
   )
 }
