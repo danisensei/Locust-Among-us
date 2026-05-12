@@ -1,22 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from '@/components/ui/dialog'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
-import { CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2, Map as MapIcon, Eye, XCircle, MessageSquare } from 'lucide-react'
+  CheckCircle2, Clock, Plus, MapPin, Keyboard, X, Loader2, Map as MapIcon, Eye, XCircle, MessageSquare, AlertTriangle, FileText, Search, ShieldAlert, CheckSquare, Send, Activity, RefreshCw
+} from 'lucide-react'
 import { useAuth, useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 // ── Zone bounding boxes (approx) ─────────────────────────────
-// { south, north, west, east } — generous bounds to allow border observations
 const ZONE_BOUNDS: Record<string, { s: number; n: number; w: number; e: number }> = {
   'Khuzdar Valley':    { s: 26.5, n: 28.5, w: 65.5, e: 67.5 },
   'Quetta':            { s: 29.5, n: 31.0, w: 66.0, e: 67.5 },
@@ -45,10 +44,10 @@ function isInsideZone(zoneName: string, lat: number, lon: number): boolean {
 }
 
 const RISK_LEVELS = [
-  { value: 'Critical', color: 'bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/25' },
-  { value: 'High',     color: 'bg-orange-500/15 text-orange-400 border-orange-500/30 hover:bg-orange-500/25' },
-  { value: 'Medium',   color: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/25' },
-  { value: 'Low',      color: 'bg-green-500/15 text-green-400 border-green-500/30 hover:bg-green-500/25' },
+  { value: 'Critical', color: 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20 active:bg-rose-500/30 ring-rose-500' },
+  { value: 'High',     color: 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 active:bg-orange-500/30 ring-orange-500' },
+  { value: 'Medium',   color: 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 active:bg-amber-500/30 ring-amber-500' },
+  { value: 'Low',      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 active:bg-emerald-500/30 ring-emerald-500' },
 ]
 
 const SIZE_OPTIONS = [
@@ -97,7 +96,6 @@ function MapPicker({ lat, lon, onChange }: {
       maxZoom: 18,
     }).addTo(map)
 
-    // Place initial marker if coords exist
     if (lat && lon) {
       const marker = L.marker([lat, lon]).addTo(map)
       markerRef.current = marker
@@ -116,7 +114,6 @@ function MapPicker({ lat, lon, onChange }: {
 
     mapInstance.current = map
 
-    // Fix tile rendering after dialog animation
     setTimeout(() => map.invalidateSize(), 300)
 
     return () => {
@@ -126,7 +123,6 @@ function MapPicker({ lat, lon, onChange }: {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update marker when lat/lon change externally
   useEffect(() => {
     if (!mapInstance.current) return
     if (lat && lon) {
@@ -139,7 +135,7 @@ function MapPicker({ lat, lon, onChange }: {
   }, [lat, lon])
 
   return (
-    <div ref={mapRef} className="w-full h-64 rounded-lg border border-border overflow-hidden" />
+    <div ref={mapRef} className="w-full h-[280px] rounded-xl border border-border/50 overflow-hidden shadow-inner" />
   )
 }
 
@@ -186,7 +182,7 @@ function MapViewer({ lat, lon, zone }: { lat: number; lon: number; zone: string 
     return () => { map.remove(); mapInstance.current = null }
   }, [lat, lon, zone])
 
-  return <div ref={mapRef} className="w-full h-80 rounded-lg border border-border overflow-hidden" />
+  return <div ref={mapRef} className="w-full h-80 rounded-xl border border-border/50 overflow-hidden shadow-inner" />
 }
 
 // ── Main Component ───────────────────────────────────────────
@@ -198,6 +194,7 @@ export default function FieldReports() {
   const [reports, setReports] = useState<ReportData[]>([])
   const [loadingReports, setLoadingReports] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | 'Pending' | 'Verified' | 'Rejected'>('all')
 
   // Dialog state
   const [open, setOpen] = useState(false)
@@ -241,7 +238,7 @@ export default function FieldReports() {
     }
   }, [authFetch])
 
-  useEffect(() => { fetchReports() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchReports() }, [fetchReports])
 
   // ── Reset form ─────────────────────────────────────────────
   const resetForm = () => {
@@ -263,7 +260,6 @@ export default function FieldReports() {
       setSubmitError('Please fill in Zone, Risk Level, and Description.')
       return
     }
-    // If there's a mismatch, ask for confirmation first
     if (zoneMismatch) {
       setShowMismatchConfirm(true)
       return
@@ -273,7 +269,6 @@ export default function FieldReports() {
 
   const doSubmit = async () => {
     setShowMismatchConfirm(false)
-
     setSubmitting(true)
     setSubmitError(null)
     try {
@@ -303,7 +298,7 @@ export default function FieldReports() {
       setTimeout(() => {
         setOpen(false)
         resetForm()
-      }, 1200)
+      }, 1500)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Submission failed')
     } finally {
@@ -324,74 +319,116 @@ export default function FieldReports() {
 
   const riskBadgeColor = (risk: string) => {
     switch (risk) {
-      case 'Critical': return 'bg-red-500/15 text-red-400'
-      case 'High':     return 'bg-orange-500/15 text-orange-400'
-      case 'Medium':   return 'bg-yellow-500/15 text-yellow-300'
-      case 'Low':      return 'bg-green-500/15 text-green-400'
-      default:         return 'bg-muted text-muted-foreground'
+      case 'Critical': return 'bg-rose-500/15 text-rose-400 border-rose-500/20'
+      case 'High':     return 'bg-orange-500/15 text-orange-400 border-orange-500/20'
+      case 'Medium':   return 'bg-amber-500/15 text-amber-300 border-amber-500/20'
+      case 'Low':      return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+      default:         return 'bg-muted text-muted-foreground border-border'
     }
   }
 
+  const statusIcon = (status: string) => {
+    switch (status) {
+      case 'Verified': return <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+      case 'Rejected': return <XCircle className="h-4 w-4 text-rose-400" />
+      default:         return <Clock className="h-4 w-4 text-amber-400" />
+    }
+  }
+
+  const myReports = reports.filter(r => r.observer_name === user?.name)
+  const filteredMyReports = filter === 'all' ? myReports : myReports.filter(r => r.status === filter)
+  
+  const myVerified = myReports.filter(r => r.status === 'Verified').length
+  const myPending = myReports.filter(r => r.status === 'Pending').length
+  const myRejected = myReports.filter(r => r.status === 'Rejected').length
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header + New Report button */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Field Reports</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm font-['Outfit']">
+            My Field Reports
+          </h1>
+          <p className="text-muted-foreground mt-1 font-medium">
             Submit and track field observations · Location-tagged · Verified by analysts
           </p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 shadow-lg">
-              <Plus className="h-4 w-4" />
+            <Button className="gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 shadow-lg shadow-sky-500/20 transition-opacity hover:opacity-90 font-semibold">
+              <Plus className="h-5 w-5" />
               New Report
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto border-border/50 bg-background/95 backdrop-blur-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg">Submit Field Report</DialogTitle>
+              <DialogTitle className="text-xl font-['Outfit'] flex items-center gap-2">
+                <Send className="h-5 w-5 text-sky-400" />
+                Submit Field Report
+              </DialogTitle>
               <DialogDescription>
                 Record your observation. Location can be set by tapping the map or entering coordinates.
               </DialogDescription>
             </DialogHeader>
 
             {submitSuccess ? (
-              <div className="py-8 text-center space-y-3">
-                <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto" />
-                <p className="text-lg font-semibold text-green-400">Report Submitted!</p>
-                <p className="text-sm text-muted-foreground">Your report has been queued for verification.</p>
+              <div className="py-12 flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-500">
+                <div className="h-20 w-20 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold font-['Outfit'] text-foreground">Report Submitted!</h3>
+                  <p className="text-muted-foreground mt-1">Your report has been queued for analyst verification.</p>
+                </div>
               </div>
             ) : (
-              <div className="space-y-5 py-2">
-                {/* Zone */}
-                <div className="space-y-2">
-                  <Label htmlFor="zone">Zone *</Label>
-                  <select
-                    id="zone"
-                    value={zone}
-                    onChange={(e) => setZone(e.target.value)}
-                    className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none dark:bg-input/30"
-                  >
-                    <option value="" disabled>Select zone…</option>
-                    {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                  </select>
+              <div className="space-y-6 py-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Zone */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Zone *</Label>
+                    <Select value={zone} onValueChange={setZone}>
+                      <SelectTrigger className="w-full bg-muted/10 border-input transition-colors hover:bg-muted/20">
+                        <SelectValue placeholder="Select observation zone..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ZONES.map(z => (
+                          <SelectItem key={z} value={z}>{z}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Estimated Size */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Estimated Swarm Size</Label>
+                    <Select value={estimatedSize} onValueChange={setEstimatedSize}>
+                      <SelectTrigger className="w-full bg-muted/10 border-input transition-colors hover:bg-muted/20">
+                        <SelectValue placeholder="Unknown / Not estimated" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SIZE_OPTIONS.map(s => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Risk Level */}
-                <div className="space-y-2">
-                  <Label>Risk Level *</Label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="space-y-3 p-4 rounded-xl bg-muted/10 border border-border/50">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Risk Level *</Label>
+                  <div className="flex flex-wrap gap-3">
                     {RISK_LEVELS.map(rl => (
                       <button
                         key={rl.value}
                         type="button"
                         onClick={() => setRiskLevel(rl.value)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-150 ${
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all duration-200 ${
                           riskLevel === rl.value
-                            ? `${rl.color} ring-2 ring-offset-1 ring-offset-background ring-current scale-105`
-                            : `${rl.color} opacity-60 hover:opacity-100`
+                            ? `${rl.color} ring-2 ring-offset-2 ring-offset-background scale-105 shadow-lg`
+                            : `${rl.color} opacity-70 hover:opacity-100`
                         }`}
                       >
                         {rl.value}
@@ -400,90 +437,78 @@ export default function FieldReports() {
                   </div>
                 </div>
 
-                {/* Estimated Size */}
-                <div className="space-y-2">
-                  <Label htmlFor="size">Estimated Swarm Size</Label>
-                  <select
-                    id="size"
-                    value={estimatedSize}
-                    onChange={(e) => setEstimatedSize(e.target.value)}
-                    className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none dark:bg-input/30"
-                  >
-                    <option value="">Unknown / Not estimated</option>
-                    {SIZE_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
-                </div>
-
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="desc">Description *</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Description *</Label>
                   <textarea
-                    id="desc"
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe what you observed — swarm direction, density, crop damage, etc."
-                    className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none resize-none dark:bg-input/30"
+                    placeholder="Describe swarm direction, density, crop damage, etc."
+                    className="w-full rounded-xl border border-input bg-muted/10 px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:border-sky-500/50 focus-visible:ring-1 focus-visible:ring-sky-500/50 outline-none resize-none transition-all"
                   />
                 </div>
 
                 {/* Location Picker */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Location (optional)</Label>
-                    <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Location (optional)</Label>
+                    <div className="flex gap-1 bg-muted/30 border border-border/50 rounded-lg p-1">
                       <button
                         type="button"
                         onClick={() => setLocationMode('map')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                           locationMode === 'map'
-                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            ? 'bg-background shadow-sm text-foreground'
                             : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
-                        <MapPin className="h-3 w-3" /> Map
+                        <MapPin className="h-3.5 w-3.5" /> Map
                       </button>
                       <button
                         type="button"
                         onClick={() => setLocationMode('manual')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                           locationMode === 'manual'
-                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            ? 'bg-background shadow-sm text-foreground'
                             : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
-                        <Keyboard className="h-3 w-3" /> Manual
+                        <Keyboard className="h-3.5 w-3.5" /> Manual
                       </button>
                     </div>
                   </div>
 
                   {locationMode === 'map' ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
                       <MapPicker
                         lat={lat}
                         lon={lon}
                         onChange={(newLat, newLon) => { setLat(newLat); setLon(newLon) }}
                       />
-                      {lat !== null && lon !== null && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 text-green-400" />
-                          <span>Selected: {lat.toFixed(6)}, {lon.toFixed(6)}</span>
+                      {lat !== null && lon !== null ? (
+                        <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2 flex items-center gap-3 text-xs font-medium shadow-md">
+                          <div className="flex items-center gap-1.5 text-sky-400">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span>{lat.toFixed(4)}, {lon.toFixed(4)}</span>
+                          </div>
                           <button
                             type="button"
                             onClick={() => { setLat(null); setLon(null) }}
-                            className="ml-auto text-red-400 hover:text-red-300"
+                            className="text-muted-foreground hover:text-rose-400 transition-colors"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                      )}
-                      {lat === null && (
-                        <p className="text-xs text-muted-foreground">Click on the map to set the observation location</p>
+                      ) : (
+                        <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-1.5 text-xs text-muted-foreground font-medium shadow-sm pointer-events-none">
+                          Click map to pin location
+                        </div>
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
+                      <div className="space-y-1.5">
                         <Label htmlFor="lat" className="text-xs">Latitude</Label>
                         <Input
                           id="lat"
@@ -492,9 +517,10 @@ export default function FieldReports() {
                           placeholder="e.g. 27.81"
                           value={lat ?? ''}
                           onChange={(e) => setLat(e.target.value ? parseFloat(e.target.value) : null)}
+                          className="bg-background"
                         />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <Label htmlFor="lon" className="text-xs">Longitude</Label>
                         <Input
                           id="lon"
@@ -503,6 +529,7 @@ export default function FieldReports() {
                           placeholder="e.g. 66.63"
                           value={lon ?? ''}
                           onChange={(e) => setLon(e.target.value ? parseFloat(e.target.value) : null)}
+                          className="bg-background"
                         />
                       </div>
                     </div>
@@ -511,13 +538,13 @@ export default function FieldReports() {
 
                 {/* Zone / Location mismatch warning */}
                 {zoneMismatch && (
-                  <div className="flex items-start gap-2 text-sm text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2.5">
-                    <span className="text-base mt-0.5">⚠️</span>
+                  <div className="flex items-start gap-3 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 shadow-inner">
+                    <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium">Location mismatch</p>
-                      <p className="text-xs text-yellow-300/80 mt-0.5">
-                        The pinned coordinates ({lat?.toFixed(4)}, {lon?.toFixed(4)}) appear to be outside <strong>{zone}</strong>. 
-                        Please verify the zone or adjust the pin. You can still submit if you're near the border.
+                      <p className="font-semibold text-amber-500">Location mismatch detected</p>
+                      <p className="text-xs text-amber-400/80 mt-1 leading-relaxed">
+                        The pinned coordinates ({lat?.toFixed(4)}, {lon?.toFixed(4)}) appear to be outside <strong className="text-amber-500">{zone}</strong>. 
+                        Please verify the zone or pin. You can still submit if you're near the border.
                       </p>
                     </div>
                   </div>
@@ -525,21 +552,21 @@ export default function FieldReports() {
 
                 {/* Error */}
                 {submitError && (
-                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                    ⚠️ {submitError}
+                  <div className="flex items-center gap-2 text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl px-4 py-3 font-medium">
+                    <AlertTriangle className="h-4 w-4 shrink-0" /> {submitError}
                   </div>
                 )}
               </div>
             )}
 
             {!submitSuccess && (
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>
+              <DialogFooter className="pt-2 border-t border-border/50">
+                <Button variant="ghost" onClick={() => { setOpen(false); resetForm() }}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmitClick} disabled={submitting} className="gap-2">
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {submitting ? 'Submitting…' : 'Submit Report'}
+                <Button onClick={handleSubmitClick} disabled={submitting} className="gap-2 bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/20">
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {submitting ? 'Submitting...' : 'Submit Report'}
                 </Button>
               </DialogFooter>
             )}
@@ -548,9 +575,9 @@ export default function FieldReports() {
 
         {/* Mismatch Confirmation Dialog */}
         <Dialog open={showMismatchConfirm} onOpenChange={setShowMismatchConfirm}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md border-amber-500/20 bg-background/95 backdrop-blur-xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-yellow-400">
+              <DialogTitle className="flex items-center gap-2 text-amber-500">
                 <MapPin className="h-5 w-5" />
                 Location Mismatch
               </DialogTitle>
@@ -558,21 +585,21 @@ export default function FieldReports() {
                 The coordinates you pinned don't appear to be inside <strong className="text-foreground">{zone}</strong>.
               </DialogDescription>
             </DialogHeader>
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-sm space-y-1">
-              <p className="text-yellow-300"><strong>Zone:</strong> {zone}</p>
-              <p className="text-yellow-300"><strong>Pinned location:</strong> {lat?.toFixed(4)}, {lon?.toFixed(4)}</p>
-              <p className="text-xs text-yellow-300/70 mt-2">
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 text-sm space-y-2 mt-2">
+              <p className="text-amber-400/90 flex justify-between"><strong className="text-amber-500">Zone:</strong> {zone}</p>
+              <p className="text-amber-400/90 flex justify-between"><strong className="text-amber-500">Pinned location:</strong> {lat?.toFixed(4)}, {lon?.toFixed(4)}</p>
+              <p className="text-xs text-amber-400/70 mt-3 pt-3 border-t border-amber-500/10">
                 This could mean the wrong zone was selected, or the pin was placed incorrectly.
                 If you're near a zone border, this may be normal.
               </p>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowMismatchConfirm(false)}>
+            <DialogFooter className="mt-4">
+              <Button variant="ghost" onClick={() => setShowMismatchConfirm(false)}>
                 Go Back & Fix
               </Button>
               <Button
                 variant="default"
-                className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
+                className="bg-amber-500 hover:bg-amber-600 text-amber-950 gap-2 font-semibold shadow-lg shadow-amber-500/20"
                 onClick={doSubmit}
                 disabled={submitting}
               >
@@ -585,340 +612,291 @@ export default function FieldReports() {
       </div>
 
       {/* My Reports Stats */}
-      {(() => {
-        const myReports = reports.filter(r => r.observer_name === user?.name)
-        const myVerified = myReports.filter(r => r.status === 'Verified').length
-        const myPending = myReports.filter(r => r.status === 'Pending').length
-        const myRejected = myReports.filter(r => r.status === 'Rejected').length
-        return (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">My Reports</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold">{myReports.length}</div></CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-green-500">
-                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Verified</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-green-400">{myVerified}</div></CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-yellow-500">
-                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Pending</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-yellow-300">{myPending}</div></CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-red-500">
-                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Rejected</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-red-400">{myRejected}</div></CardContent>
-              </Card>
-            </div>
-
-            {/* My Submitted Reports Table */}
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b border-border bg-accent/30">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>My Submitted Reports</CardTitle>
-                    <CardDescription>Reports you have submitted · Click a row to view details and feedback</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={fetchReports} disabled={loadingReports}>
-                    {loadingReports ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {listError ? (
-                  <div className="p-8 text-center text-red-400">
-                    <p>⚠️ {listError}</p>
-                    <Button variant="outline" size="sm" className="mt-3" onClick={fetchReports}>Retry</Button>
-                  </div>
-                ) : loadingReports ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    <p>Loading reports…</p>
-                  </div>
-                ) : myReports.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <p className="text-lg mb-1">No reports yet</p>
-                    <p className="text-sm">Click "New Report" to submit your first observation.</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
-                        <TableHead className="font-semibold text-foreground">Report ID</TableHead>
-                        <TableHead className="font-semibold text-foreground">Zone</TableHead>
-                        <TableHead className="font-semibold text-foreground">Risk</TableHead>
-                        <TableHead className="font-semibold text-foreground">Size</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
-                        <TableHead className="font-semibold text-foreground">Location</TableHead>
-                        <TableHead className="font-semibold text-foreground">Submitted</TableHead>
-                        <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {myReports.map((r) => (
-                        <TableRow
-                          key={r.report_id}
-                          className="border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
-                          onClick={() => { setDetailReport(r); setDetailOpen(true) }}
-                        >
-                          <TableCell className="font-semibold text-sm">{r.report_id}</TableCell>
-                          <TableCell className="text-sm">{r.zone}</TableCell>
-                          <TableCell>
-                            <Badge className={`${riskBadgeColor(r.risk_level)} text-xs`}>{r.risk_level}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{r.estimated_size || '—'}</TableCell>
-                          <TableCell>
-                            {r.status === 'Verified' ? (
-                              <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Verified
-                              </Badge>
-                            ) : r.status === 'Rejected' ? (
-                              <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
-                                <XCircle className="h-3 w-3" />
-                                Rejected
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
-                                <Clock className="h-3 w-3" />
-                                Pending
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {r.lat && r.lon ? (
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono">{r.lat.toFixed(4)}, {r.lon.toFixed(4)}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-5 text-[10px] gap-1 px-1.5 text-sky-400 hover:text-sky-300"
-                                  onClick={(e) => { e.stopPropagation(); setMapViewReport(r); setMapViewOpen(true) }}
-                                >
-                                  <Eye className="h-3 w-3" /> View
-                                </Button>
-                              </div>
-                            ) : '—'}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{formatTime(r.created_at)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setDetailReport(r); setDetailOpen(true) }}>
-                              <Eye className="h-3 w-3" /> Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )
-      })()}
-
-      {/* All Reports Table */}
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b border-border bg-accent/30">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Field Reports</CardTitle>
-              <CardDescription>Reports from all field officers across the network</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={fetchReports} disabled={loadingReports}>
-              {loadingReports ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
-            </Button>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div 
+          onClick={() => setFilter('all')}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'all' ? 'bg-sky-500/10 border-sky-500/50 shadow-[0_0_30px_-5px_rgba(14,165,233,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-sky-500/30'}`}
+        >
+          <div className="absolute -right-4 -top-4 p-6 bg-sky-500/5 rounded-full group-hover:bg-sky-500/10 transition-colors">
+            <FileText className="h-8 w-8 text-sky-500/40" />
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+          <p className="text-sm font-semibold text-muted-foreground mb-1">My Reports</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'all' ? 'text-sky-400' : 'text-foreground'}`}>{myReports.length}</p>
+        </div>
+        
+        <div 
+          onClick={() => setFilter('Pending')}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Pending' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-amber-500/30'}`}
+        >
+          <div className="absolute -right-4 -top-4 p-6 bg-amber-500/5 rounded-full group-hover:bg-amber-500/10 transition-colors">
+            <Clock className="h-8 w-8 text-amber-500/40" />
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground mb-1">Pending</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Pending' ? 'text-amber-400' : 'text-foreground'}`}>{myPending}</p>
+        </div>
+
+        <div 
+          onClick={() => setFilter('Verified')}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Verified' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_30px_-5px_rgba(16,185,129,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-emerald-500/30'}`}
+        >
+          <div className="absolute -right-4 -top-4 p-6 bg-emerald-500/5 rounded-full group-hover:bg-emerald-500/10 transition-colors">
+            <CheckSquare className="h-8 w-8 text-emerald-500/40" />
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground mb-1">Verified</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Verified' ? 'text-emerald-400' : 'text-foreground'}`}>{myVerified}</p>
+        </div>
+
+        <div 
+          onClick={() => setFilter('Rejected')}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Rejected' ? 'bg-rose-500/10 border-rose-500/50 shadow-[0_0_30px_-5px_rgba(244,63,94,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-rose-500/30'}`}
+        >
+          <div className="absolute -right-4 -top-4 p-6 bg-rose-500/5 rounded-full group-hover:bg-rose-500/10 transition-colors">
+            <ShieldAlert className="h-8 w-8 text-rose-500/40" />
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground mb-1">Rejected</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Rejected' ? 'text-rose-400' : 'text-foreground'}`}>{myRejected}</p>
+        </div>
+      </div>
+
+      {/* My Submitted Reports List */}
+      <div className="rounded-2xl border border-border/50 bg-background/50 backdrop-blur-xl overflow-hidden shadow-xl flex flex-col">
+        <div className="p-4 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-indigo-500/20 rounded-lg">
+              <Search className="h-4 w-4 text-indigo-400" />
+            </div>
+            <h2 className="font-semibold font-['Outfit'] text-lg">My Submitted Reports</h2>
+            {filter !== 'all' && (
+              <Badge variant="outline" className="ml-2 bg-background border-border/50 text-muted-foreground cursor-pointer hover:bg-muted" onClick={() => setFilter('all')}>
+                {filter} <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+          </div>
+          <Button type="button" variant="ghost" size="sm" onClick={fetchReports} disabled={loadingReports} className="h-8 w-8 p-0 hover:bg-sky-500/10 hover:text-sky-400 transition-colors">
+            {loadingReports ? <Loader2 className="h-4 w-4 animate-spin text-sky-500" /> : <RefreshCw className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <div className="bg-muted/10 grid grid-cols-[110px_1fr_110px_120px_140px_130px] gap-4 px-8 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/50 hidden md:grid">
+          <div>Report ID</div>
+          <div>Zone / Size</div>
+          <div>Risk Level</div>
+          <div>Status</div>
+          <div>Location</div>
+          <div className="text-right">Submitted</div>
+        </div>
+
+        <ScrollArea className="h-[350px]">
           {listError ? (
-            <div className="p-8 text-center text-red-400">
-              <p>⚠️ {listError}</p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={fetchReports}>Retry</Button>
+            <div className="flex flex-col items-center justify-center h-full p-8 text-rose-400">
+              <AlertTriangle className="h-10 w-10 mb-3 opacity-80" />
+              <p className="font-medium">{listError}</p>
             </div>
-          ) : loadingReports ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p>Loading reports…</p>
+          ) : (loadingReports && myReports.length === 0) ? (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
+              <Loader2 className="h-8 w-8 animate-spin mb-3 text-sky-500" />
+              <p className="text-sm font-medium">Loading your reports...</p>
             </div>
-          ) : reports.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <p className="text-lg mb-1">No reports yet</p>
-              <p className="text-sm">Reports submitted by field officers will appear here.</p>
+          ) : filteredMyReports.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full p-12 text-muted-foreground text-center">
+              <div className="p-4 bg-muted/20 rounded-full mb-4">
+                <FileText className="h-8 w-8 opacity-50" />
+              </div>
+              <p className="text-lg font-medium text-foreground mb-1">No {filter !== 'all' ? filter.toLowerCase() : ''} reports found</p>
+              <p className="text-sm max-w-sm">Click "New Report" to submit your first observation from the field.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/50 transition-colors">
-                  <TableHead className="font-semibold text-foreground">Report ID</TableHead>
-                  <TableHead className="font-semibold text-foreground">Observer</TableHead>
-                  <TableHead className="font-semibold text-foreground">Zone</TableHead>
-                  <TableHead className="font-semibold text-foreground">Risk</TableHead>
-                  <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground">Location</TableHead>
-                  <TableHead className="font-semibold text-foreground">Submitted</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((r) => (
-                  <TableRow
-                    key={r.report_id}
-                    className={`border-b border-border hover:bg-accent/40 transition-colors duration-150 cursor-pointer ${r.observer_name === user?.name ? 'bg-sky-500/5' : ''}`}
-                    onClick={() => { setDetailReport(r); setDetailOpen(true) }}
-                  >
-                    <TableCell className="font-semibold text-sm">{r.report_id}</TableCell>
-                    <TableCell className="text-sm">
-                      {r.observer_name}
-                      {r.observer_name === user?.name && (
-                        <Badge className="ml-1.5 bg-sky-500/15 text-sky-300 text-[10px] px-1.5 py-0">You</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">{r.zone}</TableCell>
-                    <TableCell>
-                      <Badge className={`${riskBadgeColor(r.risk_level)} text-xs`}>{r.risk_level}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {r.status === 'Verified' ? (
-                        <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
-                          <CheckCircle2 className="h-3 w-3" /> Verified
-                        </Badge>
-                      ) : r.status === 'Rejected' ? (
-                        <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
-                          <XCircle className="h-3 w-3" /> Rejected
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
-                          <Clock className="h-3 w-3" /> Pending
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {r.lat && r.lon ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono">{r.lat.toFixed(4)}, {r.lon.toFixed(4)}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 text-[10px] gap-1 px-1.5 text-sky-400 hover:text-sky-300"
-                            onClick={(e) => { e.stopPropagation(); setMapViewReport(r); setMapViewOpen(true) }}
-                          >
-                            <Eye className="h-3 w-3" /> View
-                          </Button>
-                        </div>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{formatTime(r.created_at)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Report Detail Dialog */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          {detailReport && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-sky-400" />
-                  Report Details — {detailReport.report_id}
-                </DialogTitle>
-                <DialogDescription>
-                  Submitted {formatTime(detailReport.created_at)}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Zone</label>
-                    <p className="text-sm font-medium">{detailReport.zone}</p>
+            <div className={`flex flex-col gap-2.5 p-3 transition-opacity duration-300 ${loadingReports ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+              {filteredMyReports.map((r) => (
+                <div
+                  key={r.report_id}
+                  onClick={() => { setDetailReport(r); setDetailOpen(true) }}
+                  className="relative overflow-hidden grid grid-cols-1 md:grid-cols-[110px_1fr_110px_120px_140px_130px] gap-4 px-5 py-3 items-center bg-background/40 hover:bg-muted/30 border border-border/50 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+                >
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    r.status === 'Verified' ? 'bg-emerald-500' : r.status === 'Rejected' ? 'bg-rose-500' : 'bg-sky-500'
+                  }`} />
+                  
+                  <div className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-sky-400 transition-colors flex items-center gap-2">
+                    {r.status === 'Pending' && <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />}
+                    {r.report_id}
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Risk Level</label>
-                    <Badge className={`${riskBadgeColor(detailReport.risk_level)} text-xs`}>
-                      {detailReport.risk_level}
+                  
+                  <div>
+                    <div className="font-bold text-sm flex items-center gap-1.5 text-foreground"><MapPin className="h-3 w-3 text-sky-400" />{r.zone}</div>
+                    <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mt-0.5">{r.estimated_size || 'Size unknown'}</div>
+                  </div>
+
+                  <div>
+                    <Badge variant="outline" className={`${riskBadgeColor(r.risk_level)} text-xs px-2.5 py-0.5 shadow-sm font-semibold tracking-wide`}>
+                      {r.risk_level}
                     </Badge>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Estimated Size</label>
-                    <p className="text-sm">{detailReport.estimated_size || '—'}</p>
+
+                  <div>
+                    <div className="flex items-center gap-1.5 text-sm font-bold">
+                      {statusIcon(r.status)}
+                      <span className={r.status === 'Verified' ? 'text-emerald-500' : r.status === 'Rejected' ? 'text-rose-500' : 'text-amber-500'}>
+                        {r.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Location</label>
+
+                  <div className="text-xs text-muted-foreground">
+                    {r.lat && r.lon ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono bg-muted/30 px-1.5 py-0.5 rounded text-foreground/80">{r.lat.toFixed(2)}, {r.lon.toFixed(2)}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-full"
+                          onClick={(e) => { e.stopPropagation(); setMapViewReport(r); setMapViewOpen(true) }}
+                        >
+                          <MapIcon className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ) : '—'}
+                  </div>
+
+                  <div className="text-right text-sm font-medium text-muted-foreground md:flex md:flex-col md:items-end">
+                    {formatTime(r.created_at)}
+                    <span className="text-[10px] uppercase tracking-wider text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex items-center gap-1">
+                      <Eye className="h-3 w-3" /> View details
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+
+      {/* Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl shadow-2xl">
+          {detailReport && (
+            <>
+              {/* Header section with gradient */}
+              <div className="relative p-6 pb-8 bg-gradient-to-br from-sky-500/10 via-background to-background border-b border-border/50">
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                  <FileText className="w-32 h-32 text-sky-500" />
+                </div>
+                <DialogHeader className="relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-sky-500/20 rounded-xl shadow-inner border border-sky-500/20">
+                        <MessageSquare className="h-5 w-5 text-sky-400" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-2xl font-black font-['Outfit'] tracking-tight text-foreground">
+                          My Observation
+                        </DialogTitle>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                          <span className="font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">{detailReport.report_id}</span>
+                          <span>·</span>
+                          <span>Submitted {new Date(detailReport.created_at).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Status Badge */}
+                    <div className={`px-4 py-1.5 rounded-full border shadow-sm flex items-center gap-2 text-sm font-semibold tracking-wide ${
+                      detailReport.status === 'Verified' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : detailReport.status === 'Rejected' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    }`}>
+                      {statusIcon(detailReport.status)}
+                      {detailReport.status.toUpperCase()}
+                    </div>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              <div className="p-6 space-y-6 overflow-y-auto max-h-[60vh]">
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1.5 p-3.5 rounded-xl bg-muted/10 border border-border/40 hover:bg-muted/20 transition-colors">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3 text-sky-400" /> Zone
+                    </label>
+                    <p className="text-sm font-semibold">{detailReport.zone}</p>
+                  </div>
+                  <div className="space-y-1.5 p-3.5 rounded-xl bg-muted/10 border border-border/40 hover:bg-muted/20 transition-colors">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                      <AlertTriangle className="h-3 w-3 text-orange-400" /> Risk Level
+                    </label>
+                    <div>
+                      <Badge variant="outline" className={`${riskBadgeColor(detailReport.risk_level)} text-xs shadow-sm`}>
+                        {detailReport.risk_level}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 p-3.5 rounded-xl bg-muted/10 border border-border/40 hover:bg-muted/20 transition-colors">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                      <Activity className="h-3 w-3 text-indigo-400" /> Swarm Size
+                    </label>
+                    <p className="text-sm font-semibold text-foreground">{detailReport.estimated_size || '—'}</p>
+                  </div>
+                  <div className="space-y-1.5 p-3.5 rounded-xl bg-muted/10 border border-border/40 hover:bg-muted/20 transition-colors">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                      <Search className="h-3 w-3 text-emerald-400" /> Exact Location
+                    </label>
                     {detailReport.lat && detailReport.lon ? (
-                      <p className="text-sm font-mono flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-green-400" />
+                      <p className="text-sm font-mono font-medium text-sky-400">
                         {detailReport.lat.toFixed(4)}, {detailReport.lon.toFixed(4)}
                       </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Not provided</p>
+                      <p className="text-sm text-muted-foreground italic">Unspecified</p>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Description</label>
-                  <div className="bg-muted/40 rounded-lg p-3 text-sm leading-relaxed">
+                {/* Description block */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Observation Notes</label>
+                  <div className="bg-gradient-to-br from-background to-muted/20 border border-border/60 rounded-2xl p-5 text-sm leading-relaxed text-foreground shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-sky-500/50"></div>
                     {detailReport.description}
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Current Status</label>
-                  <div>
-                    {detailReport.status === 'Verified' ? (
-                      <Badge className="bg-green-500/15 text-green-300 flex items-center gap-1 w-fit">
-                        <CheckCircle2 className="h-3 w-3" /> Verified
-                      </Badge>
-                    ) : detailReport.status === 'Rejected' ? (
-                      <Badge className="bg-red-500/15 text-red-400 flex items-center gap-1 w-fit">
-                        <XCircle className="h-3 w-3" /> Rejected
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-yellow-500/15 text-yellow-200 flex items-center gap-1 w-fit">
-                        <Clock className="h-3 w-3" /> Pending
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Analyst Feedback Section */}
-                {detailReport.reviewed_by ? (
-                  <div className={`rounded-lg p-3 space-y-1 border ${
-                    detailReport.status === 'Verified'
-                      ? 'bg-green-500/10 border-green-500/20'
-                      : detailReport.status === 'Rejected'
-                        ? 'bg-red-500/10 border-red-500/20'
-                        : 'bg-sky-500/10 border-sky-500/20'
-                  }`}>
-                    <p className={`text-xs font-medium ${
-                      detailReport.status === 'Verified' ? 'text-green-300'
-                        : detailReport.status === 'Rejected' ? 'text-red-300'
-                        : 'text-sky-300'
-                    }`}>Analyst Review</p>
-                    <p className="text-sm">
-                      Reviewed by <strong>{detailReport.reviewed_by}</strong>
-                      {detailReport.reviewed_at ? ` · ${formatTime(detailReport.reviewed_at)}` : ''}
-                    </p>
-                    {detailReport.reviewer_feedback && (
-                      <div className="bg-background/40 rounded-md p-2 mt-2">
-                        <p className="text-sm text-muted-foreground italic">"{detailReport.reviewer_feedback}"</p>
+                {/* Review Info */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Analyst Feedback</label>
+                  {detailReport.reviewed_by ? (
+                    <div className={`rounded-2xl p-5 border shadow-sm relative overflow-hidden ${
+                      detailReport.status === 'Verified' ? 'bg-gradient-to-r from-emerald-500/10 to-transparent border-emerald-500/20'
+                        : detailReport.status === 'Rejected' ? 'bg-gradient-to-r from-rose-500/10 to-transparent border-rose-500/20'
+                        : 'bg-gradient-to-r from-sky-500/10 to-transparent border-sky-500/20'
+                    }`}>
+                      <div className="flex items-start justify-between mb-1">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Reviewed by {detailReport.reviewed_by}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{detailReport.reviewed_at ? new Date(detailReport.reviewed_at).toLocaleString() : 'Date unknown'}</p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="bg-muted/30 border border-border rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground">⏳ Awaiting analyst review…</p>
-                  </div>
-                )}
+                      
+                      {detailReport.reviewer_feedback ? (
+                        <div className="mt-3 bg-background/60 rounded-xl p-4 border border-border/40 shadow-inner">
+                          <p className="text-sm text-foreground italic border-l-2 border-primary/30 pl-3">"{detailReport.reviewer_feedback}"</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic mt-2">No additional feedback provided.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5 flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-amber-400 animate-pulse" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-500">Awaiting Assignment</p>
+                        <p className="text-xs text-amber-400/80 mt-0.5">Your report is waiting for an analyst to review.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDetailOpen(false)}>
+              <DialogFooter className="border-t border-border/50 pt-4">
+                <Button variant="ghost" onClick={() => setDetailOpen(false)}>
                   Close
                 </Button>
               </DialogFooter>
@@ -926,21 +904,27 @@ export default function FieldReports() {
           )}
         </DialogContent>
       </Dialog>
+
       {/* Map Viewer Dialog */}
       <Dialog open={mapViewOpen} onOpenChange={(v) => { setMapViewOpen(v); if (!v) setMapViewReport(null) }}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-3xl border-border/50 bg-background/95 backdrop-blur-xl p-0 overflow-hidden">
           {mapViewReport && mapViewReport.lat && mapViewReport.lon && (
             <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+              <div className="p-6 pb-4 bg-muted/20 border-b border-border/50">
+                <DialogTitle className="flex items-center gap-2 text-xl font-['Outfit']">
                   <MapIcon className="h-5 w-5 text-sky-400" />
-                  Report Location — {mapViewReport.report_id}
+                  Location: {mapViewReport.zone}
                 </DialogTitle>
-                <DialogDescription>
-                  {mapViewReport.zone} · {mapViewReport.lat.toFixed(6)}, {mapViewReport.lon.toFixed(6)} · Toggle layers in the top-right corner
+                <DialogDescription className="mt-1">
+                  Report {mapViewReport.report_id} · Coordinates: {mapViewReport.lat.toFixed(6)}, {mapViewReport.lon.toFixed(6)}
                 </DialogDescription>
-              </DialogHeader>
-              <MapViewer lat={mapViewReport.lat} lon={mapViewReport.lon} zone={mapViewReport.zone} />
+              </div>
+              <div className="p-6">
+                <MapViewer lat={mapViewReport.lat} lon={mapViewReport.lon} zone={mapViewReport.zone} />
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" onClick={() => setMapViewOpen(false)}>Close Map</Button>
+                </div>
+              </div>
             </>
           )}
         </DialogContent>

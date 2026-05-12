@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────
 export interface AuthUser {
@@ -104,7 +104,7 @@ export function useAuth(): AuthContextType {
 
 // ── Authenticated fetch helper ────────────────────────────────
 export function useAuthFetch() {
-  return async (url: string, options: RequestInit = {}): Promise<Response> => {
+  return useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
     // Read fresh token each call — avoids stale closure issues
     const token = localStorage.getItem('lcews_token')
 
@@ -116,5 +116,5 @@ export function useAuthFetch() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     })
-  }
+  }, [])
 }
