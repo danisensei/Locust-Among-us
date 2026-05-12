@@ -58,7 +58,7 @@ services:
         VITE_SWARM_API_URL: ${VITE_SWARM_API_URL:-http://localhost:8001}
     container_name: lc-ews-frontend
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       swarm-engine:
         condition: service_healthy
