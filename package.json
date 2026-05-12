@@ -24,6 +24,7 @@
     "vite": "^8.0.4"
   },
   "dependencies": {
+    "@base-ui/react": "^1.4.1",
     "@chakra-ui/react": "^3.34.0",
     "@chakra-ui/theme-tools": "^2.2.6",
     "@emotion/react": "^11.14.0",

@@ -24,6 +24,7 @@
   "registries": {
     "@aceternity": "https://ui.aceternity.com/registry/{name}.json",
     "@magicui": "https://magicui.design/r/{name}",
-    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json",
+    "@basecn": "https://basecn.dev/r/{name}.json"
   }
 }
