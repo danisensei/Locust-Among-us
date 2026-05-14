@@ -22,35 +22,23 @@ ENV VITE_SWARM_API_URL=$VITE_SWARM_API_URL
 
 RUN npm run build
 
-# Stage 2: Serve with Caddy (Automatic HTTPS + SPA + Reverse Proxy)
-FROM caddy:alpine
+# Stage 2: Serve with nginx
+FROM nginx:alpine
 
 # Copy built assets
-COPY --from=build /app/dist /usr/share/caddy
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Create Caddyfile
-# This configures Caddy to:
-# 1. Automatically fetch a ZeroSSL/Let's Encrypt cert for the domain
-# 2. Proxy all /api/* requests to the FastAPI backend (swarm-engine:8001)
-# 3. Serve the static Vite frontend for all other routes with SPA fallback
-RUN echo "roachpestanalyzer.duckdns.org {" > /etc/caddy/Caddyfile && \
-    echo "    root * /usr/share/caddy" >> /etc/caddy/Caddyfile && \
-    echo "    encode gzip" >> /etc/caddy/Caddyfile && \
-    echo "" >> /etc/caddy/Caddyfile && \
-    echo "    handle /api/* {" >> /etc/caddy/Caddyfile && \
-    echo "        reverse_proxy swarm-engine:8001" >> /etc/caddy/Caddyfile && \
-    echo "    }" >> /etc/caddy/Caddyfile && \
-    echo "" >> /etc/caddy/Caddyfile && \
-    echo "    handle /auth/* {" >> /etc/caddy/Caddyfile && \
-    echo "        reverse_proxy swarm-engine:8001" >> /etc/caddy/Caddyfile && \
-    echo "    }" >> /etc/caddy/Caddyfile && \
-    echo "" >> /etc/caddy/Caddyfile && \
-    echo "    handle {" >> /etc/caddy/Caddyfile && \
-    echo "        try_files {path} /index.html" >> /etc/caddy/Caddyfile && \
-    echo "        file_server" >> /etc/caddy/Caddyfile && \
-    echo "    }" >> /etc/caddy/Caddyfile && \
-    echo "}" >> /etc/caddy/Caddyfile
+# SPA fallback: redirect all routes to index.html
+RUN echo 'server { \
+    listen 80; \
+    server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 443
+EXPOSE 80
 
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+CMD ["nginx", "-g", "daemon off;"]
