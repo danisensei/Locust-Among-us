@@ -1,43 +1,58 @@
-import { cn } from "@/lib/utils";
-import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-function Avatar({ className, ...props }: AvatarPrimitive.Root.Props) {
-  return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
-        className
-      )}
-      {...props}
-    />
-  );
-}
+const Avatar = React.forwardRef<
+  HTMLSpanElement,
+  React.HTMLAttributes<HTMLSpanElement>
+>(({ className, ...props }, ref) => (
+  <span
+    ref={ref}
+    data-slot="avatar"
+    className={cn(
+      "relative flex size-8 shrink-0 overflow-hidden rounded-full",
+      className
+    )}
+    {...props}
+  />
+))
+Avatar.displayName = "Avatar"
 
-function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
+const AvatarImage = React.forwardRef<
+  HTMLImageElement,
+  React.ImgHTMLAttributes<HTMLImageElement>
+>(({ className, src, alt = "", ...props }, ref) => {
+  const [hasError, setHasError] = React.useState(false)
+
+  if (hasError || !src) return null
+
   return (
-    <AvatarPrimitive.Image
+    <img
+      ref={ref}
       data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
+      src={src}
+      alt={alt}
+      onError={() => setHasError(true)}
+      className={cn("aspect-square size-full object-cover", className)}
       {...props}
     />
-  );
-}
+  )
+})
+AvatarImage.displayName = "AvatarImage"
 
-function AvatarFallback({
-  className,
-  ...props
-}: AvatarPrimitive.Fallback.Props) {
-  return (
-    <AvatarPrimitive.Fallback
-      data-slot="avatar-fallback"
-      className={cn(
-        "bg-muted flex items-center justify-center size-full rounded-full text-sm",
-        className
-      )}
-      {...props}
-    />
-  );
-}
+const AvatarFallback = React.forwardRef<
+  HTMLSpanElement,
+  React.HTMLAttributes<HTMLSpanElement>
+>(({ className, ...props }, ref) => (
+  <span
+    ref={ref}
+    data-slot="avatar-fallback"
+    className={cn(
+      "bg-muted flex items-center justify-center size-full rounded-full text-sm",
+      className
+    )}
+    {...props}
+  />
+))
+AvatarFallback.displayName = "AvatarFallback"
 
-export { Avatar, AvatarImage, AvatarFallback };
+export { Avatar, AvatarImage, AvatarFallback }
