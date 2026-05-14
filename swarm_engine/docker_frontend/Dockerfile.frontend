@@ -36,10 +36,19 @@ COPY --from=build /app/dist /usr/share/caddy
 RUN echo "roachpestanalyzer.duckdns.org {" > /etc/caddy/Caddyfile && \
     echo "    root * /usr/share/caddy" >> /etc/caddy/Caddyfile && \
     echo "    encode gzip" >> /etc/caddy/Caddyfile && \
-    echo "    reverse_proxy /api/* swarm-engine:8001" >> /etc/caddy/Caddyfile && \
-    echo "    reverse_proxy /auth/* swarm-engine:8001" >> /etc/caddy/Caddyfile && \
-    echo "    try_files {path} /index.html" >> /etc/caddy/Caddyfile && \
-    echo "    file_server" >> /etc/caddy/Caddyfile && \
+    echo "" >> /etc/caddy/Caddyfile && \
+    echo "    handle /api/* {" >> /etc/caddy/Caddyfile && \
+    echo "        reverse_proxy swarm-engine:8001" >> /etc/caddy/Caddyfile && \
+    echo "    }" >> /etc/caddy/Caddyfile && \
+    echo "" >> /etc/caddy/Caddyfile && \
+    echo "    handle /auth/* {" >> /etc/caddy/Caddyfile && \
+    echo "        reverse_proxy swarm-engine:8001" >> /etc/caddy/Caddyfile && \
+    echo "    }" >> /etc/caddy/Caddyfile && \
+    echo "" >> /etc/caddy/Caddyfile && \
+    echo "    handle {" >> /etc/caddy/Caddyfile && \
+    echo "        try_files {path} /index.html" >> /etc/caddy/Caddyfile && \
+    echo "        file_server" >> /etc/caddy/Caddyfile && \
+    echo "    }" >> /etc/caddy/Caddyfile && \
     echo "}" >> /etc/caddy/Caddyfile
 
 EXPOSE 80 443
