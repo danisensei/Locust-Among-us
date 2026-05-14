@@ -328,7 +328,7 @@ export default function DroneOps() {
                   <div className="flex flex-wrap gap-2">
                     {MISSION_TYPES.map(t => (
                       <button key={t} type="button" onClick={() => setMissionType(t)}
-                        className={`px-4 py-2 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                        className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
                           missionType === t
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
                             : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-border/50'
@@ -377,28 +377,28 @@ export default function DroneOps() {
 
       {/* ━━━ STATS ━━━ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-sky-500/30 transition-all group cursor-pointer">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-sky-500/30 transition-all group">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400 group-hover:scale-110 transition-transform"><Plane className="w-4 h-4" /></div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Fleet</span>
           </div>
           <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{drones.length}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-emerald-500/30 transition-all group cursor-pointer">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-emerald-500/30 transition-all group">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform"><CheckCircle2 className="w-4 h-4" /></div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</span>
           </div>
           <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{availableDrones.length}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-blue-500/30 transition-all group cursor-pointer">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-blue-500/30 transition-all group">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform"><Activity className="w-4 h-4" /></div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">On Mission</span>
           </div>
           <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{onMissionDrones.length}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-amber-500/30 transition-all group cursor-pointer">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-amber-500/30 transition-all group">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform"><Battery className="w-4 h-4" /></div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Battery</span>
@@ -410,8 +410,8 @@ export default function DroneOps() {
       {/* ━━━ MAIN CONTENT TABS ━━━ */}
       <Tabs defaultValue="fleet" className="w-full">
         <TabsList className="bg-muted/40 p-1 border border-border/40 rounded-lg w-fit mb-4">
-          <TabsTrigger value="fleet" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-sky-400 transition-all cursor-pointer">Fleet Overview</TabsTrigger>
-          <TabsTrigger value="missions" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-400 transition-all cursor-pointer">Active Missions ({activeMissions.length})</TabsTrigger>
+          <TabsTrigger value="fleet" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-sky-400 transition-all">Fleet Overview</TabsTrigger>
+          <TabsTrigger value="missions" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-400 transition-all">Active Missions ({activeMissions.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="fleet" className="m-0 mt-2 outline-none">
@@ -423,7 +423,7 @@ export default function DroneOps() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {drones.map(d => (
-                <div key={d.id} className="group relative p-5 rounded-2xl bg-background border border-border/50 hover:border-sky-500/50 hover:shadow-[0_0_20px_-10px_rgba(14,165,233,0.3)] transition-all overflow-hidden cursor-pointer">
+                <div key={d.id} className="group relative p-5 rounded-2xl bg-background border border-border/50 hover:border-sky-500/50 hover:shadow-[0_0_20px_-10px_rgba(14,165,233,0.3)] transition-all overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
                   
                   <div className="flex justify-between items-start mb-4 relative z-10">
@@ -492,7 +492,7 @@ export default function DroneOps() {
                   
                   <div className="divide-y divide-border/50">
                     {missions.map(m => (
-                      <div key={m.mission_id} className="grid grid-cols-7 gap-4 p-4 items-center hover:bg-muted/10 transition-colors cursor-pointer">
+                      <div key={m.mission_id} className="grid grid-cols-7 gap-4 p-4 items-center hover:bg-muted/10 transition-colors">
                         <div className="col-span-1 font-mono text-sm">{m.mission_id}</div>
                         
                         <div className="col-span-1 flex items-center gap-2">
