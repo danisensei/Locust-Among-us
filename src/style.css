@@ -73,6 +73,27 @@
   border-color: hsl(var(--border));
 }
 
+/* Global pointer cursor for all interactive/clickable elements */
+a,
+button,
+select,
+summary,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[role="link"],
+[tabindex]:not([tabindex="-1"]),
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+label[for] {
+  cursor: pointer;
+}
+
 html, body, #app {
   width: 100%;
   height: 100%;
