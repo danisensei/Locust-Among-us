@@ -1,14 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Slider } from '@/components/ui/slider'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-  Loader2, Zap, Play, MapPin, Plane, Target, RefreshCw, Activity, Battery, CheckCircle2
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Loader2, Plus, Zap, CheckCircle2, XCircle, Play, MapPin, Plane, Target, RefreshCw, Activity, Battery, ShieldAlert
 } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
+import { Separator } from '@/components/ui/separator'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment } from '@react-three/drei'
+import DroneModel from '@/components/ui/DroneModel'
 
 // ── Types ────────────────────────────────────────────────────
 interface DroneData {
@@ -27,6 +38,8 @@ interface MissionData {
   started_at: string | null; completed_at: string | null; created_at: string
   drone?: DroneData; report?: ReportData
 }
+
+const MISSION_TYPES = ['Survey', 'Spray', 'Monitor', 'Patrol']
 
 const statusColor = (s: string) => {
   switch (s) {
@@ -62,18 +75,43 @@ export default function DroneOps() {
 
   const [drones, setDrones] = useState<DroneData[]>([])
   const [missions, setMissions] = useState<MissionData[]>([])
+  const [reports, setReports] = useState<ReportData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Assign dialog
+  const [open, setOpen] = useState(false)
+  const [selDrone, setSelDrone] = useState<number | ''>('')
+  const [selReport, setSelReport] = useState<number | ''>('')
+  const [missionType, setMissionType] = useState('Survey')
+  const [coverage, setCoverage] = useState(10)
+  const [altitude, setAltitude] = useState(500)
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Status update loading
+  const [updatingMission, setUpdatingMission] = useState<string | null>(null)
+
+  // Add drone dialog
+  const [addDroneOpen, setAddDroneOpen] = useState(false)
+  const [newDroneId, setNewDroneId] = useState('')
+  const [newDroneModel, setNewDroneModel] = useState('')
+  const [newDroneBattery, setNewDroneBattery] = useState(100)
+  const [addingDrone, setAddingDrone] = useState(false)
+  const [addDroneError, setAddDroneError] = useState<string | null>(null)
 
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true)
-      const [dRes, mRes] = await Promise.all([
+      const [dRes, mRes, rRes] = await Promise.all([
         authFetch(`${API_URL}/api/drones`),
         authFetch(`${API_URL}/api/missions`),
+        authFetch(`${API_URL}/api/reports`),
       ])
       if (dRes.ok) setDrones(await dRes.json())
       if (mRes.ok) setMissions(await mRes.json())
+      if (rRes.ok) setReports(await rRes.json())
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load data')
@@ -82,13 +120,86 @@ export default function DroneOps() {
     }
   }, [authFetch])
 
-  useEffect(() => { fetchAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchAll() }, [])
 
   // Computed stats
   const availableDrones = drones.filter(d => d.status === 'Available')
   const onMissionDrones = drones.filter(d => d.status === 'On Mission')
+  const verifiedReports = reports.filter(r => r.status === 'Verified')
   const activeMissions = missions.filter(m => m.status === 'Assigned' || m.status === 'In Progress')
   const avgBattery = drones.length > 0 ? Math.round(drones.reduce((a, d) => a + d.battery, 0) / drones.length) : 0
+
+  const resetForm = () => {
+    setSelDrone(''); setSelReport(''); setMissionType('Survey')
+    setCoverage(10); setAltitude(500); setNotes(''); setSubmitError(null)
+  }
+
+  const resetDroneForm = () => {
+    setNewDroneId(''); setNewDroneModel(''); setNewDroneBattery(100); setAddDroneError(null)
+  }
+
+  const handleAddDrone = async () => {
+    if (!newDroneId.trim() || !newDroneModel.trim()) { setAddDroneError('Drone ID and Model are required'); return }
+    setAddingDrone(true); setAddDroneError(null)
+    try {
+      const res = await authFetch(`${API_URL}/api/drones`, {
+        method: 'POST',
+        body: JSON.stringify({ drone_id: newDroneId.trim(), model: newDroneModel.trim(), battery: newDroneBattery }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Failed (${res.status})`)
+      }
+      setAddDroneOpen(false); resetDroneForm(); await fetchAll()
+    } catch (e) {
+      setAddDroneError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setAddingDrone(false)
+    }
+  }
+
+  const handleAssign = async () => {
+    if (!selDrone || !selReport) { setSubmitError('Select a drone and a report'); return }
+    setSubmitting(true); setSubmitError(null)
+    try {
+      const res = await authFetch(`${API_URL}/api/missions`, {
+        method: 'POST',
+        body: JSON.stringify({
+          drone_id: selDrone, report_id: selReport,
+          mission_type: missionType, coverage_km: coverage,
+          altitude_m: altitude, notes,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Failed (${res.status})`)
+      }
+      setOpen(false); resetForm(); await fetchAll()
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const updateMissionStatus = async (missionId: string, newStatus: string) => {
+    setUpdatingMission(missionId)
+    try {
+      const res = await authFetch(`${API_URL}/api/missions/${missionId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.detail || 'Failed to update')
+      }
+      await fetchAll()
+    } finally {
+      setUpdatingMission(null)
+    }
+  }
+
+  const selectedReport = verifiedReports.find(r => r.id === selReport)
 
   return (
     <div className="w-full space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -102,7 +213,7 @@ export default function DroneOps() {
             Drone Ops Center
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Real-time fleet monitoring and mission tracking (Read-only).
+            Real-time fleet monitoring and mission control.
           </p>
         </div>
         
@@ -111,14 +222,158 @@ export default function DroneOps() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Refresh
           </Button>
+
+          {/* Add Drone Dialog */}
+          <Dialog open={addDroneOpen} onOpenChange={(v) => { setAddDroneOpen(v); if (!v) resetDroneForm() }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="border-sky-500/30 text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 hover:text-sky-300 transition-all">
+                <Plus className="h-4 w-4 mr-2" /> Add Drone
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-border/50">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plane className="h-5 w-5 text-sky-400" /> Register Drone
+                </DialogTitle>
+                <DialogDescription>Add a new UAV to the active fleet.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Drone Designation *</Label>
+                  <Input value={newDroneId} onChange={e => setNewDroneId(e.target.value)} placeholder="e.g. UAV-007" className="bg-muted/50 border-border/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hardware Model *</Label>
+                  <Input value={newDroneModel} onChange={e => setNewDroneModel(e.target.value)} placeholder="e.g. DJI Matrice" className="bg-muted/50 border-border/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex justify-between"><span>Initial Battery</span> <span className="text-sky-400 font-mono">{newDroneBattery}%</span></Label>
+                  <Slider min={0} max={100} value={[newDroneBattery]} onValueChange={e => setNewDroneBattery(e[0])} className="w-full" />
+                </div>
+                {addDroneError && (
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">⚠️ {addDroneError}</div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => { setAddDroneOpen(false); resetDroneForm() }}>Cancel</Button>
+                <Button onClick={handleAddDrone} disabled={addingDrone || !newDroneId.trim() || !newDroneModel.trim()} className="bg-sky-500 hover:bg-sky-600 text-white">
+                  {addingDrone && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Register
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Assign Mission Dialog */}
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/20 transition-all border-none">
+                <Target className="h-4 w-4 mr-2" /> Dispatch
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-xl bg-background/95 backdrop-blur-xl border-border/50 max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  <Target className="h-5 w-5 text-amber-500" /> Dispatch Drone
+                </DialogTitle>
+                <DialogDescription>Assign an available drone to investigate a verified threat zone.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="space-y-3">
+                  <Label>Target Zone (Verified Report) *</Label>
+                  <Select value={selReport ? selReport.toString() : ""} onValueChange={(val) => setSelReport(parseInt(val))}>
+                    <SelectTrigger className="h-10 w-full rounded-md border border-border/50 bg-muted/30 px-3 text-sm focus-visible:ring-1 focus-visible:ring-amber-500 transition-all">
+                      <SelectValue placeholder="Select a target..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {verifiedReports.map(r => (
+                        <SelectItem key={r.id} value={r.id.toString()}>
+                          {r.report_id} — {r.zone} ({r.risk_level})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {verifiedReports.length === 0 && <p className="text-xs text-amber-400">No verified reports available.</p>}
+                  
+                  {selectedReport && (
+                    <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-xs text-amber-400">{selectedReport.report_id}</span>
+                        <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 text-[10px]">{selectedReport.risk_level} Risk</Badge>
+                      </div>
+                      <p className="text-sm">{selectedReport.zone}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{selectedReport.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Available Drone *</Label>
+                  <Select value={selDrone ? selDrone.toString() : ""} onValueChange={(val) => setSelDrone(parseInt(val))}>
+                    <SelectTrigger className="h-10 w-full rounded-md border border-border/50 bg-muted/30 px-3 text-sm focus-visible:ring-1 focus-visible:ring-sky-500 transition-all">
+                      <SelectValue placeholder={availableDrones.length > 0 ? "Select unit..." : "No units available"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableDrones.map(d => (
+                        <SelectItem key={d.id} value={d.id.toString()}>
+                          {d.drone_id} — {d.model} (🔋 {d.battery}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Mission Protocol</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {MISSION_TYPES.map(t => (
+                      <button key={t} type="button" onClick={() => setMissionType(t)}
+                        className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
+                          missionType === t
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                            : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-border/50'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="flex justify-between text-xs"><span>Coverage Area</span><span className="text-amber-500">{coverage} km²</span></Label>
+                    <Slider min={1} max={50} value={[coverage]} onValueChange={e => setCoverage(e[0])} className="w-full" />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-xs">Flight Altitude (m)</Label>
+                    <Input type="number" min={50} max={2000} value={altitude} onChange={e => setAltitude(parseInt(e.target.value) || 500)} className="bg-muted/50 border-border/50 h-9" />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-xs">Operational Notes</Label>
+                  <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}
+                    className="w-full rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm focus-visible:ring-1 focus-visible:ring-amber-500 outline-none resize-none"
+                    placeholder="Enter special instructions..."
+                  />
+                </div>
+
+                {submitError && (
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">⚠️ {submitError}</div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => { setOpen(false); resetForm() }}>Cancel</Button>
+                <Button onClick={handleAssign} disabled={submitting || !selDrone || !selReport} className="bg-amber-500 hover:bg-amber-600 text-white">
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Launch Drone
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-
-      {error && (
-        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-          ⚠️ {error}
-        </div>
-      )}
 
       {/* ━━━ STATS ━━━ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -173,9 +428,15 @@ export default function DroneOps() {
                   
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-border/50 bg-muted/30">
-                        <AvatarFallback className="bg-transparent text-sky-400"><Plane className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 rounded-xl border border-border/50 bg-muted/10 overflow-hidden relative group-hover:border-sky-500/30 transition-all">
+                        <Canvas camera={{ position: [2.5, 1.5, 2.5], fov: 45 }}>
+                          <ambientLight intensity={0.5} />
+                          <directionalLight position={[10, 10, 5]} intensity={1} />
+                          <Environment preset="city" />
+                          <OrbitControls enableZoom={false} autoRotate={d.status === 'Available'} autoRotateSpeed={2} />
+                          <DroneModel status={d.status} />
+                        </Canvas>
+                      </div>
                       <div>
                         <h3 className="font-semibold text-sm">{d.drone_id}</h3>
                         <p className="text-xs text-muted-foreground">{d.model}</p>
@@ -215,21 +476,23 @@ export default function DroneOps() {
               <div className="py-20 flex flex-col items-center justify-center text-muted-foreground">
                 <Target className="h-12 w-12 opacity-20 mb-4" />
                 <p className="text-lg font-medium">No active missions</p>
+                <p className="text-sm mt-1">Dispatch a drone to begin operations.</p>
               </div>
             ) : (
               <ScrollArea className="w-full">
                 <div className="min-w-[800px]">
-                  <div className="grid grid-cols-6 gap-4 p-4 border-b border-border/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/20">
+                  <div className="grid grid-cols-7 gap-4 p-4 border-b border-border/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/20">
                     <div className="col-span-1">Mission ID</div>
                     <div className="col-span-1">Unit</div>
                     <div className="col-span-2">Target Report</div>
                     <div className="col-span-1">Parameters</div>
                     <div className="col-span-1">Status</div>
+                    <div className="col-span-1 text-right">Command</div>
                   </div>
                   
                   <div className="divide-y divide-border/50">
                     {missions.map(m => (
-                      <div key={m.mission_id} className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-muted/10 transition-colors">
+                      <div key={m.mission_id} className="grid grid-cols-7 gap-4 p-4 items-center hover:bg-muted/10 transition-colors">
                         <div className="col-span-1 font-mono text-sm">{m.mission_id}</div>
                         
                         <div className="col-span-1 flex items-center gap-2">
@@ -254,16 +517,37 @@ export default function DroneOps() {
                         </div>
                         
                         <div className="col-span-1">
-                          <div className="flex flex-col gap-1 items-start">
-                            <Badge variant="outline" className={`text-xs px-2.5 py-0.5 ${missionStatusColor(m.status)}`}>
-                              {m.status}
-                            </Badge>
-                            {m.completed_at && (
-                              <span className="text-[10px] text-muted-foreground">
-                                Concluded {formatTime(m.completed_at)}
-                              </span>
-                            )}
-                          </div>
+                          <Badge variant="outline" className={`text-xs px-2.5 py-0.5 ${missionStatusColor(m.status)}`}>
+                            {m.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="col-span-1 flex justify-end gap-2">
+                          {updatingMission === m.mission_id ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          ) : m.status === 'Assigned' ? (
+                            <>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10" onClick={() => updateMissionStatus(m.mission_id, 'In Progress')} title="Commence Operation">
+                                <Play className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => updateMissionStatus(m.mission_id, 'Aborted')} title="Abort Mission">
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : m.status === 'In Progress' ? (
+                            <>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10" onClick={() => updateMissionStatus(m.mission_id, 'Completed')} title="Mark Completed">
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => updateMissionStatus(m.mission_id, 'Aborted')} title="Abort Mission">
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground border border-border/50 px-2 py-1 rounded-md bg-muted/20">
+                              {m.completed_at ? formatTime(m.completed_at) : 'Concluded'}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}

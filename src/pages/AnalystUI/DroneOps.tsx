@@ -17,6 +17,9 @@ import {
 } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import { Separator } from '@/components/ui/separator'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment } from '@react-three/drei'
+import DroneModel from '@/components/ui/DroneModel'
 
 // ── Types ────────────────────────────────────────────────────
 interface DroneData {
@@ -90,6 +93,14 @@ export default function DroneOps() {
   // Status update loading
   const [updatingMission, setUpdatingMission] = useState<string | null>(null)
 
+  // Add drone dialog
+  const [addDroneOpen, setAddDroneOpen] = useState(false)
+  const [newDroneId, setNewDroneId] = useState('')
+  const [newDroneModel, setNewDroneModel] = useState('')
+  const [newDroneBattery, setNewDroneBattery] = useState(100)
+  const [addingDrone, setAddingDrone] = useState(false)
+  const [addDroneError, setAddDroneError] = useState<string | null>(null)
+
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true)
@@ -121,6 +132,30 @@ export default function DroneOps() {
   const resetForm = () => {
     setSelDrone(''); setSelReport(''); setMissionType('Survey')
     setCoverage(10); setAltitude(500); setNotes(''); setSubmitError(null)
+  }
+
+  const resetDroneForm = () => {
+    setNewDroneId(''); setNewDroneModel(''); setNewDroneBattery(100); setAddDroneError(null)
+  }
+
+  const handleAddDrone = async () => {
+    if (!newDroneId.trim() || !newDroneModel.trim()) { setAddDroneError('Drone ID and Model are required'); return }
+    setAddingDrone(true); setAddDroneError(null)
+    try {
+      const res = await authFetch(`${API_URL}/api/drones`, {
+        method: 'POST',
+        body: JSON.stringify({ drone_id: newDroneId.trim(), model: newDroneModel.trim(), battery: newDroneBattery }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Failed (${res.status})`)
+      }
+      setAddDroneOpen(false); resetDroneForm(); await fetchAll()
+    } catch (e) {
+      setAddDroneError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setAddingDrone(false)
+    }
   }
 
   const handleAssign = async () => {
@@ -187,6 +222,47 @@ export default function DroneOps() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Refresh
           </Button>
+
+          {/* Add Drone Dialog */}
+          <Dialog open={addDroneOpen} onOpenChange={(v) => { setAddDroneOpen(v); if (!v) resetDroneForm() }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="border-sky-500/30 text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 hover:text-sky-300 transition-all">
+                <Plus className="h-4 w-4 mr-2" /> Add Drone
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-border/50">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plane className="h-5 w-5 text-sky-400" /> Register Drone
+                </DialogTitle>
+                <DialogDescription>Add a new UAV to the active fleet.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Drone Designation *</Label>
+                  <Input value={newDroneId} onChange={e => setNewDroneId(e.target.value)} placeholder="e.g. UAV-007" className="bg-muted/50 border-border/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hardware Model *</Label>
+                  <Input value={newDroneModel} onChange={e => setNewDroneModel(e.target.value)} placeholder="e.g. DJI Matrice" className="bg-muted/50 border-border/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex justify-between"><span>Initial Battery</span> <span className="text-sky-400 font-mono">{newDroneBattery}%</span></Label>
+                  <Slider min={0} max={100} value={[newDroneBattery]} onValueChange={e => setNewDroneBattery(e[0])} className="w-full" />
+                </div>
+                {addDroneError && (
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">⚠️ {addDroneError}</div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => { setAddDroneOpen(false); resetDroneForm() }}>Cancel</Button>
+                <Button onClick={handleAddDrone} disabled={addingDrone || !newDroneId.trim() || !newDroneModel.trim()} className="bg-sky-500 hover:bg-sky-600 text-white">
+                  {addingDrone && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Register
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Assign Mission Dialog */}
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
@@ -352,9 +428,15 @@ export default function DroneOps() {
                   
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-border/50 bg-muted/30">
-                        <AvatarFallback className="bg-transparent text-sky-400"><Plane className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 rounded-xl border border-border/50 bg-muted/10 overflow-hidden relative group-hover:border-sky-500/30 transition-all">
+                        <Canvas camera={{ position: [2.5, 1.5, 2.5], fov: 45 }}>
+                          <ambientLight intensity={0.5} />
+                          <directionalLight position={[10, 10, 5]} intensity={1} />
+                          <Environment preset="city" />
+                          <OrbitControls enableZoom={false} autoRotate={d.status === 'Available'} autoRotateSpeed={2} />
+                          <DroneModel status={d.status} />
+                        </Canvas>
+                      </div>
                       <div>
                         <h3 className="font-semibold text-sm">{d.drone_id}</h3>
                         <p className="text-xs text-muted-foreground">{d.model}</p>

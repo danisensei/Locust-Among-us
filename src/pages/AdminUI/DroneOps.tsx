@@ -17,6 +17,9 @@ import {
 } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import { Separator } from '@/components/ui/separator'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment } from '@react-three/drei'
+import DroneModel from '@/components/ui/DroneModel'
 
 // ── Types ────────────────────────────────────────────────────
 interface DroneData {
@@ -425,9 +428,15 @@ export default function DroneOps() {
                   
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-border/50 bg-muted/30">
-                        <AvatarFallback className="bg-transparent text-sky-400"><Plane className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 rounded-xl border border-border/50 bg-muted/10 overflow-hidden relative group-hover:border-sky-500/30 transition-all">
+                        <Canvas camera={{ position: [2.5, 1.5, 2.5], fov: 45 }}>
+                          <ambientLight intensity={0.5} />
+                          <directionalLight position={[10, 10, 5]} intensity={1} />
+                          <Environment preset="city" />
+                          <OrbitControls enableZoom={false} autoRotate={d.status === 'Available'} autoRotateSpeed={2} />
+                          <DroneModel status={d.status} />
+                        </Canvas>
+                      </div>
                       <div>
                         <h3 className="font-semibold text-sm">{d.drone_id}</h3>
                         <p className="text-xs text-muted-foreground">{d.model}</p>
