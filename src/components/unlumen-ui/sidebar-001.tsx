@@ -248,7 +248,7 @@ export const Sidebar001Item = memo(function Sidebar001Item({
           }}
           onMouseLeave={() => setHovered(null)}
           className={cn(
-            "relative flex items-center gap-2 ml-2 pl-4 py-1.5 text-sm select-none",
+            "relative flex items-center gap-2 ml-2 pl-4 py-1.5 text-sm select-none cursor-pointer",
             className,
           )}
         >
@@ -338,7 +338,7 @@ export function Sidebar001Group({
         onClick={() => setIsOpen((v) => !v)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="relative z-1 flex items-center gap-1.5 py-1.5 pr-2 select-none text-left w-full group"
+        className="relative z-1 flex items-center gap-1.5 py-1.5 pr-2 select-none text-left w-full group cursor-pointer"
       >
         {icon ? (
           <>
