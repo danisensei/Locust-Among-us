@@ -313,3 +313,28 @@ async def run_astar(req: AStarRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
+
+
+class ActionRequest(BaseModel):
+    zone: str
+    action_type: str
+    details: Optional[str] = None
+
+@router.post("/api/actions/execute")
+async def execute_action(req: ActionRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Execute a recommended action (Dispatch Drone, Deploy Team, Issue Warning).
+    In a fully-fledged system, this would create Missions or Alert records in DB.
+    """
+    # For now, we simulate success for the UI.
+    if req.action_type == "dispatch_drone":
+        return {"status": "success", "message": f"Eradication drones dispatched to {req.zone}. ETA: 15 mins."}
+    elif req.action_type == "deploy_team":
+        return {"status": "success", "message": f"Ground assessment team deployed to {req.zone}."}
+    elif req.action_type == "issue_warning":
+        return {"status": "success", "message": f"SMS warnings issued to registered farmers in {req.zone}."}
+    elif req.action_type == "deploy_intercept":
+        return {"status": "success", "message": f"Intercept team deployed to midpoint zone {req.zone}."}
+    
+    raise HTTPException(status_code=400, detail="Unknown action type")
+
