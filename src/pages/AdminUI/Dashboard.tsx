@@ -5,18 +5,15 @@ import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Bug, Radar, Plane, FileText, Thermometer, Droplets, Wind, Eye,
-  ArrowUpRight, ArrowDownRight, Activity, Shield, Navigation, MapPin,
-  Clock, Zap, Map, Globe, Brain, ClipboardList, Bell
+  ArrowUpRight, ArrowDownRight, Activity, Shield, MapPin,
+  Clock, Zap
 } from 'lucide-react'
-import { Area, AreaChart, XAxis, CartesianGrid, Bar, BarChart } from 'recharts'
+import { Area, AreaChart, XAxis, CartesianGrid } from 'recharts'
 import { AnimateDigits } from '@/components/unlumen-ui/animate-digits'
 import { Tilt } from '@/components/unlumen-ui/tilt'
-import {
-  MotionNavigationMenu, MotionNavigationMenuList, MotionNavigationMenuItem,
-  MotionNavigationMenuTrigger, MotionNavigationMenuContent, MotionNavigationMenuLink,
-} from '@/components/unlumen-ui/motion-navigation-menu'
 import type { ChartConfig } from '@/components/ui/chart'
 
 /* ─── Constants ─── */
@@ -106,7 +103,7 @@ export default function Dashboard() {
     <TooltipProvider>
       <div className="w-full space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-        {/* ━━━ HEADER + NAV ━━━ */}
+        {/* ━━━ HEADER ━━━ */}
         <div className="flex flex-col gap-4">
           <div className="flex items-end justify-between">
             <div>
@@ -126,296 +123,253 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* Nav bar inline */}
-          <div className="flex items-center gap-3">
-            <MotionNavigationMenu>
-              <MotionNavigationMenuList>
-                <MotionNavigationMenuItem value="monitoring">
-                  <MotionNavigationMenuTrigger className="text-xs gap-1.5 h-8">
-                    <Radar className="h-3.5 w-3.5 text-emerald-400" /> Monitoring
-                  </MotionNavigationMenuTrigger>
-                  <MotionNavigationMenuContent className="w-[300px]">
-                    <div className="space-y-0.5">
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <Map className="h-4 w-4 text-emerald-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">Swarm Map</div>
-                          <div className="text-[10px] text-muted-foreground">Live cluster tracking</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <Globe className="h-4 w-4 text-sky-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">Risk Overview</div>
-                          <div className="text-[10px] text-muted-foreground">GIS heatmap</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <Brain className="h-4 w-4 text-violet-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">AI Prediction</div>
-                          <div className="text-[10px] text-muted-foreground">BFS · A* pathfinding</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                    </div>
-                  </MotionNavigationMenuContent>
-                </MotionNavigationMenuItem>
-
-                <MotionNavigationMenuItem value="operations">
-                  <MotionNavigationMenuTrigger className="text-xs gap-1.5 h-8">
-                    <Zap className="h-3.5 w-3.5 text-amber-400" /> Operations
-                  </MotionNavigationMenuTrigger>
-                  <MotionNavigationMenuContent className="w-[300px]">
-                    <div className="space-y-0.5">
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <Plane className="h-4 w-4 text-sky-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">Drone Ops</div>
-                          <div className="text-[10px] text-muted-foreground">Fleet management</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <ClipboardList className="h-4 w-4 text-cyan-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">Field Reports</div>
-                          <div className="text-[10px] text-muted-foreground">Observer submissions</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                      <MotionNavigationMenuLink href="#" className="flex-row items-center gap-3 p-2.5">
-                        <Bell className="h-4 w-4 text-red-400 shrink-0" />
-                        <div>
-                          <div className="text-xs font-medium">Alerts</div>
-                          <div className="text-[10px] text-muted-foreground">Active notifications</div>
-                        </div>
-                      </MotionNavigationMenuLink>
-                    </div>
-                  </MotionNavigationMenuContent>
-                </MotionNavigationMenuItem>
-              </MotionNavigationMenuList>
-            </MotionNavigationMenu>
-            <Separator orientation="vertical" className="h-5" />
-            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">LC-EWS v2.0</span>
-          </div>
         </div>
 
         <Separator />
 
-        {/* ━━━ STATS ROW ━━━ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map(stat => {
-            const Icon = stat.icon
-            return (
-              <Tilt key={stat.label} rotationFactor={6}>
-                <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className={`p-2 rounded-lg ${stat.bg}`}>
-                        <Icon className={`h-4 w-4 ${stat.color}`} />
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${stat.trendUp ? 'text-red-400' : 'text-muted-foreground'}`}>
-                            {stat.trend}
-                            {stat.trendUp && <ArrowUpRight className="h-3 w-3" />}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>Change since yesterday</TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <div className="mt-3">
-                      <AnimateDigits value={String(stat.value)} className="text-2xl font-bold" />
-                      <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-                    </div>
-                  </CardContent>
-                  {/* Subtle gradient accent at bottom */}
-                  <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${stat.bg.replace('/10', '/40')}`} />
-                </Card>
-              </Tilt>
-            )
-          })}
-        </div>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <TabsList className="bg-muted/50 border border-border/50">
+              <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+              <TabsTrigger value="intelligence" className="text-xs">Intelligence & Threats</TabsTrigger>
+              <TabsTrigger value="performance" className="text-xs">System Performance</TabsTrigger>
+            </TabsList>
+            <Badge variant="outline" className="text-[10px] bg-background">
+              LC-EWS v2.0
+            </Badge>
+          </div>
 
-        {/* ━━━ MAIN GRID: Chart + Threats ━━━ */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-          {/* Activity Chart — 3 cols */}
-          <Card className="lg:col-span-3">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-sky-400" />
-                    Threat Activity — 24h
-                  </CardTitle>
-                  <CardDescription className="text-xs">Swarm sightings, active threats, and resolved incidents</CardDescription>
-                </div>
-                <Badge variant="outline" className="text-[10px]">Live</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pb-2">
-              <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gThreats" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gSightings" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} className="text-[10px]" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area type="monotone" dataKey="sightings" stroke="hsl(199, 89%, 48%)" strokeWidth={1.5} fill="url(#gSightings)" />
-                  <Area type="monotone" dataKey="threats" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#gThreats)" />
-                  <Area type="monotone" dataKey="resolved" stroke="hsl(142, 71%, 45%)" strokeWidth={1.5} fill="transparent" strokeDasharray="4 4" />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Zone Threat Levels — 2 cols */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Radar className="h-4 w-4 text-amber-400" />
-                Zone Threat Levels
-              </CardTitle>
-              <CardDescription className="text-xs">Real-time risk assessment by zone</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {THREAT_ZONES.map(zone => (
-                <div key={zone.name} className="group">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${STATUS_COLORS[zone.status as keyof typeof STATUS_COLORS]}`} />
-                      <span className="text-sm font-medium">{zone.name}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {zone.trend === 'up' && <ArrowUpRight className="h-3 w-3 text-red-400" />}
-                      {zone.trend === 'down' && <ArrowDownRight className="h-3 w-3 text-emerald-400" />}
-                      <span className="text-xs font-mono tabular-nums text-muted-foreground">{zone.level}%</span>
-                    </div>
-                  </div>
-                  <Progress
-                    value={zone.level}
-                    className={`h-1.5 ${zone.status === 'critical' ? '[&>div]:bg-red-500' : zone.status === 'high' ? '[&>div]:bg-orange-500' : zone.status === 'medium' ? '[&>div]:bg-amber-500' : '[&>div]:bg-emerald-500'}`}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ━━━ BOTTOM GRID: Alerts + Weather + Quick Nav ━━━ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Alerts — 1 col */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-red-400" />
-                  Recent Alerts
-                </CardTitle>
-                <span className="flex items-center gap-1 text-[10px] text-red-400 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                  Live
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {ALERTS.map(alert => {
-                const style = ALERT_STYLES[alert.type]
+          {/* ━━━ TAB 1: OVERVIEW ━━━ */}
+          <TabsContent value="overview" className="space-y-6 mt-0">
+            {/* STATS ROW */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map(stat => {
+                const Icon = stat.icon
                 return (
-                  <div key={alert.id} className={`rounded-lg border p-3 ${style.bg} transition-colors hover:border-opacity-60`}>
-                    <div className="flex items-start gap-2.5">
-                      <div className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${style.dot}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold truncate">{alert.title}</span>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</span>
+                  <Tilt key={stat.label} rotationFactor={6}>
+                    <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className={`p-2 rounded-lg ${stat.bg}`}>
+                            <Icon className={`h-4 w-4 ${stat.color}`} />
+                          </div>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${stat.trendUp ? 'text-red-400' : 'text-muted-foreground'}`}>
+                                {stat.trend}
+                                {stat.trendUp && <ArrowUpRight className="h-3 w-3" />}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Change since yesterday</TooltipContent>
+                          </Tooltip>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{alert.desc}</p>
-                      </div>
-                    </div>
-                  </div>
+                        <div className="mt-3">
+                          <AnimateDigits value={String(stat.value)} className="text-2xl font-bold" />
+                          <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                        </div>
+                      </CardContent>
+                      <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${stat.bg.replace('/10', '/40')}`} />
+                    </Card>
+                  </Tilt>
                 )
               })}
-            </CardContent>
-          </Card>
-
-          {/* Weather — 1 col */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <span className="text-base">🌤️</span>
-                  Weather & Conditions
-                </CardTitle>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge variant="outline" className="text-[10px] gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      8s refresh
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Simulated meteorological feed</TooltipContent>
-                </Tooltip>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {weatherItems.map(item => {
-                const WIcon = item.icon
-                return (
-                  <div key={item.label} className="flex items-center gap-3">
-                    <WIcon className={`h-4 w-4 ${item.color} shrink-0`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">{item.label}</span>
-                        <span className="text-sm font-bold tabular-nums">
-                          <AnimateDigits value={item.value} className="text-sm font-bold inline-flex" />
-                          <span className="text-xs text-muted-foreground ml-0.5">{item.unit}</span>
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${item.barColor} transition-all duration-700 ease-out`}
-                          style={{ width: `${item.pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              <Separator className="my-2" />
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Quetta, Pakistan</span>
-                <span>Last sync: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* ━━━ OPERATIONAL METRICS BAR ━━━ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'Avg Response Time', value: '14 min', sub: 'Last 24h', color: 'text-emerald-400' },
-            { label: 'Coverage Area', value: '847K km²', sub: 'Pakistan', color: 'text-sky-400' },
-            { label: 'Detection Rate', value: '94.2%', sub: 'AI model', color: 'text-violet-400' },
-            { label: 'Uptime', value: '99.8%', sub: 'System', color: 'text-amber-400' },
-          ].map(m => (
-            <div key={m.label} className="rounded-lg border border-border/40 bg-accent/20 p-3 text-center">
-              <div className={`text-lg font-bold tabular-nums ${m.color}`}>{m.value}</div>
-              <div className="text-[11px] font-medium mt-0.5">{m.label}</div>
-              <div className="text-[10px] text-muted-foreground">{m.sub}</div>
             </div>
-          ))}
-        </div>
+
+            {/* ALERTS & WEATHER GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Alerts */}
+              <Card className="lg:col-span-1">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-red-400" />
+                      Recent Alerts
+                    </CardTitle>
+                    <span className="flex items-center gap-1 text-[10px] text-red-400 font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {ALERTS.map(alert => {
+                    const style = ALERT_STYLES[alert.type]
+                    return (
+                      <div key={alert.id} className={`rounded-lg border p-3 ${style.bg} transition-colors hover:border-opacity-60`}>
+                        <div className="flex items-start gap-2.5">
+                          <div className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${style.dot}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-semibold truncate">{alert.title}</span>
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{alert.desc}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* Weather */}
+              <Card className="lg:col-span-1">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <span className="text-base">🌤️</span>
+                      Weather & Conditions
+                    </CardTitle>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="outline" className="text-[10px] gap-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          8s refresh
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>Simulated meteorological feed</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {weatherItems.map(item => {
+                    const WIcon = item.icon
+                    return (
+                      <div key={item.label} className="flex items-center gap-3">
+                        <WIcon className={`h-4 w-4 ${item.color} shrink-0`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground">{item.label}</span>
+                            <span className="text-sm font-bold tabular-nums">
+                              <AnimateDigits value={item.value} className="text-sm font-bold inline-flex" />
+                              <span className="text-xs text-muted-foreground ml-0.5">{item.unit}</span>
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${item.barColor} transition-all duration-700 ease-out`}
+                              style={{ width: `${item.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <Separator className="my-2" />
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Quetta, Pakistan</span>
+                    <span>Last sync: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* ━━━ TAB 2: INTELLIGENCE & THREATS ━━━ */}
+          <TabsContent value="intelligence" className="space-y-6 mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              {/* Activity Chart — 3 cols */}
+              <Card className="lg:col-span-3">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-sky-400" />
+                        Threat Activity — 24h
+                      </CardTitle>
+                      <CardDescription className="text-xs">Swarm sightings, active threats, and resolved incidents</CardDescription>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">Live</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <ChartContainer config={chartConfig} className="h-[280px] w-full">
+                    <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gThreats" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gSightings" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.2} />
+                          <stop offset="100%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} className="text-[10px]" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Area type="monotone" dataKey="sightings" stroke="hsl(199, 89%, 48%)" strokeWidth={1.5} fill="url(#gSightings)" />
+                      <Area type="monotone" dataKey="threats" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#gThreats)" />
+                      <Area type="monotone" dataKey="resolved" stroke="hsl(142, 71%, 45%)" strokeWidth={1.5} fill="transparent" strokeDasharray="4 4" />
+                    </AreaChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Zone Threat Levels — 2 cols */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Radar className="h-4 w-4 text-amber-400" />
+                    Zone Threat Levels
+                  </CardTitle>
+                  <CardDescription className="text-xs">Real-time risk assessment by zone</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {THREAT_ZONES.map(zone => (
+                    <div key={zone.name} className="group">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-2 rounded-full ${STATUS_COLORS[zone.status as keyof typeof STATUS_COLORS]}`} />
+                          <span className="text-sm font-medium">{zone.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {zone.trend === 'up' && <ArrowUpRight className="h-3 w-3 text-red-400" />}
+                          {zone.trend === 'down' && <ArrowDownRight className="h-3 w-3 text-emerald-400" />}
+                          <span className="text-xs font-mono tabular-nums text-muted-foreground">{zone.level}%</span>
+                        </div>
+                      </div>
+                      <Progress
+                        value={zone.level}
+                        className={`h-2 ${zone.status === 'critical' ? '[&>div]:bg-red-500' : zone.status === 'high' ? '[&>div]:bg-orange-500' : zone.status === 'medium' ? '[&>div]:bg-amber-500' : '[&>div]:bg-emerald-500'}`}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* ━━━ TAB 3: SYSTEM PERFORMANCE ━━━ */}
+          <TabsContent value="performance" className="mt-0">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Radar className="h-4 w-4 text-emerald-400" />
+                  Operational Metrics
+                </CardTitle>
+                <CardDescription className="text-xs">Overall system performance and AI model health</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Avg Response Time', value: '14 min', sub: 'Last 24h', color: 'text-emerald-400' },
+                    { label: 'Coverage Area', value: '847K km²', sub: 'Pakistan', color: 'text-sky-400' },
+                    { label: 'Detection Rate', value: '94.2%', sub: 'AI model', color: 'text-violet-400' },
+                    { label: 'Uptime', value: '99.8%', sub: 'System', color: 'text-amber-400' },
+                  ].map(m => (
+                    <div key={m.label} className="rounded-lg border border-border/40 bg-accent/20 p-4 text-center hover:bg-accent/30 transition-colors">
+                      <div className={`text-2xl font-bold tabular-nums ${m.color}`}>{m.value}</div>
+                      <div className="text-xs font-medium mt-1">{m.label}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">{m.sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+        </Tabs>
 
       </div>
     </TooltipProvider>

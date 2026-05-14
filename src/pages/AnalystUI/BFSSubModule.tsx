@@ -8,8 +8,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Loader2, Play, SkipForward, RotateCcw, GitBranch, Network,
-  Layers, Target, Clock, ArrowRight, Info
+  Layers, Target, Clock, ArrowRight, Info, ShieldAlert
 } from 'lucide-react'
+import { useAuthFetch } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -43,6 +44,25 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
   const [animStep, setAnimStep] = useState<number>(-1)
   const [autoPlay, setAutoPlay] = useState(false)
   const [showGraph, setShowGraph] = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
+  const authFetch = useAuthFetch()
+
+  const handleAction = async (actionType: string, zone: string) => {
+    setActionLoading(true)
+    try {
+      const res = await authFetch(`${API_URL}/api/actions/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone, action_type: actionType })
+      })
+      const data = await res.json()
+      alert(data.message || 'Action executed successfully')
+    } catch (err) {
+      alert('Action failed')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   useEffect(() => {
     const names = Object.keys(zones)
@@ -257,8 +277,11 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
             <div className="flex items-center gap-1.5 text-xs font-medium mb-2">
               <Info className="h-3.5 w-3.5 text-violet-400" /> BFS Spread Model
             </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
+            <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
               Breadth-first traversal predicts layer-by-layer swarm migration from a source zone through the neighbor graph.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed font-semibold">
+              <strong>How to use:</strong> Select a Source Zone and click "Run BFS". The prediction helps you identify which adjacent zones will be impacted first, allowing you to set up containment lines.
             </p>
           </div>
 
@@ -291,6 +314,24 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
             <div className="rounded-lg border border-dashed border-border/50 p-4 text-center">
               <GitBranch className="h-5 w-5 mx-auto text-muted-foreground/40 mb-2" />
               <p className="text-[11px] text-muted-foreground">Select a zone and run BFS</p>
+            </div>
+          )}
+
+          {/* Recommended Next Steps */}
+          {bfsResult && bfsResult.levels.length > 1 && (
+            <div className="bg-muted/30 rounded-lg p-2.5 border border-border/50">
+              <div className="text-[10px] font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                <ShieldAlert className="h-3 w-3 text-violet-400" />
+                Containment Strategy
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                Based on the spread horizon, we recommend setting up containment lines around the {bfsResult.levels[1].zones.length} zones at Depth 1 to halt the swarm.
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleAction('issue_warning', bfsResult.levels[1].zones.join(', '))} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-violet-500 hover:bg-violet-600 text-white border-0">
+                  {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : 'Issue Early Warning'}
+                </Button>
+              </div>
             </div>
           )}
 

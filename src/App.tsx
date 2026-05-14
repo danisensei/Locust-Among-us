@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe } from 'lucide-react'
+import { ChevronDown, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe, Menu } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
+import { ThemeProvider } from './components/ThemeProvider'
+import { ThemeToggle } from './components/ThemeToggle'
+import { AlertDropdown } from './components/AlertDropdown'
 import Login from './pages/Login'
 
 // ── Admin / Analyst pages ─────────────────────────────────
@@ -43,10 +46,7 @@ export default function App() {
   const { user, logout, isLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedSection, setExpandedSection] = useState<string | null>('platform')
-
-  useEffect(() => {
-    document.documentElement.classList.add('dark')
-  }, [])
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   // Show nothing while restoring session from localStorage
   if (isLoading) {
@@ -164,40 +164,79 @@ export default function App() {
   ]
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      {/* Sidebar */}
-      <div className="w-64 border-r border-border bg-background flex flex-col overflow-hidden shadow-lg">
+    <ThemeProvider defaultTheme="dark" storageKey="lc-ews-theme">
+      <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+        {/* Collapsible Sidebar */}
+        <div className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} border-r border-border/50 bg-card/50 backdrop-blur-xl flex flex-col transition-all duration-300 z-50 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)] relative overflow-x-hidden`}>
+          
+          {/* Toggle Button (Absolute inside sidebar) */}
+          <button 
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="absolute -right-3 top-20 bg-background border border-border shadow-md rounded-full p-1 hover:bg-accent text-muted-foreground hover:text-foreground z-50"
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isSidebarCollapsed ? '-rotate-90' : 'rotate-90'}`} />
+          </button>
         {/* Logo */}
-        <div className="px-6 py-4 border-b border-border hover:bg-accent/30 transition-colors duration-200">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <span className="text-2xl">🦗</span>
-            <span>LC-EWS</span>
+        <div className={`px-4 py-7 border-b border-border/50 relative overflow-hidden group cursor-default transition-all duration-300 ${isSidebarCollapsed ? 'items-center justify-center' : ''}`}>
+          {/* Animated background glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-sky-500/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+          
+          {/* Faint watermark */}
+          <div className="absolute -right-8 -top-8 opacity-5 group-hover:opacity-[0.08] group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 pointer-events-none transform origin-center">
+            <span className="text-9xl">🦗</span>
           </div>
-          {isFieldOfficer && (
-            <div className="text-xs text-green-400 mt-1 font-medium">Field Officer Portal</div>
-          )}
-          {isAnalyst && (
-            <div className="text-xs text-blue-400 mt-1 font-medium">Analyst Portal</div>
-          )}
+          
+          <div className={`flex ${isSidebarCollapsed ? 'flex-col justify-center' : 'items-center'} gap-4 relative z-10`}>
+            {/* Logo Icon with radar/pulse ring */}
+            <div className="relative flex-shrink-0">
+              <div className="absolute inset-0 bg-sky-500/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
+              <div className="absolute inset-0 border border-sky-400/30 rounded-xl animate-ping opacity-0 group-hover:opacity-100" style={{ animationDuration: '3s' }} />
+              <div className="p-3 bg-gradient-to-br from-emerald-500/20 via-sky-500/20 to-indigo-500/20 rounded-xl shadow-inner border border-white/10 group-hover:border-white/20 group-hover:shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-all duration-300 relative bg-background/50 backdrop-blur-sm">
+                <span className="text-2xl drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 group-hover:-translate-y-0.5 transition-all duration-300 inline-block">🦗</span>
+              </div>
+            </div>
+
+            {!isSidebarCollapsed && (
+              <div className="flex flex-col justify-center overflow-hidden whitespace-nowrap">
+                <span className="text-[28px] leading-none font-black tracking-tighter bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent font-['Outfit'] drop-shadow-sm pb-1.5 group-hover:from-sky-400 group-hover:via-indigo-400 group-hover:to-emerald-400 transition-all duration-700" style={{ backgroundSize: '200% auto' }}>LC-EWS</span>
+                {isFieldOfficer && (
+                  <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-emerald-400/90 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" /> Field Officer
+                  </span>
+                )}
+                {isAnalyst && (
+                  <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-sky-400/90 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.8)]" /> Analyst Portal
+                  </span>
+                )}
+                {isAdmin && (
+                  <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-indigo-400/90 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]" /> Admin Portal
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-2">
           {sections.map(section => (
             <div key={section.id}>
               {section.expandable ? (
                 <button
                   onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group"
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group`}
+                  title={isSidebarCollapsed ? section.label : undefined}
                 >
-                  <span className="group-hover:translate-x-0.5 transition-transform">{section.label}</span>
+                  {!isSidebarCollapsed && <span className="group-hover:translate-x-0.5 transition-transform whitespace-nowrap">{section.label}</span>}
                   <ChevronDown 
-                    className={`h-4 w-4 transition-all duration-300 ${expandedSection === section.id ? 'rotate-180' : 'group-hover:translate-x-0.5'}`}
+                    className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${expandedSection === section.id ? 'rotate-180' : 'group-hover:translate-x-0.5'}`}
                   />
                 </button>
               ) : (
-                <div className="px-3 py-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
-                  {section.label}
+                <div className={`px-3 py-2 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider ${isSidebarCollapsed ? 'text-center truncate' : ''}`}>
+                  {!isSidebarCollapsed ? section.label : '•••'}
                 </div>
               )}
 
@@ -210,17 +249,20 @@ export default function App() {
                       <button
                         key={page.id}
                         onClick={() => setActiveTab(page.id)}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium transition-all duration-200 group ${
+                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} text-sm font-medium transition-all duration-200 group ${
                           isActive
-                            ? 'bg-primary text-primary-foreground shadow-md'
-                            : 'text-foreground hover:bg-accent/60 hover:shadow-sm'
+                            ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 shadow-sm border border-emerald-500/20'
+                            : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                         }`}
+                        title={isSidebarCollapsed ? page.label : undefined}
                       >
-                        <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                        <span className={`flex-1 transition-all duration-200 ${isActive ? 'font-semibold' : 'group-hover:translate-x-0.5'}`}>
-                          {page.label}
-                        </span>
-                        {isActive && <div className="h-2 w-2 rounded-full bg-primary-foreground ml-2 animate-pulse" />}
+                        <Icon className={`h-5 w-5 flex-shrink-0 transition-all duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                        {!isSidebarCollapsed && (
+                          <span className={`flex-1 transition-all duration-200 whitespace-nowrap overflow-hidden ${isActive ? 'font-semibold' : 'group-hover:translate-x-0.5'}`}>
+                            {page.label}
+                          </span>
+                        )}
+                        {isActive && !isSidebarCollapsed && <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 ml-2 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />}
                       </button>
                     )
                   })}
@@ -231,33 +273,36 @@ export default function App() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="border-t border-border p-3 space-y-3 bg-accent/20">
-          <div className="px-3 py-3 bg-accent/40 rounded-lg hover:bg-accent/60 transition-all duration-200 group cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold group-hover:scale-110 transition-transform duration-200">
-                {user.name.charAt(0).toUpperCase()}
+        <div className="border-t border-border/50 p-3 space-y-3 bg-muted/10 overflow-hidden">
+          {!isSidebarCollapsed && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 flex-shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold group-hover:scale-110 transition-transform duration-200">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{user.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{user.name}</div>
-                <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+              <div className="mt-2 px-0 whitespace-nowrap">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  user.role === 'admin'         ? 'bg-red-500/15 text-red-400' :
+                  user.role === 'analyst'       ? 'bg-blue-500/15 text-blue-400' :
+                                                'bg-green-500/15 text-green-400'
+                }`}>
+                  {user.role === 'field_officer' ? 'Field Officer' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                </span>
               </div>
-            </div>
-            <div className="mt-2 px-0">
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                user.role === 'admin'         ? 'bg-red-500/15 text-red-400' :
-                user.role === 'analyst'       ? 'bg-blue-500/15 text-blue-400' :
-                                               'bg-green-500/15 text-green-400'
-              }`}>
-                {user.role === 'field_officer' ? 'Field Officer' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-              </span>
-            </div>
-          </div>
+            </>
+          )}
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-lg transition-all duration-200 group font-medium"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'gap-2 px-3 py-2.5'} text-sm text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all duration-200 group font-medium`}
+            title={isSidebarCollapsed ? "Sign Out" : undefined}
           >
-            <LogOut className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-            <span>Sign Out</span>
+            <LogOut className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+            {!isSidebarCollapsed && <span>Sign Out</span>}
           </button>
         </div>
       </div>
@@ -265,10 +310,27 @@ export default function App() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="border-b border-border bg-background/95 h-14 flex items-center px-6 gap-4">
-          <div className="flex-1 flex items-center gap-2">
-            <span className="text-2xl">🦗</span>
-            <h1 className="font-semibold text-lg">LC-EWS - Locust Early Warning System</h1>
+        <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl h-16 flex items-center justify-between px-6 sticky top-0 z-40 shadow-sm relative overflow-hidden">
+          {/* Subtle top glow line */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 transition-opacity duration-500 header-glow-line" />
+          
+          <div className="flex items-center gap-3">
+            {/* Breadcrumb / Page Title */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-muted-foreground/60 font-medium text-sm">Dashboard</span>
+              <span className="text-muted-foreground/40 text-xs">/</span>
+              <h1 className="font-semibold text-foreground tracking-tight">
+                {pages.find(p => p.id === activeTab)?.label || 'Overview'}
+              </h1>
+            </div>
+          </div>
+          
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
+            <AlertDropdown />
+            
+            <div className="h-6 w-px bg-border/50 mx-1" />
+            <ThemeToggle />
           </div>
         </header>
 
@@ -280,5 +342,6 @@ export default function App() {
         </main>
       </div>
     </div>
+    </ThemeProvider>
   )
 }
