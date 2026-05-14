@@ -33,17 +33,13 @@ COPY --from=build /app/dist /usr/share/caddy
 # 1. Automatically fetch a ZeroSSL/Let's Encrypt cert for the domain
 # 2. Proxy all /api/* requests to the FastAPI backend (swarm-engine:8001)
 # 3. Serve the static Vite frontend for all other routes with SPA fallback
-RUN echo 'roachpestanalyzer.duckdns.org { \n\
-    root * /usr/share/caddy \n\
-    encode gzip \n\
-    \n\
-    # Proxy API requests to backend \n\
-    reverse_proxy /api/* swarm-engine:8001 \n\
-    \n\
-    # Serve static files, fallback to index.html for SPA routing \n\
-    try_files {path} /index.html \n\
-    file_server \n\
-}' > /etc/caddy/Caddyfile
+RUN echo "roachpestanalyzer.duckdns.org {" > /etc/caddy/Caddyfile && \
+    echo "    root * /usr/share/caddy" >> /etc/caddy/Caddyfile && \
+    echo "    encode gzip" >> /etc/caddy/Caddyfile && \
+    echo "    reverse_proxy /api/* swarm-engine:8001" >> /etc/caddy/Caddyfile && \
+    echo "    try_files {path} /index.html" >> /etc/caddy/Caddyfile && \
+    echo "    file_server" >> /etc/caddy/Caddyfile && \
+    echo "}" >> /etc/caddy/Caddyfile
 
 EXPOSE 80 443
 
