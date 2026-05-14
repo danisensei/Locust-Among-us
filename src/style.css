@@ -92,3 +92,45 @@ body {
   color: hsl(var(--foreground));
   min-height: 100vh;
 }
+
+/* ── Global cursor: pointer for ALL clickable elements ────────── */
+button,
+a,
+[role="button"],
+[tabindex]:not([tabindex="-1"]),
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+label[for],
+select,
+summary,
+[data-slot="button"],
+[data-slot="dialog-trigger"],
+[data-slot="dialog-close"],
+[data-slot="tabs-trigger"],
+[data-slot="select-trigger"],
+[data-slot="select-item"],
+[data-slot="select-scroll-up-button"],
+[data-slot="select-scroll-down-button"],
+[data-slot="checkbox"],
+[data-slot="slider"],
+[data-slot="slider-thumb"],
+[data-slot="dropdown-menu-trigger"],
+[data-slot="dropdown-menu-item"],
+[data-slot="dropdown-menu-checkbox-item"],
+[data-slot="dropdown-menu-radio-item"],
+[data-slot="dropdown-menu-sub-trigger"],
+[data-slot="badge"][onclick],
+[data-slot="badge"][role="button"] {
+  cursor: pointer;
+}
+
+/* Disabled elements should use not-allowed instead */
+button:disabled,
+[data-slot="button"]:disabled,
+[aria-disabled="true"],
+[data-disabled] {
+  cursor: not-allowed;
+}
