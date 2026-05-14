@@ -6,8 +6,9 @@ import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-  Loader2, Route, Layers, Info, MapPin, ArrowRight, Ruler, Search
+  Loader2, Route, Layers, Info, MapPin, ArrowRight, Ruler, Search, ShieldAlert
 } from 'lucide-react'
+import { useAuthFetch } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -36,6 +37,25 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
   const [astarGoal, setAstarGoal] = useState<string>('')
   const [astarResult, setAstarResult] = useState<AStarResult | null>(null)
   const [astarLoading, setAstarLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const authFetch = useAuthFetch()
+
+  const handleAction = async (actionType: string, zone: string) => {
+    setActionLoading(true)
+    try {
+      const res = await authFetch(`${API_URL}/api/actions/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone, action_type: actionType })
+      })
+      const data = await res.json()
+      alert(data.message || 'Action executed successfully')
+    } catch (err) {
+      alert('Action failed')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   // Init A* map
   useEffect(() => {
@@ -223,8 +243,11 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
             <div className="flex items-center gap-1.5 text-xs font-medium mb-2">
               <Info className="h-3.5 w-3.5 text-amber-400" /> A* Pathfinder
             </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
+            <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
               Uses geographic distance as heuristic to find the shortest path between two zones in the network graph.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed font-semibold">
+              <strong>How to use:</strong> Select a Start Zone and Destination Zone to calculate the most likely flight path of a swarm. Use this to determine where to deploy intercept teams.
             </p>
           </div>
 
@@ -263,6 +286,24 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
             <div className="rounded-lg border border-dashed border-border/50 p-4 text-center">
               <Route className="h-5 w-5 mx-auto text-muted-foreground/40 mb-2" />
               <p className="text-[11px] text-muted-foreground">Select zones and find route</p>
+            </div>
+          )}
+
+          {/* Recommended Next Steps */}
+          {astarResult && astarResult.path.length > 2 && (
+            <div className="bg-muted/30 rounded-lg p-2.5 border border-border/50">
+              <div className="text-[10px] font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                <ShieldAlert className="h-3 w-3 text-amber-400" />
+                Strategic Recommendation
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                The swarm is predicted to take this optimal path. Intercept the swarm at the midpoint zone <strong>{astarResult.path[Math.floor(astarResult.path.length / 2)]}</strong> before it reaches the destination.
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleAction('deploy_intercept', astarResult.path[Math.floor(astarResult.path.length / 2)])} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-amber-500 hover:bg-amber-600 text-white border-0">
+                  {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : 'Deploy Intercept Team'}
+                </Button>
+              </div>
             </div>
           )}
 

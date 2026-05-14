@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   AlertTriangle, Layers, MapPin, Loader2, RefreshCw, Shield, Clock,
-  User, FileText, ChevronRight, Eye, Globe
+  User, FileText, ChevronRight, Eye, Globe, Info
 } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
@@ -95,6 +95,24 @@ export default function PakistanRiskOverview() {
   const [error, setError] = useState<string | null>(null)
   const [activeReport, setActiveReport] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+
+  const handleAction = async (actionType: string, zone: string) => {
+    setActionLoading(true)
+    try {
+      const res = await authFetch(`${API_URL}/api/actions/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone, action_type: actionType })
+      })
+      const data = await res.json()
+      alert(data.message || 'Action executed successfully')
+    } catch (err) {
+      alert('Action failed')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   const verifiedReports = reports.filter(
     r => r.status === 'Verified' && r.lat !== null && r.lon !== null
@@ -303,6 +321,15 @@ export default function PakistanRiskOverview() {
           </div>
         </div>
 
+        {/* ━━━ CONTEXT BANNER ━━━ */}
+        <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-3 flex items-start gap-3">
+          <Info className="h-4 w-4 text-sky-400 mt-0.5 shrink-0" />
+          <div className="text-xs text-sky-100/90 leading-relaxed">
+            <strong>How to use this map:</strong> The heatmap and markers indicate verified swarm activity. 
+            Click on any colored marker to view details. <strong>Critical zones (Red)</strong> require immediate drone dispatch or farmer notification.
+          </div>
+        </div>
+
         {/* ━━━ STATS BAR ━━━ */}
         <div className="grid grid-cols-4 gap-3">
           {[
@@ -442,6 +469,36 @@ export default function PakistanRiskOverview() {
                       </div>
                     </>
                   )}
+
+                  <Separator />
+                  {/* Recommended Next Steps */}
+                  <div className="bg-muted/30 rounded-lg p-2.5 border border-border/50">
+                    <div className="text-[10px] font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                      <Shield className="h-3 w-3 text-sky-400" />
+                      Recommended Action
+                    </div>
+                    {selectedReport.risk_level === 'Critical' ? (
+                      <>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">Immediate Action Required: Dispatch eradication drones to this coordinate. Issue SMS warning to local farmers.</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleAction('dispatch_drone', selectedReport.zone)} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-red-500 hover:bg-red-600 text-white border-0">
+                            {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : 'Dispatch Drones'}
+                          </Button>
+                        </div>
+                      </>
+                    ) : selectedReport.risk_level === 'High' ? (
+                      <>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">Deploy ground assessment team. Prepare pesticide reserves.</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleAction('deploy_team', selectedReport.zone)} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-orange-500 hover:bg-orange-600 text-white border-0">
+                            {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : 'Deploy Team'}
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">Routine monitoring recommended. Check satellite imagery weekly.</p>
+                    )}
+                  </div>
                   <Button variant="ghost" size="sm" className="w-full text-xs h-7" onClick={() => setActiveReport(null)}>
                     Clear selection
                   </Button>
