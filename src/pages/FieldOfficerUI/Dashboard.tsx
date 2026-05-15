@@ -1,11 +1,12 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AnimatedTabs } from '@/components/ui/animated-tabs'
 import {
   Bug, Radar, Plane, FileText, Thermometer, Droplets, Wind, Eye,
   ArrowUpRight, ArrowDownRight, Activity, Shield, MapPin,
@@ -15,17 +16,27 @@ import { Area, AreaChart, XAxis, CartesianGrid } from 'recharts'
 import { AnimateDigits } from '@/components/unlumen-ui/animate-digits'
 import { Tilt } from '@/components/unlumen-ui/tilt'
 import type { ChartConfig } from '@/components/ui/chart'
+import { useAuthFetch, API_URL } from '@/context/AuthContext'
+
+// ── Types ────────────────────────────────────────────────────
+interface AlertData {
+  id: number
+  type: 'critical' | 'warning' | 'info'
+  title: string
+  description: string
+  created_at: string
+}
 
 /* ─── Constants ─── */
-const WEATHER_REFRESH_MS = 8_000
+const PAK_CITIES = [
+  { name: 'Karachi', lat: 24.8607, lon: 67.0011 },
+  { name: 'Lahore', lat: 31.5497, lon: 74.3436 },
+  { name: 'Islamabad', lat: 33.6844, lon: 73.0479 },
+  { name: 'Quetta', lat: 30.1798, lon: 66.0245 },
+  { name: 'Peshawar', lat: 34.0151, lon: 71.5249 },
+  { name: 'Multan', lat: 30.1575, lon: 71.5249 },
+]
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
-const createWeather = () => ({
-  temperature: randomInt(29, 43),
-  humidity: randomInt(28, 68),
-  windSpeed: randomInt(8, 36),
-  visibility: randomInt(6, 15),
-})
-
 /* Simulated hourly threat data for chart */
 const generateChartData = () => {
   const hours = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
@@ -53,41 +64,88 @@ const THREAT_ZONES = [
   { name: 'Quetta', level: 22, trend: 'stable', status: 'low' },
 ]
 
-/* Alerts */
-const ALERTS = [
-  { id: 1, type: 'critical' as const, title: 'Swarm Detected — Khuzdar', desc: 'Est. 2.3M locusts, 28 km/h NE', time: '2m ago' },
-  { id: 2, type: 'warning' as const, title: 'Wind Alert — Jacobabad', desc: 'Wind 34 km/h — migration risk elevated', time: '12m ago' },
-  { id: 3, type: 'info' as const, title: 'Drone RTB — DPP-Gamma', desc: 'Battery 15%, returning to base', time: '28m ago' },
-  { id: 4, type: 'critical' as const, title: 'Swarm Cluster — Thar', desc: 'Multiple swarms converging, 5.1M density', time: '35m ago' },
-]
-
 const STATUS_COLORS = {
   critical: 'bg-red-500',
   high: 'bg-orange-500',
-  medium: 'bg-amber-500',
+  medium: 'bg-orange-500',
   low: 'bg-emerald-500',
 }
 
 const ALERT_STYLES = {
-  critical: { bg: 'bg-red-500/8 border-red-500/30', dot: 'bg-red-500', text: 'text-red-400' },
-  warning:  { bg: 'bg-amber-500/8 border-amber-500/30', dot: 'bg-amber-500', text: 'text-amber-400' },
-  info:     { bg: 'bg-sky-500/8 border-sky-500/30', dot: 'bg-sky-500', text: 'text-sky-400' },
+  critical: { bg: 'bg-accent/30 border-l-4 border-l-red-500 border-y border-r border-border/50', dot: 'bg-red-500', text: 'text-red-400' },
+  warning:  { bg: 'bg-accent/30 border-l-4 border-l-orange-500 border-y border-r border-border/50', dot: 'bg-orange-500', text: 'text-orange-400' },
+  info:     { bg: 'bg-accent/30 border-l-4 border-l-sky-500 border-y border-r border-border/50', dot: 'bg-sky-500', text: 'text-sky-400' },
 }
 
 export default function Dashboard() {
-  const [weather, setWeather] = useState(createWeather)
+  const authFetch = useAuthFetch()
+  const [alerts, setAlerts] = useState<AlertData[]>([])
+  
+  const [cityWeatherMap, setCityWeatherMap] = useState<Record<string, any>>({})
+  const [currentCityIndex, setCurrentCityIndex] = useState(0)
   const [chartData] = useState(generateChartData)
   const [now, setNow] = useState(new Date())
+  const [activeTab, setActiveTab] = useState("overview")
+
+  const dashboardTabs = [
+    { id: "overview", label: "Overview" },
+    { id: "intelligence", label: "Intelligence & Threats" },
+    { id: "performance", label: "System Performance" },
+  ]
+
+  const fetchWeather = useCallback(async () => {
+    try {
+      const results: Record<string, any> = {}
+      await Promise.all(PAK_CITIES.map(async (city) => {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,visibility&timezone=auto`)
+        const data = await res.json()
+        if (data && data.current) {
+          results[city.name] = {
+            temperature: Math.round(data.current.temperature_2m),
+            humidity: Math.round(data.current.relative_humidity_2m),
+            windSpeed: Math.round(data.current.wind_speed_10m),
+            visibility: Math.round((data.current.visibility || 10000) / 1000),
+          }
+        }
+      }))
+      setCityWeatherMap(results)
+    } catch (err) {
+      console.error('Failed to fetch weather', err)
+    }
+  }, [])
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const res = await authFetch(`${API_URL}/api/alerts`)
+      if (res.ok) {
+        const data = await res.json()
+        setAlerts(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch alerts', err)
+    }
+  }, [authFetch])
 
   useEffect(() => {
-    const w = setInterval(() => setWeather(createWeather()), WEATHER_REFRESH_MS)
+    fetchWeather()
+    fetchAlerts()
+    
     const c = setInterval(() => setNow(new Date()), 1000)
-    return () => { clearInterval(w); clearInterval(c) }
-  }, [])
+    const rotate = setInterval(() => {
+      setCurrentCityIndex(prev => (prev + 1) % PAK_CITIES.length)
+    }, 5000)
+    const w = setInterval(fetchWeather, 600000) // 10 min refresh
+    const a = setInterval(fetchAlerts, 10000)   // 10 sec refresh for alerts
+    
+    return () => { clearInterval(c); clearInterval(rotate); clearInterval(w); clearInterval(a) }
+  }, [fetchWeather, fetchAlerts])
+
+  const currentCity = PAK_CITIES[currentCityIndex]
+  const weather = cityWeatherMap[currentCity.name] || { temperature: 32, humidity: 45, windSpeed: 12, visibility: 10 }
 
   const stats = useMemo(() => [
     { label: 'Active Swarms', value: 3, icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10', trend: '+1', trendUp: true },
-    { label: 'Risk Zones', value: 7, icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10', trend: '—', trendUp: false },
+    { label: 'Risk Zones', value: 7, icon: Shield, color: 'text-orange-400', bg: 'bg-orange-500/10', trend: '—', trendUp: false },
     { label: 'Drones Active', value: 12, icon: Plane, color: 'text-sky-400', bg: 'bg-sky-500/10', trend: '+3', trendUp: true },
     { label: 'Reports Today', value: 38, icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/10', trend: '+12', trendUp: true },
   ], [])
@@ -127,35 +185,39 @@ export default function Dashboard() {
 
         <Separator />
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <TabsList className="bg-muted/50 border border-border/50">
-              <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-              <TabsTrigger value="intelligence" className="text-xs">Intelligence & Threats</TabsTrigger>
-              <TabsTrigger value="performance" className="text-xs">System Performance</TabsTrigger>
-            </TabsList>
+            <AnimatedTabs
+              tabs={dashboardTabs}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
             <Badge variant="outline" className="text-[10px] bg-background">
               LC-EWS v2.0
             </Badge>
           </div>
 
           {/* ━━━ TAB 1: OVERVIEW ━━━ */}
-          <TabsContent value="overview" className="space-y-6 mt-0">
+          {activeTab === "overview" && (
+            <div className="space-y-6 mt-0 animate-in fade-in duration-300">
             {/* STATS ROW */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {stats.map(stat => {
                 const Icon = stat.icon
                 return (
                   <Tilt key={stat.label} rotationFactor={6}>
-                    <Card className="relative overflow-hidden border-border/50 hover:border-border transition-colors">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className={`p-2 rounded-lg ${stat.bg}`}>
-                            <Icon className={`h-4 w-4 ${stat.color}`} />
+                    <Card className="group relative overflow-hidden bg-gradient-to-br from-background/80 to-muted/20 border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+                      {/* Subdued Glow effect on hover */}
+                      <div className={`absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl ${stat.bg.replace('/10', '')}`} />
+                      
+                      <CardContent className="p-5 relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`p-2.5 rounded-xl ${stat.bg} ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300`}>
+                            <Icon className={`h-5 w-5 ${stat.color}`} />
                           </div>
                           <Tooltip>
                             <TooltipTrigger>
-                              <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${stat.trendUp ? 'text-red-400' : 'text-muted-foreground'}`}>
+                              <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${stat.trendUp ? 'bg-red-500/10 text-red-400' : 'bg-muted text-muted-foreground'}`}>
                                 {stat.trend}
                                 {stat.trendUp && <ArrowUpRight className="h-3 w-3" />}
                               </span>
@@ -163,12 +225,14 @@ export default function Dashboard() {
                             <TooltipContent>Change since yesterday</TooltipContent>
                           </Tooltip>
                         </div>
-                        <div className="mt-3">
-                          <AnimateDigits value={String(stat.value)} className="text-2xl font-bold" />
-                          <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                        <div className="mt-1">
+                          <AnimateDigits value={String(stat.value)} className="text-3xl font-bold tracking-tight" />
+                          <p className="text-sm font-medium text-muted-foreground mt-1 tracking-wide">{stat.label}</p>
                         </div>
                       </CardContent>
-                      <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${stat.bg.replace('/10', '/40')}`} />
+                      
+                      {/* Gradient border line at bottom */}
+                      <div className={`absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity ${stat.bg.replace('/10', '')} bg-gradient-to-r from-transparent via-current to-transparent`} style={{ color: stat.color.replace('text-', '') }} />
                     </Card>
                   </Tilt>
                 )
@@ -192,8 +256,15 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {ALERTS.map(alert => {
-                    const style = ALERT_STYLES[alert.type]
+                  {alerts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+                      <Shield className="h-8 w-8 mb-2 opacity-20" />
+                      <p className="text-sm">No recent alerts</p>
+                    </div>
+                  ) : alerts.map(alert => {
+                    const style = ALERT_STYLES[alert.type] || ALERT_STYLES.info
+                    const timeAgo = Math.round((new Date().getTime() - new Date(alert.created_at).getTime()) / 60000)
+                    const timeStr = timeAgo < 1 ? 'Just now' : timeAgo < 60 ? `${timeAgo}m ago` : `${Math.floor(timeAgo / 60)}h ago`
                     return (
                       <div key={alert.id} className={`rounded-lg border p-3 ${style.bg} transition-colors hover:border-opacity-60`}>
                         <div className="flex items-start gap-2.5">
@@ -201,9 +272,9 @@ export default function Dashboard() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-xs font-semibold truncate">{alert.title}</span>
-                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</span>
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeStr}</span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{alert.desc}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{alert.description}</p>
                           </div>
                         </div>
                       </div>
@@ -213,8 +284,9 @@ export default function Dashboard() {
               </Card>
 
               {/* Weather */}
-              <Card className="lg:col-span-1">
-                <CardHeader className="pb-3">
+              <Card className="lg:col-span-1 group relative overflow-hidden bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+                <div className="absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl bg-sky-500" />
+                <CardHeader className="pb-3 relative z-10">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <span className="text-base">🌤️</span>
@@ -222,51 +294,67 @@ export default function Dashboard() {
                     </CardTitle>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Badge variant="outline" className="text-[10px] gap-1">
+                        <Badge variant="outline" className="text-[10px] gap-1 bg-sky-500/10 text-sky-400 border-sky-500/20 shadow-sm">
                           <Clock className="h-2.5 w-2.5" />
-                          8s refresh
+                          Live Data
                         </Badge>
                       </TooltipTrigger>
-                      <TooltipContent>Simulated meteorological feed</TooltipContent>
+                      <TooltipContent>Open-Meteo Live API</TooltipContent>
                     </Tooltip>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {weatherItems.map(item => {
-                    const WIcon = item.icon
-                    return (
-                      <div key={item.label} className="flex items-center gap-3">
-                        <WIcon className={`h-4 w-4 ${item.color} shrink-0`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-muted-foreground">{item.label}</span>
-                            <span className="text-sm font-bold tabular-nums">
-                              <AnimateDigits value={item.value} className="text-sm font-bold inline-flex" />
-                              <span className="text-xs text-muted-foreground ml-0.5">{item.unit}</span>
-                            </span>
-                          </div>
-                          <div className="h-1 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${item.barColor} transition-all duration-700 ease-out`}
-                              style={{ width: `${item.pct}%` }}
-                            />
+                <CardContent className="space-y-4 relative z-10">
+                  <div className="space-y-4">
+                    {weatherItems.map(item => {
+                      const WIcon = item.icon
+                      return (
+                        <div key={item.label} className="flex items-center gap-3">
+                          <WIcon className={`h-4 w-4 ${item.color} shrink-0`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-muted-foreground">{item.label}</span>
+                              <span className="text-sm font-bold tabular-nums">
+                                <AnimateDigits value={item.value} className="text-sm font-bold inline-flex" />
+                                <span className="text-xs text-muted-foreground ml-0.5">{item.unit}</span>
+                              </span>
+                            </div>
+                            <div className="h-1 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${item.barColor} transition-all duration-700 ease-out`}
+                                style={{ width: `${item.pct}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                  <Separator className="my-2" />
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Quetta, Pakistan</span>
-                    <span>Last sync: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                      )
+                    })}
+                    <Separator className="my-2" />
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-muted/20 p-2 rounded-lg border border-border/30">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={currentCity.name}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-1.5 font-semibold text-foreground"
+                        >
+                          <MapPin className="h-3 w-3 text-sky-400" /> {currentCity.name}, PK
+                        </motion.span>
+                      </AnimatePresence>
+                      <span>{now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-sky-500 to-transparent" />
               </Card>
             </div>
-          </TabsContent>
+            </div>
+          )}
 
           {/* ━━━ TAB 2: INTELLIGENCE & THREATS ━━━ */}
-          <TabsContent value="intelligence" className="space-y-6 mt-0">
+          {activeTab === "intelligence" && (
+            <div className="space-y-6 mt-0 animate-in fade-in duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Activity Chart — 3 cols */}
               <Card className="lg:col-span-3">
@@ -310,7 +398,7 @@ export default function Dashboard() {
               <Card className="lg:col-span-2">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Radar className="h-4 w-4 text-amber-400" />
+                    <Radar className="h-4 w-4 text-orange-400" />
                     Zone Threat Levels
                   </CardTitle>
                   <CardDescription className="text-xs">Real-time risk assessment by zone</CardDescription>
@@ -331,17 +419,19 @@ export default function Dashboard() {
                       </div>
                       <Progress
                         value={zone.level}
-                        className={`h-2 ${zone.status === 'critical' ? '[&>div]:bg-red-500' : zone.status === 'high' ? '[&>div]:bg-orange-500' : zone.status === 'medium' ? '[&>div]:bg-amber-500' : '[&>div]:bg-emerald-500'}`}
+                        className={`h-2 ${zone.status === 'critical' ? '[&>div]:bg-red-500' : zone.status === 'high' ? '[&>div]:bg-orange-500' : zone.status === 'medium' ? '[&>div]:bg-orange-500' : '[&>div]:bg-emerald-500'}`}
                       />
                     </div>
                   ))}
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+            </div>
+          )}
 
           {/* ━━━ TAB 3: SYSTEM PERFORMANCE ━━━ */}
-          <TabsContent value="performance" className="mt-0">
+          {activeTab === "performance" && (
+            <div className="mt-0 animate-in fade-in duration-300">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -356,7 +446,7 @@ export default function Dashboard() {
                     { label: 'Avg Response Time', value: '14 min', sub: 'Last 24h', color: 'text-emerald-400' },
                     { label: 'Coverage Area', value: '847K km²', sub: 'Pakistan', color: 'text-sky-400' },
                     { label: 'Detection Rate', value: '94.2%', sub: 'AI model', color: 'text-violet-400' },
-                    { label: 'Uptime', value: '99.8%', sub: 'System', color: 'text-amber-400' },
+                    { label: 'Uptime', value: '99.8%', sub: 'System', color: 'text-orange-400' },
                   ].map(m => (
                     <div key={m.label} className="rounded-lg border border-border/40 bg-accent/20 p-4 text-center hover:bg-accent/30 transition-colors">
                       <div className={`text-2xl font-bold tabular-nums ${m.color}`}>{m.value}</div>
@@ -367,9 +457,10 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+            </div>
+          )}
 
-        </Tabs>
+        </div>
 
       </div>
     </TooltipProvider>

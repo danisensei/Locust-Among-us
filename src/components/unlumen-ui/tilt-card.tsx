@@ -27,7 +27,7 @@ const BADGE_LABEL_CLASSES: Record<
   string
 > = {
   success: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  warning: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+  warning: "bg-orange-500/20 text-orange-700 dark:text-orange-300",
 };
 
 export function TiltCard({
