@@ -29,17 +29,17 @@ export default function AIPrediction() {
       <div className="w-full space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
         {/* ━━━ HEADER ━━━ */}
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2.5" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              <Network className="h-6 w-6 text-violet-400" />
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2.5" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <Network className="h-5 w-5 md:h-6 md:w-6 text-violet-400" />
               AI Prediction
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
               Migration forecasting · Zone-graph pathfinding · {zoneCount} monitored zones
             </p>
           </div>
-          <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/30 text-violet-400">
+          <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/30 text-violet-400 self-start sm:self-auto">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
             Model ready
           </Badge>

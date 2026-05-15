@@ -64,24 +64,24 @@ export default function Users() {
   const onlineCount = users.length   // all registered = "online" for now
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between">
+    <div className="space-y-6 md:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Team Members</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Team Members</h1>
+          <p className="text-muted-foreground mt-1 md:mt-2 text-sm">
             Dept. of Plant Protection — Locust Division ·{' '}
             <span className="text-green-400 font-medium">{onlineCount} registered</span>
           </p>
         </div>
         {isAdmin && (
-          <Badge className="bg-red-500/15 text-red-400 border border-red-500/20 text-xs px-3 py-1">
+          <Badge className="bg-red-500/15 text-red-400 border border-red-500/20 text-xs px-3 py-1 self-start">
             Admin Mode
           </Badge>
         )}
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {Object.entries(ROLE_CONFIG).map(([roleKey, cfg]) => {
           const count = users.filter(u => u.role === roleKey).length
           const Icon  = cfg.icon
@@ -106,7 +106,7 @@ export default function Users() {
             {loading ? 'Loading…' : error ? `⚠️ ${error}` : `${users.length} registered users`}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="flex items-center justify-center h-48">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
