@@ -187,14 +187,6 @@ export default function App() {
       <>
         {/* Logo */}
         <div className={`h-20 border-b border-border/50 relative overflow-hidden group cursor-default flex items-center justify-center bg-background/30`}>
-          {isMobile && (
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-1.5 bg-background/80 backdrop-blur-md rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/80 z-50 md:hidden shadow-sm border border-border/50"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
           
           {/* Animated Mesh Gradient Background */}
           <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000">
@@ -257,7 +249,7 @@ export default function App() {
               {section.expandable ? (
                 <button
                   onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group`}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 text-sm font-bold text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group`}
                   title={collapsed ? section.label : undefined}
                 >
                   <AnimatePresence mode="wait">
@@ -279,8 +271,8 @@ export default function App() {
                   </motion.div>
                 </button>
               ) : (
-                <div className={`px-3 pt-6 pb-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] ${collapsed ? 'text-center' : 'pl-4'}`}>
-                  {!collapsed ? section.label : <div className="h-px bg-border/30 w-full" />}
+                <div className={`px-3 pt-6 pb-2 text-[10px] font-bold text-foreground/60 uppercase tracking-[0.2em] ${collapsed ? 'text-center' : 'pl-4'}`}>
+                  {!collapsed ? section.label : <div className="h-px bg-border/50 w-full" />}
                 </div>
               )}
 
@@ -304,9 +296,9 @@ export default function App() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.03, type: 'spring', stiffness: 400, damping: 25 }}
                             onClick={() => handleNavClick(page.id)}
-                            className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center ${collapsed ? 'justify-center' : 'gap-3'} text-sm font-medium transition-all duration-300 group ${isActive
-                              ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)] border border-emerald-500/30'
-                              : 'text-muted-foreground/70 hover:bg-emerald-500/5 hover:text-foreground'
+                            className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center ${collapsed ? 'justify-center' : 'gap-3'} text-sm font-semibold transition-all duration-300 group ${isActive
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)] border border-emerald-500/30'
+                              : 'text-foreground/70 hover:bg-emerald-500/5 hover:text-foreground'
                               }`}
                             title={collapsed ? page.label : undefined}
                             whileHover={{ x: collapsed ? 0 : 2 }}
@@ -368,8 +360,8 @@ export default function App() {
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{user.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                    <div className="text-sm font-bold truncate">{user.name}</div>
+                    <div className="text-xs text-foreground/60 font-medium truncate">{user.email}</div>
                   </div>
                 </div>
                 <div className="mt-2 px-0 whitespace-nowrap">
@@ -385,7 +377,7 @@ export default function App() {
           </AnimatePresence>
           <motion.button
             onClick={logout}
-            className={`w-full flex items-center ${collapsed ? 'justify-center p-2' : 'gap-2 px-3 py-2.5'} text-sm text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all duration-200 group font-medium`}
+            className={`w-full flex items-center ${collapsed ? 'justify-center p-2' : 'gap-2 px-3 py-2.5'} text-sm font-bold text-foreground/70 hover:text-rose-600 dark:hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all duration-200 group`}
             title={collapsed ? "Sign Out" : undefined}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
@@ -455,11 +447,22 @@ export default function App() {
           </motion.button>
         </div>
 
-        {/* ── Mobile Sidebar (fixed overlay) ── */}
         <div
-          className={`md:hidden fixed inset-y-0 left-0 z-[9999] w-64 border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`md:hidden fixed inset-y-0 left-0 z-[9999] w-64 transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
-          {renderSidebarContent(true)}
+          <div className="w-full h-full border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden">
+            {renderSidebarContent(true)}
+          </div>
+
+          <motion.button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`absolute -right-4 top-1/2 -translate-y-1/2 bg-background border border-border shadow-xl rounded-full p-2 hover:bg-accent text-primary hover:text-rose-500 transition-all duration-300 z-[60] flex items-center justify-center group ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            whileHover={{ scale: 1.1, x: 2 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          >
+            <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
+          </motion.button>
         </div>
 
         {/* Main Content */}
@@ -471,20 +474,19 @@ export default function App() {
 
             <div className="flex items-center gap-2 md:gap-3">
               {/* Mobile hamburger */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 -ml-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+              <motion.button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden p-2 -ml-2 text-foreground/80 hover:text-foreground rounded-lg hover:bg-accent/50"
+                whileHover={{ scale: 1.05 }}
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
+              </motion.button>
               {/* Breadcrumb / Page Title */}
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground/60 font-medium text-xs uppercase tracking-wider hidden sm:inline">LC-EWS</span>
-                <span className="text-muted-foreground/30 text-xs font-light hidden sm:inline">/</span>
-                <span className="text-muted-foreground/80 font-medium text-xs capitalize tracking-wide hidden sm:inline">
+                <span className="text-foreground/70 font-bold text-xs capitalize tracking-wide hidden sm:inline">
                   {pages.find(p => p.id === activeTab)?.section || 'Platform'}
                 </span>
-                <span className="text-muted-foreground/30 text-xs font-light hidden sm:inline">/</span>
+                <span className="text-foreground/30 text-xs font-light hidden sm:inline">/</span>
                 <h1 className="font-bold text-foreground tracking-tight text-sm md:text-base" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   {pages.find(p => p.id === activeTab)?.label || 'Overview'}
                 </h1>
