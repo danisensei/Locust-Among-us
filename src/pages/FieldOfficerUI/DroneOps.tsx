@@ -77,6 +77,7 @@ export default function DroneOps() {
   const [drones, setDrones] = useState<DroneData[]>([])
   const [missions, setMissions] = useState<MissionData[]>([])
   const [reports, setReports] = useState<ReportData[]>([])
+  const [swarms, setSwarms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -107,6 +108,7 @@ export default function DroneOps() {
   ]
   const [addingDrone, setAddingDrone] = useState(false)
   const [addDroneError, setAddDroneError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('All')
 
   const fetchAll = useCallback(async () => {
     try {
@@ -128,6 +130,24 @@ export default function DroneOps() {
   }, [authFetch])
 
   useEffect(() => { fetchAll() }, [])
+
+  useEffect(() => {
+    const fetchSwarms = async () => {
+      try {
+        const SWARM_API_URL = import.meta.env.VITE_SWARM_API_URL || 'http://localhost:8001'
+        const res = await fetch(`${SWARM_API_URL}/api/swarms/geojson`)
+        if (res.ok) {
+          const data = await res.json()
+          setSwarms(data.features || [])
+        }
+      } catch (e) {
+        console.error('Failed to fetch live swarms', e)
+      }
+    }
+    fetchSwarms()
+    const intId = setInterval(fetchSwarms, 3000)
+    return () => clearInterval(intId)
+  }, [])
 
   // Computed stats
   const availableDrones = drones.filter(d => d.status === 'Available')
@@ -435,12 +455,29 @@ export default function DroneOps() {
 
       {/* ━━━ MAIN CONTENT TABS ━━━ */}
       <div className="w-full">
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <AnimatedTabs
             tabs={droneTabs}
             activeTab={activeTab}
             onChange={setActiveTab}
           />
+          {activeTab === 'fleet' && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground font-medium">Show:</span>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px] h-9 border-border/50 bg-background/50 backdrop-blur-sm">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Drones</SelectItem>
+                  <SelectItem value="Available">Available</SelectItem>
+                  <SelectItem value="On Mission">On Mission</SelectItem>
+                  <SelectItem value="Charging">Charging</SelectItem>
+                  <SelectItem value="Maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {activeTab === "fleet" && (
@@ -452,7 +489,19 @@ export default function DroneOps() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {drones.map(d => (
+              {drones
+                .filter(d => statusFilter === 'All' || d.status === statusFilter)
+                .map(d => {
+                const activeMission = missions.find(m => m.drone_id === d.id && (m.status === 'Assigned' || m.status === 'In Progress'))
+                const missionReport = activeMission ? reports.find(r => r.id === activeMission.report_id) : null
+                const swarmFeature = swarms.find(f => f.properties?.report_id === missionReport?.report_id)
+                
+                const displayLat = swarmFeature?.geometry?.coordinates?.[1] ?? d.lat
+                const displayLon = swarmFeature?.geometry?.coordinates?.[0] ?? d.lon
+                const displayTime = swarmFeature?.properties?.last_updated ?? d.created_at
+                const isInProgress = activeMission?.status === 'In Progress'
+
+                return (
                 <div key={d.id} className="group relative p-5 rounded-2xl bg-background border border-border/50 hover:border-sky-500/50 hover:shadow-[0_0_20px_-10px_rgba(14,165,233,0.3)] transition-all overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
                   
@@ -487,15 +536,15 @@ export default function DroneOps() {
                     </div>
                     
                     <div className="flex items-center justify-between pt-2">
-                      <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <div className={`text-xs flex items-center gap-1.5 ${isInProgress ? 'text-red-400 font-medium' : 'text-muted-foreground'}`}>
                         <MapPin className="w-3 h-3" />
-                        {d.lat && d.lon ? `${d.lat.toFixed(4)}, ${d.lon.toFixed(4)}` : 'Position Unknown'}
+                        {displayLat && displayLon ? `${displayLat.toFixed(4)}, ${displayLon.toFixed(4)}` : 'Position Unknown'}
                       </div>
-                      <span className="text-[10px] text-muted-foreground/60">Updated {formatTime(d.created_at)}</span>
+                      <span className="text-[10px] text-muted-foreground/60">Updated {formatTime(displayTime)}</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>
