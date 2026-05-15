@@ -106,3 +106,18 @@ class Mission(Base):
     started_at     = Column(DateTime, nullable=True)
     completed_at   = Column(DateTime, nullable=True)
     created_at     = Column(DateTime, default=datetime.utcnow)
+
+
+class Alert(Base):
+    """
+    Live system alerts for Dashboard.
+    Type: critical | warning | info
+    """
+    __tablename__ = "alerts"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    type        = Column(String(50), nullable=False)
+    title       = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    is_read     = Column(Boolean, default=False)
+    created_at  = Column(DateTime, default=datetime.utcnow)

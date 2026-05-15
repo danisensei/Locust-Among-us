@@ -99,7 +99,7 @@ export function AlertDropdown() {
               >
                 <div className="mt-0.5">
                   {alert.type === "critical" && <ShieldAlert className="h-4 w-4 text-rose-500" />}
-                  {alert.type === "warning" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                  {alert.type === "warning" && <AlertTriangle className="h-4 w-4 text-orange-500" />}
                   {alert.type === "info" && <Info className="h-4 w-4 text-sky-500" />}
                 </div>
                 <div className="flex-1 space-y-1">
