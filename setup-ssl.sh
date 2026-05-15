@@ -54,15 +54,15 @@ $COMPOSE run --rm acme sh -c "\
 
 echo ">>> Requesting ZeroSSL certificate via acme.sh..."
 
-# Build acme.sh issue command
-ACME_CMD="--issue -d $DOMAIN --webroot /var/www/certbot --keylength 2048"
+# Build acme.sh issue command - Using ZeroSSL
+ACME_CMD="--issue -d $DOMAIN --webroot /var/www/certbot --keylength 2048 --server zerossl"
 
 if [ -n "$EMAIL" ]; then
   ACME_CMD="$ACME_CMD --accountemail $EMAIL"
 fi
 
 if [ "$STAGING" -eq 1 ]; then
-  ACME_CMD="$ACME_CMD --server letsencrypt --staging"
+  ACME_CMD="$ACME_CMD --staging"
 fi
 
 # Try to register standard ZeroSSL account FIRST before issuing
