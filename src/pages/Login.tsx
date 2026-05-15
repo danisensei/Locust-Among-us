@@ -10,23 +10,23 @@ import { AlertCircle, Eye, EyeOff, Loader2, Shield, LogIn, UserPlus } from 'luci
 type Tab = 'login' | 'register'
 
 const ROLES = [
-  { value: 'analyst',       label: 'Analyst',       desc: 'View maps, risk zones & reports' },
-  { value: 'field_officer', label: 'Field Officer',  desc: 'Submit field observations' },
-  { value: 'admin',         label: 'Admin',          desc: 'Full system access' },
+  { value: 'analyst', label: 'Analyst', desc: 'View maps, risk zones & reports' },
+  { value: 'field_officer', label: 'Field Officer', desc: 'Submit field observations' },
+  { value: 'admin', label: 'Admin', desc: 'Full system access' },
 ]
 
 // ── Component ─────────────────────────────────────────────────
 export default function Login() {
   const { login, register } = useAuth()
 
-  const [tab,       setTab]       = useState<Tab>('login')
-  const [name,      setName]      = useState('')
-  const [email,     setEmail]     = useState('')
-  const [password,  setPassword]  = useState('')
-  const [role,      setRole]      = useState('analyst')
-  const [showPass,  setShowPass]  = useState(false)
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
+  const [tab, setTab] = useState<Tab>('login')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('analyst')
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,8 +49,23 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-background text-foreground">
 
-      {/* Ambient grid pattern */}
-      <div className="absolute inset-0 pointer-events-none"
+      {/* Video Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute w-full h-full object-cover opacity-50 mix-blend-luminosity"
+        >
+          <source src="/models/locusts.mp4" type="video/mp4" />
+        </video>
+        {/* Subtle gradient overlay to blend smoothly into the dark theme */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-background/60 to-background" />
+      </div>
+
+      {/* Ambient grid pattern overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-50"
         style={{
           backgroundImage:
             'linear-gradient(rgba(214,166,68,0.04) 1px,transparent 1px),' +
@@ -61,13 +76,13 @@ export default function Login() {
 
       {/* Radial glow behind the card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="w-[600px] h-[600px] rounded-full bg-primary/20 blur-[100px]" />
       </div>
 
       {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0,  scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-md mx-4"
       >
@@ -78,15 +93,15 @@ export default function Login() {
           <div className="px-8 pt-8 pb-6 border-b border-border text-center">
             <motion.div
               initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1,   opacity: 1 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-              className="text-5xl mb-3"
+              className="mb-3 flex justify-center h-24 relative"
             >
-              🦗
+              {/* Perfectly centered using translate, so it spills evenly up and down without covering the text */}
+              <img src="/models/locust3d.png" alt="Locust 3D Model" className="absolute top-1/2 left-[55%] -translate-x-1/2 -translate-y-1/2 h-90 w-auto object-contain drop-shadow-2xl pointer-events-none" />
             </motion.div>
             <h1 className="text-xl font-bold text-foreground tracking-tight">LC-EWS</h1>
             <p className="text-sm text-muted-foreground mt-1">Locust Early Warning System</p>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">Dept. of Plant Protection · Pakistan</p>
           </div>
 
           {/* Tab switcher */}
@@ -95,11 +110,10 @@ export default function Login() {
               <button
                 key={t}
                 onClick={() => { setTab(t); setError(null) }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  tab === t
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${tab === t
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 {t === 'login' ? <LogIn className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
                 {t === 'login' ? 'Sign In' : 'Register'}
@@ -187,11 +201,10 @@ export default function Login() {
                           key={r.value}
                           type="button"
                           onClick={() => setRole(r.value)}
-                          className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${
-                            role === r.value
-                              ? 'border-primary/60 bg-primary/10'
-                              : 'border-border bg-muted/40 hover:border-border/80'
-                          }`}
+                          className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${role === r.value
+                            ? 'border-primary/60 bg-primary/10'
+                            : 'border-border bg-muted/40 hover:border-border/80'
+                            }`}
                         >
                           <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${role === r.value ? 'text-primary' : 'text-muted-foreground'}`} />
                           <div>
