@@ -186,46 +186,68 @@ export default function App() {
     return (
       <>
         {/* Logo */}
-        <div className={`px-4 py-7 border-b border-border/50 relative overflow-hidden group cursor-default`}>
-          {/* Animated background glow */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-sky-500/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-
-          {/* Faint watermark */}
-          <div className="absolute -right-8 -top-8 opacity-40 group-hover:opacity-[1] group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 pointer-events-none transform origin-center">
-            <img src="/models/logo.png" alt="watermark" className="w-40 h-40 object-contain" />
+        <div className={`h-20 border-b border-border/50 relative overflow-hidden group cursor-default flex items-center justify-center bg-background/30`}>
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-1.5 bg-background/80 backdrop-blur-md rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/80 z-50 md:hidden shadow-sm border border-border/50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          
+          {/* Animated Mesh Gradient Background */}
+          <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] animate-pulse" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(56,189,248,0.1),transparent_50%)] animate-pulse [animation-delay:1s]" />
           </div>
 
-          <div className="flex gap-4 relative z-10" style={{ flexDirection: collapsed ? 'column' : 'row', justifyContent: collapsed ? 'center' : 'flex-start', alignItems: 'center' }}>
-            <AnimatePresence mode="wait">
-              {!collapsed && (
-                <motion.div
-                  key="logo-text"
-                  className="flex flex-col justify-center overflow-hidden whitespace-nowrap"
-                  initial={{ opacity: 0, x: -10, width: 0 }}
-                  animate={{ opacity: 1, x: 0, width: 'auto' }}
-                  exit={{ opacity: 0, x: -10, width: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25, mass: 0.8 }}
-                >
-                  <span className="text-[28px] leading-none font-black tracking-tighter bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent font-['Outfit'] drop-shadow-sm pb-1.5 group-hover:from-sky-400 group-hover:via-indigo-400 group-hover:to-emerald-400 transition-all duration-700" style={{ backgroundSize: '200% auto' }}>LC-EWS</span>
-                  {isFieldOfficer && (
-                    <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-emerald-400/90 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" /> Field Officer
-                    </span>
-                  )}
-                  {isAnalyst && (
-                    <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-sky-400/90 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.8)]" /> Analyst Portal
-                    </span>
-                  )}
-                  {isAdmin && (
-                    <span className="text-[9px] leading-none uppercase tracking-[0.25em] font-bold text-indigo-400/90 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]" /> Admin Portal
-                    </span>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Scanning Effect Line */}
+          <motion.div
+            className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent z-20"
+            animate={{ top: ['-10%', '110%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
+
+          {/* Faint watermark - HIDE WHEN COLLAPSED */}
+          {!collapsed && (
+            <div className="absolute -right-6 -top-6 opacity-30 group-hover:opacity-60 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-1000 pointer-events-none transform origin-center">
+              <img src="/models/logo.png" alt="watermark" className="w-32 h-32 object-contain" />
+            </div>
+          )}
+
+          <motion.div
+            className="flex items-center justify-center relative z-10 w-full"
+            animate={{
+              paddingLeft: collapsed ? 0 : 20,
+              paddingRight: collapsed ? 0 : 20,
+            }}
+          >
+            {collapsed ? (
+              <motion.div 
+                className="relative flex items-center justify-center"
+                whileHover={{ scale: 1.1 }}
+              >
+                <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full" />
+                <div className="h-10 w-10 rounded-xl border border-emerald-500/30 flex items-center justify-center bg-background/50 backdrop-blur-md shadow-inner relative z-10">
+                  <span className="text-lg font-black bg-gradient-to-br from-emerald-400 to-sky-400 bg-clip-text text-transparent">LC</span>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="flex flex-col items-start w-full relative">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[26px] leading-none font-black tracking-tighter bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent font-['Outfit'] drop-shadow-md pb-1 transition-all duration-700">LC-EWS</span>
+                </div>
+                <div className="flex items-center gap-2 pl-4">
+                  <div className="h-[1px] w-4 bg-border/50" />
+                  {isFieldOfficer && <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-emerald-500/60">Field Officer</span>}
+                  {isAnalyst && <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-sky-500/60">Analyst Portal</span>}
+                  {isAdmin && <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-indigo-500/60">Admin Portal</span>}
+                </div>
+              </div>
+            )}
+          </motion.div>
         </div>
 
         {/* Navigation Sections */}
@@ -400,7 +422,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99] md:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
           )}
@@ -435,7 +457,7 @@ export default function App() {
 
         {/* ── Mobile Sidebar (fixed overlay) ── */}
         <div
-          className={`md:hidden fixed inset-y-0 left-0 z-[100] w-64 border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`md:hidden fixed inset-y-0 left-0 z-[9999] w-64 border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           {renderSidebarContent(true)}
         </div>

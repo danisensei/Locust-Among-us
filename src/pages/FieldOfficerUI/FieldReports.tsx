@@ -105,10 +105,10 @@ export default function FieldReports() {
 
   const riskBadgeColor = (risk: string) => {
     switch (risk) {
-      case 'Critical': return 'bg-red-500/15 text-red-400 border-red-500/20'
-      case 'High':     return 'bg-orange-500/15 text-orange-400 border-orange-500/20'
-      case 'Medium':   return 'bg-yellow-500/15 text-yellow-300 border-yellow-500/20'
-      case 'Low':      return 'bg-green-500/15 text-green-400 border-green-500/20'
+      case 'Critical': return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+      case 'High':     return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
+      case 'Medium':   return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+      case 'Low':      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
       default:         return 'bg-muted text-muted-foreground border-border'
     }
   }
