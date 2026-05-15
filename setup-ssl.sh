@@ -8,7 +8,7 @@
 set -e
 
 DOMAIN="roachpestanalyzer.duckdns.org"
-EMAIL=""  # Optional: add your email for ZeroSSL account
+EMAIL="roachpestanalyzer@gmail.com"  # Using a placeholder email so ZeroSSL doesn't reject registration
 STAGING=0 # Set to 1 to use Let's Encrypt staging (for testing)
 
 if docker compose version > /dev/null 2>&1; then
@@ -64,6 +64,9 @@ fi
 if [ "$STAGING" -eq 1 ]; then
   ACME_CMD="$ACME_CMD --server letsencrypt --staging"
 fi
+
+# Try to register standard ZeroSSL account FIRST before issuing
+$COMPOSE run --rm acme sh -c "acme.sh --register-account -m $EMAIL" || true
 
 # Try to issue the certificate
 # We must use 'sh -c "acme.sh ..."' because acme.sh is an alias in the container
