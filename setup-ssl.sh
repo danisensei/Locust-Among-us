@@ -66,13 +66,14 @@ if [ "$STAGING" -eq 1 ]; then
 fi
 
 # Try to issue the certificate
-if $COMPOSE run --rm acme --force $ACME_CMD; then
+# We must use 'sh -c "acme.sh ..."' because acme.sh is an alias in the container
+if $COMPOSE run --rm acme sh -c "acme.sh --force $ACME_CMD"; then
   echo ">>> Certificate obtained!"
   echo ">>> Installing certificate..."
 
-  $COMPOSE run --rm acme --install-cert -d $DOMAIN \
+  $COMPOSE run --rm acme sh -c "acme.sh --install-cert -d $DOMAIN \
     --fullchain-file /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
-    --key-file /etc/letsencrypt/live/$DOMAIN/privkey.pem
+    --key-file /etc/letsencrypt/live/$DOMAIN/privkey.pem"
 
   echo ">>> Reloading Nginx with real certificate..."
   $COMPOSE exec frontend nginx -s reload
