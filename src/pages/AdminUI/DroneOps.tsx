@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AnimatedTabs } from '@/components/ui/animated-tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Slider } from '@/components/ui/slider'
@@ -98,6 +98,12 @@ export default function DroneOps() {
   const [newDroneId, setNewDroneId] = useState('')
   const [newDroneModel, setNewDroneModel] = useState('')
   const [newDroneBattery, setNewDroneBattery] = useState(100)
+
+  const [activeTab, setActiveTab] = useState("fleet")
+  const droneTabs = [
+    { id: "fleet", label: "Fleet Overview" },
+    { id: "missions", label: `Active Missions (${missions.filter(m => m.status !== 'Completed' && m.status !== 'Aborted').length})` }
+  ]
   const [addingDrone, setAddingDrone] = useState(false)
   const [addDroneError, setAddDroneError] = useState<string | null>(null)
 
@@ -377,44 +383,67 @@ export default function DroneOps() {
 
       {/* ━━━ STATS ━━━ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-sky-500/30 transition-all group">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400 group-hover:scale-110 transition-transform"><Plane className="w-4 h-4" /></div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Fleet</span>
+        <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+          <div className="absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl bg-sky-500" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300"><Plane className="w-4 h-4" /></div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Fleet</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{drones.length}</div>
           </div>
-          <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{drones.length}</div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-sky-500 to-transparent" />
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-emerald-500/30 transition-all group">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform"><CheckCircle2 className="w-4 h-4" /></div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</span>
+
+        <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+          <div className="absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl bg-emerald-500" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300"><CheckCircle2 className="w-4 h-4" /></div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Available</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{availableDrones.length}</div>
           </div>
-          <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{availableDrones.length}</div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-blue-500/30 transition-all group">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform"><Activity className="w-4 h-4" /></div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">On Mission</span>
+
+        <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+          <div className="absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl bg-blue-500" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300"><Activity className="w-4 h-4" /></div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">On Mission</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{onMissionDrones.length}</div>
           </div>
-          <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{onMissionDrones.length}</div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
         </div>
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-background to-muted/20 border border-border/40 hover:border-amber-500/30 transition-all group">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform"><Battery className="w-4 h-4" /></div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Battery</span>
+
+        <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md">
+          <div className="absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl bg-orange-500" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-400 ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300"><Battery className="w-4 h-4" /></div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg Battery</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{avgBattery}%</div>
           </div>
-          <div className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Outfit', sans-serif" }}>{avgBattery}%</div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
         </div>
       </div>
 
       {/* ━━━ MAIN CONTENT TABS ━━━ */}
-      <Tabs defaultValue="fleet" className="w-full">
-        <TabsList className="bg-muted/40 p-1 border border-border/40 rounded-lg w-fit mb-4">
-          <TabsTrigger value="fleet" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-sky-400 transition-all">Fleet Overview</TabsTrigger>
-          <TabsTrigger value="missions" className="rounded-md px-6 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-400 transition-all">Active Missions ({activeMissions.length})</TabsTrigger>
-        </TabsList>
+      <div className="w-full">
+        <div className="mb-4">
+          <AnimatedTabs
+            tabs={droneTabs}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
+        </div>
 
-        <TabsContent value="fleet" className="m-0 mt-2 outline-none">
+        {activeTab === "fleet" && (
+          <div className="m-0 mt-2 outline-none animate-in fade-in duration-300">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin text-sky-500 mb-4" />
@@ -453,7 +482,7 @@ export default function DroneOps() {
                         <span className="text-muted-foreground flex items-center gap-1"><Battery className="w-3 h-3" /> Power Level</span>
                         <span className={d.battery < 20 ? 'text-red-400 font-medium' : 'text-emerald-400 font-medium'}>{d.battery}%</span>
                       </div>
-                      <Progress value={d.battery} className={`h-1.5 ${d.battery < 20 ? '[&>div]:bg-red-500' : d.battery < 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-emerald-500'}`} />
+                      <Progress value={d.battery} className={`h-1.5 ${d.battery < 20 ? '[&>div]:bg-red-500' : d.battery < 50 ? '[&>div]:bg-orange-500' : '[&>div]:bg-emerald-500'}`} />
                     </div>
                     
                     <div className="flex items-center justify-between pt-2">
@@ -468,9 +497,11 @@ export default function DroneOps() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </div>
+        )}
 
-        <TabsContent value="missions" className="m-0 mt-2 outline-none">
+        {activeTab === "missions" && (
+          <div className="m-0 mt-2 outline-none animate-in fade-in duration-300">
           <div className="rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md overflow-hidden">
             {missions.length === 0 ? (
               <div className="py-20 flex flex-col items-center justify-center text-muted-foreground">
@@ -556,8 +587,9 @@ export default function DroneOps() {
               </ScrollArea>
             )}
           </div>
-        </TabsContent>
-      </Tabs>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

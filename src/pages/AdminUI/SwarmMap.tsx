@@ -361,8 +361,8 @@ export default function SwarmMap() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-[10px] gap-1 ${paused ? 'border-amber-500/40 text-amber-400' : 'border-emerald-500/40 text-emerald-400'}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${paused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+            <Badge variant="outline" className={`text-[10px] gap-1 ${paused ? 'border-orange-500/40 text-orange-400' : 'border-emerald-500/40 text-emerald-400'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${paused ? 'bg-orange-500' : 'bg-emerald-500 animate-pulse'}`} />
               {paused ? 'Paused' : 'Live'}
             </Badge>
             <Button
@@ -378,23 +378,27 @@ export default function SwarmMap() {
         </div>
 
         {/* ━━━ STATS BAR ━━━ */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Active Swarms', value: stats?.total_swarms ?? '—', icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10' },
-            { label: 'Critical', value: stats?.critical_count ?? '—', icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-            { label: 'Total Locusts', value: stats ? `${(stats.total_locusts / 1e9).toFixed(1)}B` : '—', icon: Users, color: 'text-sky-400', bg: 'bg-sky-500/10' },
-            { label: 'Avg Health', value: stats ? `${(stats.avg_health * 100).toFixed(0)}%` : '—', icon: HeartPulse, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            { label: 'Active Swarms', value: stats?.total_swarms ?? '—', icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10', glow: 'bg-red-500' },
+            { label: 'Critical', value: stats?.critical_count ?? '—', icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', glow: 'bg-orange-500' },
+            { label: 'Total Locusts', value: stats ? `${(stats.total_locusts / 1e9).toFixed(1)}B` : '—', icon: Users, color: 'text-sky-400', bg: 'bg-sky-500/10', glow: 'bg-sky-500' },
+            { label: 'Avg Health', value: stats ? `${(stats.avg_health * 100).toFixed(0)}%` : '—', icon: HeartPulse, color: 'text-emerald-400', bg: 'bg-emerald-500/10', glow: 'bg-emerald-500' },
           ].map(s => {
             const Icon = s.icon
             return (
-              <div key={s.label} className="rounded-lg border border-border/50 p-3 flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${s.bg}`}>
-                  <Icon className={`h-4 w-4 ${s.color}`} />
+              <div key={s.label} className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-4">
+                <div className={`absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl ${s.glow}`} />
+                <div className="relative z-10 flex items-center gap-4 w-full">
+                  <div className={`p-2.5 rounded-xl ${s.bg} ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300`}>
+                    <Icon className={`h-5 w-5 ${s.color}`} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold tabular-nums tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{s.value}</div>
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">{s.label}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-lg font-bold tabular-nums leading-tight">{s.value}</div>
-                  <div className="text-[10px] text-muted-foreground">{s.label}</div>
-                </div>
+                <div className={`absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-current to-transparent`} style={{ color: s.color.replace('text-', '') }} />
               </div>
             )
           })}
@@ -477,7 +481,7 @@ export default function SwarmMap() {
                     </div>
                     <Progress
                       value={selectedData.health * 100}
-                      className={`h-1.5 ${selectedData.health > 0.6 ? '[&>div]:bg-emerald-500' : selectedData.health > 0.3 ? '[&>div]:bg-amber-500' : '[&>div]:bg-red-500'}`}
+                      className={`h-1.5 ${selectedData.health > 0.6 ? '[&>div]:bg-emerald-500' : selectedData.health > 0.3 ? '[&>div]:bg-orange-500' : '[&>div]:bg-red-500'}`}
                     />
                   </div>
                   <Button variant="ghost" size="sm" className="w-full text-xs h-7" onClick={() => setSelectedSwarm(null)}>

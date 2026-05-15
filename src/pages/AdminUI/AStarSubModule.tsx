@@ -6,9 +6,10 @@ import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-  Loader2, Route, Layers, Info, MapPin, ArrowRight, Ruler, Search, ShieldAlert
+  Loader2, Route, Layers, Info, MapPin, ArrowRight, Ruler, Search, ShieldAlert, CheckCircle2, AlertTriangle
 } from 'lucide-react'
 import { useAuthFetch } from '@/context/AuthContext'
+import { AnimatePresence, motion } from 'framer-motion'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -38,6 +39,7 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
   const [astarResult, setAstarResult] = useState<AStarResult | null>(null)
   const [astarLoading, setAstarLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [actionToast, setActionToast] = useState<{show: boolean, type: 'success'|'error', message: string}>({show: false, type: 'success', message: ''})
   const authFetch = useAuthFetch()
 
   const handleAction = async (actionType: string, zone: string) => {
@@ -49,9 +51,11 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
         body: JSON.stringify({ zone, action_type: actionType })
       })
       const data = await res.json()
-      alert(data.message || 'Action executed successfully')
+      setActionToast({ show: true, type: 'success', message: data.message || 'Action executed successfully' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } catch (err) {
-      alert('Action failed')
+      setActionToast({ show: true, type: 'error', message: 'Action failed. Please try again.' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } finally {
       setActionLoading(false)
     }
@@ -191,6 +195,7 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
   }, [astarResult])
 
   return (
+    <>
     <div className="space-y-4">
       {/* ━━━ Controls ━━━ */}
       <div className="flex flex-wrap items-end gap-3">
@@ -239,9 +244,9 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
         <div className="lg:col-span-1 space-y-3">
 
           {/* Model info */}
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+          <div className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3">
             <div className="flex items-center gap-1.5 text-xs font-medium mb-2">
-              <Info className="h-3.5 w-3.5 text-amber-400" /> A* Pathfinder
+              <Info className="h-3.5 w-3.5 text-orange-400" /> A* Pathfinder
             </div>
             <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
               Uses geographic distance as heuristic to find the shortest path between two zones in the network graph.
@@ -266,7 +271,7 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
               <CardContent className="px-3 pb-3 space-y-2.5">
                 <Separator />
                 {[
-                  { icon: Ruler, label: 'Total distance', value: `${astarResult.total_distance_km} km`, color: 'text-amber-400' },
+                  { icon: Ruler, label: 'Total distance', value: `${astarResult.total_distance_km} km`, color: 'text-orange-400' },
                   { icon: MapPin, label: 'Zones in route', value: `${astarResult.path_length}`, color: 'text-foreground' },
                   { icon: Search, label: 'Zones evaluated', value: `${astarResult.nodes_explored}`, color: 'text-foreground' },
                 ].map(row => {
@@ -293,14 +298,14 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
           {astarResult && astarResult.path.length > 2 && (
             <div className="bg-muted/30 rounded-lg p-2.5 border border-border/50">
               <div className="text-[10px] font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                <ShieldAlert className="h-3 w-3 text-amber-400" />
+                <ShieldAlert className="h-3 w-3 text-orange-400" />
                 Strategic Recommendation
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
                 The swarm is predicted to take this optimal path. Intercept the swarm at the midpoint zone <strong>{astarResult.path[Math.floor(astarResult.path.length / 2)]}</strong> before it reaches the destination.
               </p>
               <div className="flex gap-2">
-                <Button size="sm" onClick={() => handleAction('deploy_intercept', astarResult.path[Math.floor(astarResult.path.length / 2)])} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-amber-500 hover:bg-amber-600 text-white border-0">
+                <Button size="sm" onClick={() => handleAction('deploy_intercept', astarResult.path[Math.floor(astarResult.path.length / 2)])} disabled={actionLoading} className="h-7 text-[10px] flex-1 bg-orange-500 hover:bg-orange-600 text-white border-0">
                   {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : 'Deploy Intercept Team'}
                 </Button>
               </div>
@@ -317,7 +322,7 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
                   <div key={zone} className="rounded-lg border border-border/40 p-2 text-xs">
                     <div className="flex items-center gap-2">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 ${
-                        isStart ? 'bg-emerald-500' : isGoal ? 'bg-red-500' : 'bg-amber-500'
+                        isStart ? 'bg-emerald-500' : isGoal ? 'bg-red-500' : 'bg-orange-500'
                       }`}>{i + 1}</div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-[11px]">{zone}</div>
@@ -343,12 +348,37 @@ export default function AStarSubModule({ zones }: AStarSubModuleProps) {
       {/* ━━━ LEGEND ━━━ */}
       <div className="flex items-center gap-4 text-[10px] text-muted-foreground px-1">
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Start</span>
-        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waypoint</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Waypoint</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" /> Destination</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gray-500" /> Explored</span>
         <Separator orientation="vertical" className="h-3" />
         <span>Green line = optimal path · Grey dots = evaluated but rejected</span>
       </div>
     </div>
+
+    {/* Action Toast Notification */}
+    <AnimatePresence>
+      {actionToast.show && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md ${
+            actionToast.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}
+        >
+          {actionToast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {actionToast.type === 'success' ? 'Action Dispatched' : 'Action Failed'}
+            </p>
+            <p className="text-xs opacity-90">{actionToast.message}</p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   )
 }

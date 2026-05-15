@@ -135,7 +135,7 @@ export default function Users() {
                   return (
                     <TableRow
                       key={u.id}
-                      className={`border-b border-border hover:bg-accent/40 transition-colors duration-150 ${isMe ? 'bg-amber-500/5' : ''}`}
+                      className={`border-b border-border hover:bg-accent/40 transition-colors duration-150 ${isMe ? 'bg-orange-500/5' : ''}`}
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export default function Users() {
                             </AvatarFallback>
                           </Avatar>
                           <span className="font-medium text-sm">
-                            {u.name}{isMe && <span className="ml-2 text-xs text-amber-400">(you)</span>}
+                            {u.name}{isMe && <span className="ml-2 text-xs text-orange-400">(you)</span>}
                           </span>
                         </div>
                       </TableCell>
