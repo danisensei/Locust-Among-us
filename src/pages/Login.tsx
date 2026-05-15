@@ -97,8 +97,16 @@ export default function Login() {
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
               className="mb-3 flex justify-center h-24 relative"
             >
-              {/* Perfectly centered using translate, so it spills evenly up and down without covering the text */}
-              <img src="/models/logo.png" alt="Locust 3D Model" className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-58 w-auto object-contain drop-shadow-2xl pointer-events-none" />
+              {/* Perfectly centered using translate, with a radial mask to hide the hard image edges */}
+              <img 
+                src="/models/locust-tech-logo.png" 
+                alt="Tech Locust Logo" 
+                className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-64 w-auto object-contain drop-shadow-2xl pointer-events-none dark:mix-blend-screen mix-blend-normal" 
+                style={{ 
+                  WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
+                  maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 
+                }}
+              />
             </motion.div>
             <h1 className="text-3xl font-black font-['Outfit'] text-foreground tracking-tighter mt-8">LC-EWS</h1>
             <p className="text-sm text-muted-foreground mt-1">Locust Early Warning System</p>

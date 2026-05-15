@@ -203,8 +203,14 @@ export default function App() {
 
           {/* Faint watermark - HIDE WHEN COLLAPSED */}
           {!collapsed && (
-            <div className="absolute -right-6 -top-6 opacity-30 group-hover:opacity-60 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-1000 pointer-events-none transform origin-center">
-              <img src="/models/logo.png" alt="watermark" className="w-32 h-32 object-contain" />
+            <div 
+              className="absolute -right-4 -top-4 opacity-40 group-hover:opacity-80 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000 pointer-events-none transform origin-center dark:mix-blend-screen mix-blend-normal"
+              style={{ 
+                WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
+                maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 
+              }}
+            >
+              <img src="/models/locust-tech-logo.png" alt="AI Locust Logo" className="w-32 h-32 object-contain" />
             </div>
           )}
 
