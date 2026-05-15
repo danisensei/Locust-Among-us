@@ -186,7 +186,11 @@ export default function App() {
     return (
       <>
         {/* Logo */}
+<<<<<<< Updated upstream
         <div className={`h-20 border-b border-border/50 relative overflow-hidden group cursor-default flex items-center justify-center bg-background/30`}>
+=======
+        <div className={`px-4 py-7 border-b border-border/50 relative overflow-hidden group cursor-default`}>
+>>>>>>> Stashed changes
           {isMobile && (
             <button
               onClick={() => setIsMobileMenuOpen(false)}
@@ -195,11 +199,20 @@ export default function App() {
               <X className="h-4 w-4" />
             </button>
           )}
+<<<<<<< Updated upstream
           
           {/* Animated Mesh Gradient Background */}
           <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] animate-pulse" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(56,189,248,0.1),transparent_50%)] animate-pulse [animation-delay:1s]" />
+=======
+          {/* Animated background glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-sky-500/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+
+          {/* Faint watermark */}
+          <div className="absolute -right-8 -top-8 opacity-40 group-hover:opacity-[1] group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 pointer-events-none transform origin-center">
+            <img src="/models/logo.png" alt="watermark" className="w-40 h-40 object-contain" />
+>>>>>>> Stashed changes
           </div>
 
           {/* Scanning Effect Line */}
