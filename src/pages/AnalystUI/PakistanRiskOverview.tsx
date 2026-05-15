@@ -60,10 +60,10 @@ function riskIntensity(risk: string): number {
 }
 
 const RISK_BADGE: Record<string, string> = {
-  Critical: 'bg-red-500/15 text-red-400 border-red-500/30',
-  High: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
-  Medium: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
-  Low: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  Critical: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+  High: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+  Medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  Low: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
 }
 
 const RISK_DOT: Record<string, string> = {
@@ -75,13 +75,13 @@ const RISK_DOT: Record<string, string> = {
 
 // ── Time formatter ───────────────────────────────────────────
 function formatTime(iso: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const diff = Math.floor((now.getTime() - d.getTime()) / 1000)
-  if (diff < 60) return 'Just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
+  return new Date(iso).toLocaleString('en-PK', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
 }
 
 export default function PakistanRiskOverview() {

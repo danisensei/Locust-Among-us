@@ -163,17 +163,17 @@ export default function Dashboard() {
 
         {/* ━━━ HEADER ━━━ */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Command Dashboard
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 Real-time swarm intelligence · AI-powered risk assessment
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-xl font-medium tabular-nums tracking-wider" style={{ fontFamily: "'Space Mono', monospace" }}>
+            <div className="text-left sm:text-right">
+              <div className="text-lg md:text-xl font-medium tabular-nums tracking-wider" style={{ fontFamily: "'Space Mono', monospace" }}>
                 {now.toLocaleTimeString('en-US', { hour12: false })}
               </div>
               <div className="text-[11px] text-muted-foreground">
@@ -186,7 +186,7 @@ export default function Dashboard() {
         <Separator />
 
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <AnimatedTabs
               tabs={dashboardTabs}
               activeTab={activeTab}

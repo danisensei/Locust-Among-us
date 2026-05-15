@@ -57,7 +57,13 @@ body::before {
 .main {
   flex: 1;
   overflow-y: auto;
-  padding: 22px 24px;
+  padding: 16px 12px;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: 22px 24px;
+  }
 }
 
 .main::-webkit-scrollbar {
@@ -115,9 +121,16 @@ body::before {
 /* STAT GRID */
 .sg {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
   margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .sg {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
 }
 
 .scard {
@@ -202,20 +215,44 @@ body::before {
 /* GRID LAYOUTS */
 .g2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .g2 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .g3 {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .g3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .g3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }
 
 .g75 {
   display: grid;
-  grid-template-columns: 7fr 5fr;
+  grid-template-columns: 1fr;
   gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .g75 {
+    grid-template-columns: 7fr 5fr;
+  }
 }
 
 .mb {
@@ -378,9 +415,15 @@ tr:hover td {
 /* FORECAST BAR */
 .fbar {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin-top: 11px;
+}
+
+@media (min-width: 768px) {
+  .fbar {
+    grid-template-columns: repeat(8, 1fr);
+  }
 }
 
 .fcell {
@@ -432,8 +475,20 @@ tr:hover td {
 /* WEATHER CARDS */
 .wg {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 11px;
+}
+
+@media (min-width: 640px) {
+  .wg {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .wg {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .wc {
@@ -480,9 +535,21 @@ tr:hover td {
 /* AI SECTION */
 .ai-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 11px;
   margin-bottom: 14px;
+}
+
+@media (min-width: 640px) {
+  .ai-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .ai-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }
 
 .ig label {
