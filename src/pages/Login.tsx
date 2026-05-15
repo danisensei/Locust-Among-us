@@ -98,9 +98,9 @@ export default function Login() {
               className="mb-3 flex justify-center h-24 relative"
             >
               {/* Perfectly centered using translate, so it spills evenly up and down without covering the text */}
-              <img src="/models/locust3d.png" alt="Locust 3D Model" className="absolute top-1/2 left-[55%] -translate-x-1/2 -translate-y-1/2 h-90 w-auto object-contain drop-shadow-2xl pointer-events-none" />
+              <img src="/models/logo.png" alt="Locust 3D Model" className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-58 w-auto object-contain drop-shadow-2xl pointer-events-none" />
             </motion.div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">LC-EWS</h1>
+            <h1 className="text-3xl font-black font-['Outfit'] text-foreground tracking-tighter mt-8">LC-EWS</h1>
             <p className="text-sm text-muted-foreground mt-1">Locust Early Warning System</p>
           </div>
 
