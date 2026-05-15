@@ -80,70 +80,83 @@ export function AlertDropdown({ onNavigate }: { onNavigate?: (tab: string) => vo
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-card border border-border/50 rounded-xl shadow-xl z-[1010] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="px-4 py-3 border-b border-border/50 bg-muted/20 flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Notifications</h3>
+        <div className="absolute right-0 mt-4 w-96 bg-card/98 backdrop-blur-xl border border-border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] z-[5000] rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 origin-top-right">
+          <div className="px-5 py-4 border-b border-border/40 bg-muted/20 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-sm">Notifications</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Real-time alerts and system updates</p>
+            </div>
             {unreadCount > 0 && (
               <button 
                 onClick={markAllAsRead}
-                className="text-[11px] text-primary hover:underline font-medium"
+                className="text-[11px] text-primary hover:text-primary/80 font-bold"
               >
-                Mark all as read
+                Clear All
               </button>
             )}
           </div>
           
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[28rem] overflow-y-auto">
             {alerts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                <div className="h-12 w-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-                  <Inbox className="h-6 w-6 text-muted-foreground/50" />
+              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                <div className="h-14 w-14 rounded-2xl bg-muted/20 flex items-center justify-center mb-4">
+                  <Inbox className="h-7 w-7 text-muted-foreground/30" />
                 </div>
-                <p className="text-sm font-medium text-foreground/80">No notifications</p>
+                <p className="text-sm font-bold text-foreground">No new notifications</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  You're all caught up! New alerts will appear here.
+                  You're all caught up! New events will appear here.
                 </p>
               </div>
             ) : (
-              alerts.map((alert) => (
-                <div 
-                  key={alert.id}
-                  className={`p-4 border-b border-border/50 last:border-0 hover:bg-accent/30 transition-colors cursor-pointer flex gap-3 ${!alert.is_read ? 'bg-primary/5' : ''}`}
-                  onClick={() => {
-                    setAlerts(alerts.map(a => a.id === alert.id ? { ...a, is_read: true } : a))
-                  }}
-                >
-                  <div className="mt-0.5">
-                    {alert.type === "critical" && <ShieldAlert className="h-4 w-4 text-rose-500" />}
-                    {alert.type === "warning" && <AlertTriangle className="h-4 w-4 text-orange-500" />}
-                    {alert.type === "info" && <Info className="h-4 w-4 text-sky-500" />}
+              <div className="divide-y divide-border/10">
+                {alerts.map((alert) => (
+                  <div 
+                    key={alert.id}
+                    className={`p-4 hover:bg-accent/40 transition-all cursor-pointer flex gap-4 relative group/item ${!alert.is_read ? 'bg-primary/[0.02]' : ''}`}
+                    onClick={() => {
+                      setAlerts(alerts.map(a => a.id === alert.id ? { ...a, is_read: true } : a))
+                    }}
+                  >
+                    {!alert.is_read && (
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary" />
+                    )}
+                    
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      alert.type === 'critical' ? 'bg-rose-500/10 text-rose-500' :
+                      alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' :
+                      'bg-sky-500/10 text-sky-500'
+                    }`}>
+                      {alert.type === "critical" && <ShieldAlert className="h-5 w-5" />}
+                      {alert.type === "warning" && <AlertTriangle className="h-5 w-5" />}
+                      {alert.type === "info" && <Info className="h-5 w-5" />}
+                    </div>
+                    
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-sm font-semibold truncate ${!alert.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {alert.title}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground/50 font-medium whitespace-nowrap">
+                          {formatTime(alert.created_at).split(',')[1]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground/70 line-clamp-2">
+                        {alert.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <p className={`text-sm font-medium leading-none ${!alert.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {alert.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {alert.description}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/60 font-medium pt-1">
-                      {formatTime(alert.created_at)}
-                    </p>
-                  </div>
-                  {!alert.is_read && (
-                    <div className="h-2 w-2 rounded-full bg-primary mt-1" />
-                  )}
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
           
-          <div className="p-2 bg-muted/10 border-t border-border/50">
+          <div className="p-3 bg-muted/10 border-t border-border/40">
             <button 
               onClick={() => {
                 onNavigate?.('alerts')
                 setIsOpen(false)
               }}
-              className="w-full text-center text-xs py-2 font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full text-center text-xs py-2.5 font-bold text-primary hover:bg-primary/5 rounded-xl transition-all"
             >
               View All Alerts
             </button>

@@ -468,7 +468,7 @@ export default function App() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl h-14 md:h-16 flex items-center justify-between px-3 md:px-6 sticky top-0 z-[1000] shadow-sm relative overflow-hidden">
+          <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl h-14 md:h-16 flex items-center justify-between px-3 md:px-6 sticky top-0 z-[1000] shadow-sm relative">
             {/* Subtle top glow line */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 transition-opacity duration-500 header-glow-line" />
 
@@ -494,7 +494,7 @@ export default function App() {
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 relative z-[1001]">
               <AlertDropdown onNavigate={setActiveTab} />
 
               <div className="h-6 w-px bg-border/50 mx-1" />
