@@ -263,8 +263,13 @@ export default function Dashboard() {
                     </div>
                   ) : alerts.map(alert => {
                     const style = ALERT_STYLES[alert.type] || ALERT_STYLES.info
-                    const timeAgo = Math.round((new Date().getTime() - new Date(alert.created_at).getTime()) / 60000)
-                    const timeStr = timeAgo < 1 ? 'Just now' : timeAgo < 60 ? `${timeAgo}m ago` : `${Math.floor(timeAgo / 60)}h ago`
+                    const timeStr = new Date(alert.created_at).toLocaleString('en-PK', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })
                     return (
                       <div key={alert.id} className={`rounded-lg border p-3 ${style.bg} transition-colors hover:border-opacity-60`}>
                         <div className="flex items-start gap-2.5">

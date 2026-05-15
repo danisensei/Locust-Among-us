@@ -163,3 +163,39 @@ button:disabled,
 [data-disabled] {
   cursor: not-allowed;
 }
+/* ── Custom Premium Scrollbar ────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border) / 0.3);
+  border-radius: 100px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.4);
+  background-clip: content-box;
+}
+
+/* Hide scrollbar when not in use for a cleaner look */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border) / 0.3) transparent;
+}
+
+/* Ensure scrollbar only shows on hover for specific containers if desired, 
+   but for global we'll keep it subtle enough to not be distracting */
+@supports (scrollbar-gutter: stable) {
+  html {
+    scrollbar-gutter: stable;
+  }
+}
