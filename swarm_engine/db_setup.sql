@@ -51,3 +51,13 @@ CREATE INDEX IF NOT EXISTS idx_swarm_events_recorded_at ON swarm_events(recorded
 -- Register your first admin account via:  POST /auth/register
 -- with role: "admin"
 
+-- 5. Alerts table
+CREATE TABLE IF NOT EXISTS alerts (
+    id          SERIAL PRIMARY KEY,
+    type        VARCHAR(50)  NOT NULL,
+    title       VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_read     BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts(created_at);

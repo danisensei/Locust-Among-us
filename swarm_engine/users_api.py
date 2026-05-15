@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from database import get_db
-from models import User, Report, Drone, Mission
+from models import User, Report, Drone, Mission, Alert
 from auth import get_current_user, require_role
 
 router = APIRouter(tags=["users-reports"])
@@ -84,6 +84,30 @@ def _mission_out(m: Mission, drone: Drone = None, report: Report = None) -> dict
     if report:
         out["report"] = _report_out(report)
     return out
+
+
+def _alert_out(a: Alert) -> dict:
+    return {
+        "id":          a.id,
+        "type":        a.type,
+        "title":       a.title,
+        "description": a.description,
+        "is_read":     a.is_read,
+        "created_at":  a.created_at.isoformat(),
+    }
+
+
+# ── Alerts ────────────────────────────────────────────────────
+@router.get("/api/alerts")
+async def list_alerts(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch recent alerts for the dashboard."""
+    result = await db.execute(
+        select(Alert).order_by(Alert.created_at.desc()).limit(50)
+    )
+    return [_alert_out(a) for a in result.scalars().all()]
 
 
 # ── Users ─────────────────────────────────────────────────────
@@ -192,6 +216,20 @@ async def review_report(
     report.reviewer_feedback = req.feedback or None
     report.reviewed_by = current_user.name
     report.reviewed_at = datetime.utcnow()
+
+    # Create an alert if verified as Critical or High
+    if req.status == "Verified" and report.risk_level in ("Critical", "High"):
+        alert_type = "critical" if report.risk_level == "Critical" else "warning"
+        alert_title = f"Verified {report.risk_level} Swarm — {report.zone}"
+        alert_desc = report.description[:100] + "..." if len(report.description) > 100 else report.description
+        
+        alert = Alert(
+            type=alert_type,
+            title=alert_title,
+            description=f"{alert_desc} (Report ID: {report.report_id})",
+        )
+        db.add(alert)
+
     await db.commit()
     return _report_out(report)
 
@@ -272,7 +310,17 @@ async def update_drone_status(
     if req.status is not None:
         drone.status = req.status
     if req.battery is not None:
+        old_battery = drone.battery
         drone.battery = max(0, min(100, req.battery))
+        
+        # Create an alert if battery drops to 20% or below
+        if old_battery > 20 and drone.battery <= 20:
+            alert = Alert(
+                type="info",
+                title=f"Drone Low Battery — {drone.drone_id}",
+                description=f"Battery at {drone.battery}%. Return to base recommended.",
+            )
+            db.add(alert)
 
     await db.commit()
     await db.refresh(drone)

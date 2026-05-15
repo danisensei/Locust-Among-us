@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { GitBranch, Network, Route } from 'lucide-react'
+import { AnimatedTabs } from '@/components/ui/animated-tabs'
 import BFSSubModule from './BFSSubModule'
 import AStarSubModule from './AStarSubModule'
 
@@ -45,38 +46,15 @@ export default function AIPrediction() {
         </div>
 
         {/* ━━━ VIEW TOGGLE ━━━ */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/40 border border-border/40 w-fit">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setActiveView('bfs')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeView === 'bfs'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <GitBranch className="h-3.5 w-3.5" /> Spread Prediction
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>BFS — layer-by-layer migration forecasting</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setActiveView('astar')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeView === 'astar'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Route className="h-3.5 w-3.5" /> Route Finder
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>A* — optimal path between two zones</TooltipContent>
-          </Tooltip>
-        </div>
+        <AnimatedTabs
+          tabs={[
+            { id: 'bfs', label: <><GitBranch className="h-3.5 w-3.5" /> Spread Prediction</> },
+            { id: 'astar', label: <><Route className="h-3.5 w-3.5" /> Route Finder</> }
+          ]}
+          activeTab={activeView}
+          onChange={(val) => setActiveView(val as 'bfs' | 'astar')}
+          className="w-fit"
+        />
 
         <Separator />
 

@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   AlertTriangle, Layers, MapPin, Loader2, RefreshCw, Shield, Clock,
-  User, FileText, ChevronRight, Eye, Globe, Info
+  User, FileText, ChevronRight, Eye, Globe, Info, CheckCircle2
 } from 'lucide-react'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
@@ -18,6 +18,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { MarkerClusterGroup } from 'leaflet.markercluster'
 // @ts-ignore
 import 'leaflet.heat'
+import { AnimatePresence, motion } from 'framer-motion'
 
 // ── Types ────────────────────────────────────────────────────
 interface ReportData {
@@ -96,6 +97,7 @@ export default function PakistanRiskOverview() {
   const [activeReport, setActiveReport] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [actionToast, setActionToast] = useState<{show: boolean, type: 'success'|'error', message: string}>({show: false, type: 'success', message: ''})
 
   const handleAction = async (actionType: string, zone: string) => {
     setActionLoading(true)
@@ -106,9 +108,11 @@ export default function PakistanRiskOverview() {
         body: JSON.stringify({ zone, action_type: actionType })
       })
       const data = await res.json()
-      alert(data.message || 'Action executed successfully')
+      setActionToast({ show: true, type: 'success', message: data.message || 'Action executed successfully' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } catch (err) {
-      alert('Action failed')
+      setActionToast({ show: true, type: 'error', message: 'Action failed. Please try again.' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } finally {
       setActionLoading(false)
     }
@@ -310,8 +314,8 @@ export default function PakistanRiskOverview() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-[10px] gap-1 ${loading ? 'border-amber-500/40 text-amber-400' : 'border-emerald-500/40 text-emerald-400'}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+            <Badge variant="outline" className={`text-[10px] gap-1 ${loading ? 'border-orange-500/40 text-orange-400' : 'border-emerald-500/40 text-emerald-400'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500'}`} />
               {loading ? 'Loading' : `${stats.totalReports} reports`}
             </Badge>
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={fetchReports} disabled={loading}>
@@ -323,31 +327,35 @@ export default function PakistanRiskOverview() {
 
         {/* ━━━ CONTEXT BANNER ━━━ */}
         <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-3 flex items-start gap-3">
-          <Info className="h-4 w-4 text-sky-400 mt-0.5 shrink-0" />
-          <div className="text-xs text-sky-100/90 leading-relaxed">
-            <strong>How to use this map:</strong> The heatmap and markers indicate verified swarm activity. 
-            Click on any colored marker to view details. <strong>Critical zones (Red)</strong> require immediate drone dispatch or farmer notification.
+          <Info className="h-4 w-4 text-sky-500 mt-0.5 shrink-0" />
+          <div className="text-xs text-sky-800 dark:text-sky-100/90 leading-relaxed">
+            <strong className="text-sky-900 dark:text-sky-50">How to use this map:</strong> The heatmap and markers indicate verified swarm activity. 
+            Click on any colored marker to view details. <strong className="text-red-600 dark:text-red-400">Critical zones (Red)</strong> require immediate drone dispatch or farmer notification.
           </div>
         </div>
 
         {/* ━━━ STATS BAR ━━━ */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Critical', value: stats.criticalZones, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
-            { label: 'High Risk', value: stats.highZones, icon: Shield, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-            { label: 'Verified Reports', value: stats.totalReports, icon: Eye, color: 'text-sky-400', bg: 'bg-sky-500/10' },
-            { label: 'Affected Zones', value: stats.zones, icon: MapPin, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+            { label: 'Critical', value: stats.criticalZones, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10', glow: 'bg-red-500' },
+            { label: 'High Risk', value: stats.highZones, icon: Shield, color: 'text-orange-400', bg: 'bg-orange-500/10', glow: 'bg-orange-500' },
+            { label: 'Verified Reports', value: stats.totalReports, icon: Eye, color: 'text-sky-400', bg: 'bg-sky-500/10', glow: 'bg-sky-500' },
+            { label: 'Affected Zones', value: stats.zones, icon: MapPin, color: 'text-violet-400', bg: 'bg-violet-500/10', glow: 'bg-violet-500' },
           ].map(s => {
             const Icon = s.icon
             return (
-              <div key={s.label} className="rounded-lg border border-border/50 p-3 flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${s.bg}`}>
-                  <Icon className={`h-4 w-4 ${s.color}`} />
+              <div key={s.label} className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-background/80 to-muted/20 border border-border/40 hover:border-border/80 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-4">
+                <div className={`absolute -inset-1 opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl ${s.glow}`} />
+                <div className="relative z-10 flex items-center gap-4 w-full">
+                  <div className={`p-2.5 rounded-xl ${s.bg} ring-1 ring-inset ring-foreground/5 shadow-inner transition-transform group-hover:scale-110 duration-300`}>
+                    <Icon className={`h-5 w-5 ${s.color}`} />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold tabular-nums tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>{s.value}</div>
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">{s.label}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-lg font-bold tabular-nums leading-tight">{s.value}</div>
-                  <div className="text-[10px] text-muted-foreground">{s.label}</div>
-                </div>
+                <div className={`absolute bottom-0 left-0 right-0 h-[3px] opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-current to-transparent`} style={{ color: s.color.replace('text-', '') }} />
               </div>
             )
           })}
@@ -562,6 +570,30 @@ export default function PakistanRiskOverview() {
         </div>
 
       </div>
+
+      {/* Action Toast Notification */}
+      <AnimatePresence>
+        {actionToast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md ${
+              actionToast.type === 'success' 
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                : 'bg-red-500/10 border-red-500/30 text-red-400'
+            }`}
+          >
+            {actionToast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {actionToast.type === 'success' ? 'Action Dispatched' : 'Action Failed'}
+              </p>
+              <p className="text-xs opacity-90">{actionToast.message}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </TooltipProvider>
   )
 }

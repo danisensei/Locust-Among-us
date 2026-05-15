@@ -46,7 +46,7 @@ function isInsideZone(zoneName: string, lat: number, lon: number): boolean {
 const RISK_LEVELS = [
   { value: 'Critical', color: 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20 active:bg-rose-500/30 ring-rose-500' },
   { value: 'High',     color: 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 active:bg-orange-500/30 ring-orange-500' },
-  { value: 'Medium',   color: 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 active:bg-amber-500/30 ring-amber-500' },
+  { value: 'Medium',   color: 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 active:bg-orange-500/30 ring-orange-500' },
   { value: 'Low',      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 active:bg-emerald-500/30 ring-emerald-500' },
 ]
 
@@ -321,7 +321,7 @@ export default function FieldReports() {
     switch (risk) {
       case 'Critical': return 'bg-rose-500/15 text-rose-400 border-rose-500/20'
       case 'High':     return 'bg-orange-500/15 text-orange-400 border-orange-500/20'
-      case 'Medium':   return 'bg-amber-500/15 text-amber-300 border-amber-500/20'
+      case 'Medium':   return 'bg-orange-500/15 text-orange-300 border-orange-500/20'
       case 'Low':      return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
       default:         return 'bg-muted text-muted-foreground border-border'
     }
@@ -331,7 +331,7 @@ export default function FieldReports() {
     switch (status) {
       case 'Verified': return <CheckCircle2 className="h-4 w-4 text-emerald-400" />
       case 'Rejected': return <XCircle className="h-4 w-4 text-rose-400" />
-      default:         return <Clock className="h-4 w-4 text-amber-400" />
+      default:         return <Clock className="h-4 w-4 text-orange-400" />
     }
   }
 
@@ -538,12 +538,12 @@ export default function FieldReports() {
 
                 {/* Zone / Location mismatch warning */}
                 {zoneMismatch && (
-                  <div className="flex items-start gap-3 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 shadow-inner">
+                  <div className="flex items-start gap-3 text-sm text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl px-4 py-3 shadow-inner">
                     <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-amber-500">Location mismatch detected</p>
-                      <p className="text-xs text-amber-400/80 mt-1 leading-relaxed">
-                        The pinned coordinates ({lat?.toFixed(4)}, {lon?.toFixed(4)}) appear to be outside <strong className="text-amber-500">{zone}</strong>. 
+                      <p className="font-semibold text-orange-500">Location mismatch detected</p>
+                      <p className="text-xs text-orange-400/80 mt-1 leading-relaxed">
+                        The pinned coordinates ({lat?.toFixed(4)}, {lon?.toFixed(4)}) appear to be outside <strong className="text-orange-500">{zone}</strong>. 
                         Please verify the zone or pin. You can still submit if you're near the border.
                       </p>
                     </div>
@@ -575,9 +575,9 @@ export default function FieldReports() {
 
         {/* Mismatch Confirmation Dialog */}
         <Dialog open={showMismatchConfirm} onOpenChange={setShowMismatchConfirm}>
-          <DialogContent className="sm:max-w-md border-amber-500/20 bg-background/95 backdrop-blur-xl">
+          <DialogContent className="sm:max-w-md border-orange-500/20 bg-background/95 backdrop-blur-xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-amber-500">
+              <DialogTitle className="flex items-center gap-2 text-orange-500">
                 <MapPin className="h-5 w-5" />
                 Location Mismatch
               </DialogTitle>
@@ -585,10 +585,10 @@ export default function FieldReports() {
                 The coordinates you pinned don't appear to be inside <strong className="text-foreground">{zone}</strong>.
               </DialogDescription>
             </DialogHeader>
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 text-sm space-y-2 mt-2">
-              <p className="text-amber-400/90 flex justify-between"><strong className="text-amber-500">Zone:</strong> {zone}</p>
-              <p className="text-amber-400/90 flex justify-between"><strong className="text-amber-500">Pinned location:</strong> {lat?.toFixed(4)}, {lon?.toFixed(4)}</p>
-              <p className="text-xs text-amber-400/70 mt-3 pt-3 border-t border-amber-500/10">
+            <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4 text-sm space-y-2 mt-2">
+              <p className="text-orange-400/90 flex justify-between"><strong className="text-orange-500">Zone:</strong> {zone}</p>
+              <p className="text-orange-400/90 flex justify-between"><strong className="text-orange-500">Pinned location:</strong> {lat?.toFixed(4)}, {lon?.toFixed(4)}</p>
+              <p className="text-xs text-orange-400/70 mt-3 pt-3 border-t border-orange-500/10">
                 This could mean the wrong zone was selected, or the pin was placed incorrectly.
                 If you're near a zone border, this may be normal.
               </p>
@@ -599,7 +599,7 @@ export default function FieldReports() {
               </Button>
               <Button
                 variant="default"
-                className="bg-amber-500 hover:bg-amber-600 text-amber-950 gap-2 font-semibold shadow-lg shadow-amber-500/20"
+                className="bg-orange-500 hover:bg-orange-600 text-orange-950 gap-2 font-semibold shadow-lg shadow-orange-500/20"
                 onClick={doSubmit}
                 disabled={submitting}
               >
@@ -626,13 +626,13 @@ export default function FieldReports() {
         
         <div 
           onClick={() => setFilter('Pending')}
-          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Pending' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-amber-500/30'}`}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Pending' ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-orange-500/30'}`}
         >
-          <div className="absolute -right-4 -top-4 p-6 bg-amber-500/5 rounded-full group-hover:bg-amber-500/10 transition-colors">
-            <Clock className="h-8 w-8 text-amber-500/40" />
+          <div className="absolute -right-4 -top-4 p-6 bg-orange-500/5 rounded-full group-hover:bg-orange-500/10 transition-colors">
+            <Clock className="h-8 w-8 text-orange-500/40" />
           </div>
           <p className="text-sm font-semibold text-muted-foreground mb-1">Pending</p>
-          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Pending' ? 'text-amber-400' : 'text-foreground'}`}>{myPending}</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Pending' ? 'text-orange-400' : 'text-foreground'}`}>{myPending}</p>
         </div>
 
         <div 
@@ -718,7 +718,7 @@ export default function FieldReports() {
                   }`} />
                   
                   <div className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-sky-400 transition-colors flex items-center gap-2">
-                    {r.status === 'Pending' && <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />}
+                    {r.status === 'Pending' && <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />}
                     {r.report_id}
                   </div>
                   
@@ -736,7 +736,7 @@ export default function FieldReports() {
                   <div>
                     <div className="flex items-center gap-1.5 text-sm font-bold">
                       {statusIcon(r.status)}
-                      <span className={r.status === 'Verified' ? 'text-emerald-500' : r.status === 'Rejected' ? 'text-rose-500' : 'text-amber-500'}>
+                      <span className={r.status === 'Verified' ? 'text-emerald-500' : r.status === 'Rejected' ? 'text-rose-500' : 'text-orange-500'}>
                         {r.status}
                       </span>
                     </div>
@@ -802,7 +802,7 @@ export default function FieldReports() {
                     <div className={`px-4 py-1.5 rounded-full border shadow-sm flex items-center gap-2 text-sm font-semibold tracking-wide ${
                       detailReport.status === 'Verified' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                         : detailReport.status === 'Rejected' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
                     }`}>
                       {statusIcon(detailReport.status)}
                       {detailReport.status.toUpperCase()}
@@ -884,11 +884,11 @@ export default function FieldReports() {
                       )}
                     </div>
                   ) : (
-                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5 flex items-center gap-3">
-                      <Clock className="h-5 w-5 text-amber-400 animate-pulse" />
+                    <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5 flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-orange-400 animate-pulse" />
                       <div>
-                        <p className="text-sm font-semibold text-amber-500">Awaiting Assignment</p>
-                        <p className="text-xs text-amber-400/80 mt-0.5">Your report is waiting for an analyst to review.</p>
+                        <p className="text-sm font-semibold text-orange-500">Awaiting Assignment</p>
+                        <p className="text-xs text-orange-400/80 mt-0.5">Your report is waiting for an analyst to review.</p>
                       </div>
                     </div>
                   )}

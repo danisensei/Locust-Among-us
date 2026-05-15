@@ -173,7 +173,7 @@ export default function FieldReports() {
     switch (status) {
       case 'Verified': return <CheckCircle2 className="h-4 w-4 text-emerald-400" />
       case 'Rejected': return <XCircle className="h-4 w-4 text-rose-400" />
-      default:         return <Clock className="h-4 w-4 text-amber-400" />
+      default:         return <Clock className="h-4 w-4 text-orange-400" />
     }
   }
 
@@ -191,7 +191,7 @@ export default function FieldReports() {
             Report Review
           </h1>
           <p className="text-muted-foreground mt-1 font-medium">
-            Review field observations · Approve or reject with feedback · <span className="text-amber-400">{pendingCount} awaiting</span>
+            Review field observations · Approve or reject with feedback · <span className="text-orange-400">{pendingCount} awaiting</span>
           </p>
         </div>
         <Button type="button" onClick={fetchReports} disabled={loading} className="gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 shadow-lg shadow-sky-500/20 transition-all font-medium">
@@ -215,13 +215,13 @@ export default function FieldReports() {
         
         <div 
           onClick={() => setFilter('Pending')}
-          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Pending' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-amber-500/30'}`}
+          className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${filter === 'Pending' ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.15)]' : 'bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-orange-500/30'}`}
         >
-          <div className="absolute -right-4 -top-4 p-6 bg-amber-500/5 rounded-full group-hover:bg-amber-500/10 transition-colors">
-            <Clock className="h-8 w-8 text-amber-500/40" />
+          <div className="absolute -right-4 -top-4 p-6 bg-orange-500/5 rounded-full group-hover:bg-orange-500/10 transition-colors">
+            <Clock className="h-8 w-8 text-orange-500/40" />
           </div>
           <p className="text-sm font-semibold text-muted-foreground mb-1">Awaiting Review</p>
-          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Pending' ? 'text-amber-400' : 'text-foreground'}`}>{pendingCount}</p>
+          <p className={`text-3xl font-bold font-['Outfit'] ${filter === 'Pending' ? 'text-orange-400' : 'text-foreground'}`}>{pendingCount}</p>
         </div>
 
         <div 
@@ -303,7 +303,7 @@ export default function FieldReports() {
                   }`} />
                   
                   <div className="font-mono text-sm font-semibold text-muted-foreground group-hover:text-sky-400 transition-colors flex items-center gap-2">
-                    {r.status === 'Pending' && <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />}
+                    {r.status === 'Pending' && <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />}
                     {r.report_id}
                   </div>
                   
@@ -330,7 +330,7 @@ export default function FieldReports() {
                   <div>
                     <div className="flex items-center gap-1.5 text-sm font-bold">
                       {statusIcon(r.status)}
-                      <span className={r.status === 'Verified' ? 'text-emerald-500' : r.status === 'Rejected' ? 'text-rose-500' : 'text-amber-500'}>
+                      <span className={r.status === 'Verified' ? 'text-emerald-500' : r.status === 'Rejected' ? 'text-rose-500' : 'text-orange-500'}>
                         {r.status === 'Pending' ? 'Needs Review' : r.status}
                       </span>
                     </div>

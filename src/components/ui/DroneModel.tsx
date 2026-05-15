@@ -11,7 +11,7 @@ function getStatusColor(status: string) {
     case 'Available': return '#10b981' // emerald-500
     case 'On Mission': return '#3b82f6' // blue-500
     case 'Maintenance': return '#ef4444' // red-500
-    case 'Charging': return '#f59e0b' // amber-500
+    case 'Charging': return '#f59e0b' // orange-500
     default: return '#6b7280' // gray-500
   }
 }

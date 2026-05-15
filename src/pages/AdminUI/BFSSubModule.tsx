@@ -8,9 +8,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Loader2, Play, SkipForward, RotateCcw, GitBranch, Network,
-  Layers, Target, Clock, ArrowRight, Info, ShieldAlert
+  Layers, Target, Clock, ArrowRight, Info, ShieldAlert, CheckCircle2, AlertTriangle
 } from 'lucide-react'
 import { useAuthFetch } from '@/context/AuthContext'
+import { AnimatePresence, motion } from 'framer-motion'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -45,6 +46,7 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
   const [autoPlay, setAutoPlay] = useState(false)
   const [showGraph, setShowGraph] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+  const [actionToast, setActionToast] = useState<{show: boolean, type: 'success'|'error', message: string}>({show: false, type: 'success', message: ''})
   const authFetch = useAuthFetch()
 
   const handleAction = async (actionType: string, zone: string) => {
@@ -56,9 +58,11 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
         body: JSON.stringify({ zone, action_type: actionType })
       })
       const data = await res.json()
-      alert(data.message || 'Action executed successfully')
+      setActionToast({ show: true, type: 'success', message: data.message || 'Action executed successfully' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } catch (err) {
-      alert('Action failed')
+      setActionToast({ show: true, type: 'error', message: 'Action failed. Please try again.' })
+      setTimeout(() => setActionToast(prev => ({ ...prev, show: false })), 4000)
     } finally {
       setActionLoading(false)
     }
@@ -195,6 +199,7 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
   const progressPct = bfsResult ? ((animStep + 1) / bfsResult.levels.length) * 100 : 0
 
   return (
+    <>
     <div className="space-y-4">
       {/* ━━━ Controls ━━━ */}
       <div className="flex flex-wrap items-end gap-3">
@@ -389,8 +394,33 @@ export default function BFSSubModule({ zones }: BFSSubModuleProps) {
           </span>
         ))}
         <Separator orientation="vertical" className="h-3" />
-        <span>Amber lines = migration paths · Dots = affected zones</span>
+        <span>orange lines = migration paths · Dots = affected zones</span>
       </div>
     </div>
+
+    {/* Action Toast Notification */}
+    <AnimatePresence>
+      {actionToast.show && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md ${
+            actionToast.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}
+        >
+          {actionToast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {actionToast.type === 'success' ? 'Action Dispatched' : 'Action Failed'}
+            </p>
+            <p className="text-xs opacity-90">{actionToast.message}</p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   )
 }
