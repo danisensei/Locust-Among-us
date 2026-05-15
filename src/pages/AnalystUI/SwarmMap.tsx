@@ -1,3 +1,4 @@
+import { useAuthFetch, API_URL as AUTH_API_URL } from '@/context/AuthContext'
 import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -121,6 +122,7 @@ function ensurePulseStyle() {
 
 // ── Main Component ───────────────────────────────────────────
 export default function SwarmMap() {
+  const authFetch = useAuthFetch()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
@@ -130,6 +132,11 @@ export default function SwarmMap() {
 
   const [stats, setStats] = useState<Stats | null>(null)
   const [swarms, setSwarms] = useState<SwarmProps[]>([])
+
+  const [drones, setDrones] = useState<any[]>([])
+  const [missions, setMissions] = useState<any[]>([])
+  const [reports, setReports] = useState<any[]>([])
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paused, setPaused] = useState(false)
@@ -184,14 +191,25 @@ export default function SwarmMap() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [geoRes, statsRes] = await Promise.all([
+        const [geoRes, statsRes, dRes, mRes, rRes] = await Promise.all([
           fetch(`${API_URL}/api/swarms/geojson`),
           fetch(`${API_URL}/api/swarms/stats`),
+          authFetch(`${AUTH_API_URL}/api/drones`),
+          authFetch(`${AUTH_API_URL}/api/missions`),
+          authFetch(`${AUTH_API_URL}/api/reports`),
         ])
         if (!geoRes.ok || !statsRes.ok) throw new Error('API error')
 
         const geoData = await geoRes.json()
         const statsData: Stats = await statsRes.json()
+
+        const fDrones = dRes.ok ? await dRes.json() : []
+        const fMissions = mRes.ok ? await mRes.json() : []
+        const fReports = rRes.ok ? await rRes.json() : []
+
+        setDrones(fDrones)
+        setMissions(fMissions)
+        setReports(fReports)
 
         const features: SwarmFeature[] = geoData.features || []
         const swarmList = features.map(f => f.properties)
@@ -199,6 +217,9 @@ export default function SwarmMap() {
         setStats(statsData)
         setError(null)
         setTickCount(t => t + 1)
+
+        // Find active missions to attach drones
+        const activeMissions = fMissions.filter((m: any) => m.status === 'Assigned' || m.status === 'In Progress')
 
         // ── Update map markers ───────────────────────────
         if (!mapInstance.current) return
@@ -241,6 +262,11 @@ export default function SwarmMap() {
             `,
           })
 
+          // Attach Drone Info
+          const swarmReport = fReports.find((r: any) => r.report_id === p.report_id)
+          const assignedMission = activeMissions.find((m: any) => m.report_id === swarmReport?.id)
+          const trackingDrone = assignedMission ? fDrones.find((d: any) => d.id === assignedMission.drone_id) : null
+
           // Popup content
           const popupHtml = `
             <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 12px; min-width: 250px;">
@@ -250,8 +276,9 @@ export default function SwarmMap() {
               </div>
               <div style="color:#999; margin-bottom:4px;">${p.center_name}</div>
               ${p.report_id ? `<div style="font-size:11px; color:#888; margin-bottom:2px;">Report: <strong>${p.report_id}</strong></div>` : ''}
-              ${p.observer_name ? `<div style="font-size:11px; color:#888; margin-bottom:6px;">Observer: <strong>${p.observer_name}</strong></div>` : ''}
-              <table style="width:100%; font-size:11px; border-collapse:collapse;">
+              ${p.observer_name ? `<div style="font-size:11px; color:#888; margin-bottom:2px;">Observer: <strong>${p.observer_name}</strong></div>` : ''}
+              ${trackingDrone ? `<div style="font-size:11px; color:#38bdf8; margin-bottom:6px; background:#0ea5e915; border:1px solid #0ea5e930; padding:4px 6px; border-radius:4px;">Drone: <strong>${trackingDrone.drone_id}</strong> (${trackingDrone.model})</div>` : ''}
+              <table style="width:100%; font-size:11px; border-collapse:collapse; margin-top:6px;">
                 <tr><td style="padding:2px 0; color:#888;">Area</td><td style="text-align:right; font-weight:600;">${p.area_km2.toFixed(1)} km²</td></tr>
                 <tr><td style="padding:2px 0; color:#888;">Population</td><td style="text-align:right; font-weight:600;">${(p.size / 1e9).toFixed(2)}B</td></tr>
                 <tr><td style="padding:2px 0; color:#888;">Density</td><td style="text-align:right; font-weight:600;">${(p.density / 1e6).toFixed(1)}M/km²</td></tr>

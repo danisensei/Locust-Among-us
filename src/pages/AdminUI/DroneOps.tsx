@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,40 @@ import { Separator } from '@/components/ui/separator'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
 import DroneModel from '@/components/ui/DroneModel'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+// ── Mini Map Component ───────────────────────────────────────
+function MiniMap({ lat, lon, title, subheading }: { lat: number; lon: number; title: string; subheading: string }) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    if (!mapRef.current) return
+    const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView([lat, lon], 14)
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 18 }
+    ).addTo(map)
+
+    const color = '#38bdf8'
+    const icon = L.divIcon({
+      className: '',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      html: `
+        <div style="width:32px; height:32px; background: ${color}33; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;">
+          <div style="width:16px; height:16px; background: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${color};"></div>
+        </div>
+      `,
+    })
+    L.marker([lat, lon], { icon }).bindTooltip(`<strong>${title}</strong><br/>${subheading}`, { direction: 'top', offset: [0, -10] }).addTo(map)
+
+    setTimeout(() => map.invalidateSize(), 100)
+    return () => { map.remove() }
+  }, [lat, lon, title, subheading])
+
+  return <div ref={mapRef} className="w-full h-64 rounded-xl overflow-hidden shadow-inner border border-border/50" />
+}
 
 // ── Types ────────────────────────────────────────────────────
 interface DroneData {
@@ -535,12 +569,37 @@ export default function DroneOps() {
                       <Progress value={d.battery} className={`h-1.5 ${d.battery < 20 ? '[&>div]:bg-red-500' : d.battery < 50 ? '[&>div]:bg-orange-500' : '[&>div]:bg-emerald-500'}`} />
                     </div>
                     
-                    <div className="flex items-center justify-between pt-2">
-                      <div className={`text-xs flex items-center gap-1.5 ${isInProgress ? 'text-red-400 font-medium' : 'text-muted-foreground'}`}>
-                        <MapPin className="w-3 h-3" />
-                        {displayLat && displayLon ? `${displayLat.toFixed(4)}, ${displayLon.toFixed(4)}` : 'Position Unknown'}
+                    <div className="flex items-center justify-between pt-2 gap-1 overflow-hidden">
+                      <div className={`text-xs flex items-center gap-1.5 overflow-hidden ${isInProgress ? 'text-red-400 font-medium' : 'text-muted-foreground'}`}>
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span className="whitespace-nowrap truncate">{displayLat && displayLon ? `${displayLat.toFixed(4)}, ${displayLon.toFixed(4)}` : 'Position Unknown'}</span>
+                        
+                        {displayLat && displayLon && isInProgress && (
+                           <Dialog>
+                             <DialogTrigger asChild>
+                               <button className="hover:bg-red-500/20 px-2 py-0.5 rounded border border-red-500/30 transition-colors text-[10px] text-red-400 whitespace-nowrap flex-shrink-0 ml-1">View Tracking</button>
+                             </DialogTrigger>
+                             <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-xl border-border/50">
+                               <DialogHeader>
+                                 <DialogTitle className="flex items-center gap-2">
+                                   <Target className="h-5 w-5 text-sky-400" /> Drone Live Feed — {d.drone_id}
+                                 </DialogTitle>
+                                 <DialogDescription>Tracking target lock at {displayLat.toFixed(4)}, {displayLon.toFixed(4)}</DialogDescription>
+                               </DialogHeader>
+                               <div className="py-2">
+                                 <MiniMap lat={displayLat} lon={displayLon} title={d.drone_id} subheading={d.model} />
+                               </div>
+                               <DialogFooter>
+                                 <p className="text-xs text-muted-foreground mr-auto flex items-center gap-1">
+                                   <Activity className="h-3 w-3 animate-pulse text-sky-400" />
+                                   Live feed engaged
+                                 </p>
+                               </DialogFooter>
+                             </DialogContent>
+                           </Dialog>
+                        )}
                       </div>
-                      <span className="text-[10px] text-muted-foreground/60">Updated {formatTime(displayTime)}</span>
+                      <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap flex-shrink-0">Updated {formatTime(displayTime)}</span>
                     </div>
                   </div>
                 </div>
