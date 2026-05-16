@@ -12,7 +12,7 @@ type Tab = 'login' | 'register'
 const ROLES = [
   { value: 'analyst', label: 'Analyst', desc: 'View maps, risk zones & reports' },
   { value: 'field_officer', label: 'Field Officer', desc: 'Submit field observations' },
-  { value: 'admin', label: 'Admin', desc: 'Full system access' },
+  // { value: 'admin', label: 'Admin', desc: 'Full system access' },
 ]
 
 // ── Component ─────────────────────────────────────────────────
