@@ -55,18 +55,36 @@ services:
       # Changed Dockerfile path to be relative to the context (root)
       dockerfile: swarm_engine/docker_frontend/Dockerfile.frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
-        VITE_SWARM_API_URL: ${VITE_SWARM_API_URL:-http://localhost:8001}
+        # CRITICAL: Point to your secure domain for production
+        VITE_API_URL: https://roachpestanalyzer.duckdns.org
+        VITE_SWARM_API_URL: https://roachpestanalyzer.duckdns.org
     container_name: lc-ews-frontend
-    ports:
-      - "80:80"
+    # We remove the host ports because Caddy will handle external traffic
     depends_on:
       swarm-engine:
         condition: service_healthy
     restart: unless-stopped
 
+  # ── Caddy Reverse Proxy (Auto SSL) ──────────────────────────
+  caddy:
+    image: caddy:2
+    container_name: lc-ews-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - swarm-engine
+
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
 
 networks:
   default:
