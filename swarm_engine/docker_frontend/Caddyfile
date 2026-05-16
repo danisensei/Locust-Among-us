@@ -1,0 +1,23 @@
+{
+    # Global options
+    email roachpestanalyzer@gmail.com
+}
+
+pestanalyzer.duckdns.org {
+    # Set root directory for static files
+    root * /usr/share/caddy
+    
+    # Enable static file server
+    file_server
+    
+    # Handle SPA routing (fallback to index.html)
+    try_files {path} /index.html
+
+    # Optional: Enable compression
+    encode gzip
+
+    # Configure ZeroSSL as the CA
+    tls {
+        ca https://acme.zerossl.com/v2/DV90
+    }
+}
