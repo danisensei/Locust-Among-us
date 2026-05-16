@@ -52,6 +52,7 @@ services:
   frontend:
     build:
       context: ..
+      # Changed Dockerfile path to be relative to the context (root)
       dockerfile: swarm_engine/docker_frontend/Dockerfile.frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}

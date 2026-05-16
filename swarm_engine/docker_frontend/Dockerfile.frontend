@@ -29,7 +29,7 @@ FROM caddy:2-alpine
 COPY --from=build /app/dist /usr/share/caddy
 
 # Copy Caddyfile config
-COPY ./swarm_engine/docker_frontend/Caddyfile /etc/caddy/Caddyfile
+COPY swarm_engine/docker_frontend/Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80 443
 
