@@ -21,4 +21,22 @@ pestanalyzer.duckdns.org {
     tls {
         ca https://acme.zerossl.com/v2/DV90
     }
+
+    # Proxy API requests to the swarm-engine backend
+    handle /api/* {
+        reverse_proxy swarm-engine:8001 {
+            header_up Host {upstream_hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Proxy documentation if needed (optional)
+    handle /docs {
+        reverse_proxy swarm-engine:8001
+    }
+    handle /openapi.json {
+        reverse_proxy swarm-engine:8001
+    }
 }
