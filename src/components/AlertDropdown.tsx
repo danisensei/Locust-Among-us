@@ -80,7 +80,7 @@ export function AlertDropdown({ onNavigate }: { onNavigate?: (tab: string) => vo
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-4 w-96 bg-card/98 backdrop-blur-xl border border-border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] z-[5000] rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 origin-top-right">
+        <div className="fixed left-4 right-4 top-[70px] w-auto sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-4 sm:w-96 bg-card/98 backdrop-blur-xl border border-border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] z-[5000] rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 origin-top sm:origin-top-right">
           <div className="px-5 py-4 border-b border-border/40 bg-muted/20 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-sm">Notifications</h3>
