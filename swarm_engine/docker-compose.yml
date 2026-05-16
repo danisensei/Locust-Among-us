@@ -48,7 +48,7 @@ services:
       retries: 5
       start_period: 15s
 
-  # ── Vite Frontend (Caddy) ───────────────────────────────────
+  # ── Vite Frontend (nginx) ───────────────────────────────────
   frontend:
     build:
       context: ..
@@ -60,10 +60,6 @@ services:
     container_name: lc-ews-frontend
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
     depends_on:
       swarm-engine:
         condition: service_healthy
@@ -71,8 +67,6 @@ services:
 
 volumes:
   pgdata:
-  caddy_data:
-  caddy_config:
 
 networks:
   default:
