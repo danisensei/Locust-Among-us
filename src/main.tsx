@@ -7,7 +7,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 
 ReactDOM.createRoot(document.getElementById('app')!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="lc-ews-theme">
+    <ThemeProvider defaultTheme="system" storageKey="lc-ews-theme">
       <AuthProvider>
         <App />
       </AuthProvider>
