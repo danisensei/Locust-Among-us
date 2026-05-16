@@ -201,24 +201,24 @@ export default function Login() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="space-y-2 pt-1">
-                    <Label className="text-muted-foreground text-xs uppercase tracking-wider">Role</Label>
-                    <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-2 pt-1 pb-1">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-muted-foreground text-xs uppercase tracking-wider">Role</Label>
+                      <span className="text-[10px] text-muted-foreground/70">{ROLES.find(r => r.value === role)?.desc}</span>
+                    </div>
+                    <div className="flex bg-muted/40 p-1 rounded-lg border border-border">
                       {ROLES.map((r) => (
                         <button
                           key={r.value}
                           type="button"
                           onClick={() => setRole(r.value)}
-                          className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${role === r.value
-                            ? 'border-primary/60 bg-primary/10'
-                            : 'border-border bg-muted/40 hover:border-border/80'
+                          className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-md transition-all duration-200 ${role === r.value
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                             }`}
                         >
-                          <Shield className={`h-4 w-4 mt-0.5 flex-shrink-0 ${role === r.value ? 'text-primary' : 'text-muted-foreground'}`} />
-                          <div>
-                            <p className={`text-sm font-medium ${role === r.value ? 'text-primary' : 'text-foreground/80'}`}>{r.label}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
-                          </div>
+                          <Shield className={`h-3.5 w-3.5 ${role === r.value ? 'text-primary-foreground' : 'opacity-70'}`} />
+                          <span className="text-[10px] font-semibold uppercase tracking-wider">{r.label}</span>
                         </button>
                       ))}
                     </div>
