@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronLeft, BarChart3, Map, Bot, Zap, Inbox, Settings, Users as UsersIcon, LogOut, Globe, Menu, X } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
-import { ThemeProvider } from './components/ThemeProvider'
 import { ThemeToggle } from './components/ThemeToggle'
 import { AlertDropdown } from './components/AlertDropdown'
 import Login from './pages/Login'
@@ -409,8 +408,7 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="lc-ews-theme">
-      <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
         
         {/* ── Mobile sidebar backdrop ── */}
         <AnimatePresence>
@@ -516,6 +514,5 @@ export default function App() {
           </main>
         </div>
       </div>
-    </ThemeProvider>
   )
 }
