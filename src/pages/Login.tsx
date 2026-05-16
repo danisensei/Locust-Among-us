@@ -12,7 +12,7 @@ type Tab = 'login' | 'register'
 const ROLES = [
   { value: 'analyst', label: 'Analyst', desc: 'View maps, risk zones & reports' },
   { value: 'field_officer', label: 'Field Officer', desc: 'Submit field observations' },
-  // { value: 'admin', label: 'Admin', desc: 'Full system access' },
+  { value: 'admin', label: 'Admin', desc: 'Full system access' },
 ]
 
 // ── Component ─────────────────────────────────────────────────
@@ -98,13 +98,13 @@ export default function Login() {
               className="mb-3 flex justify-center h-24 relative"
             >
               {/* Perfectly centered using translate, with a radial mask to hide the hard image edges */}
-              <img
-                src="/models/locust-tech-logo.png"
-                alt="Tech Locust Logo"
-                className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-64 w-auto object-contain drop-shadow-2xl pointer-events-none dark:mix-blend-screen mix-blend-normal"
-                style={{
-                  WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
-                  maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)'
+              <img 
+                src="/models/locust-tech-logo.png" 
+                alt="Tech Locust Logo" 
+                className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-64 w-auto object-contain drop-shadow-2xl pointer-events-none dark:mix-blend-screen mix-blend-normal" 
+                style={{ 
+                  WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
+                  maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 
                 }}
               />
             </motion.div>
@@ -114,21 +114,19 @@ export default function Login() {
 
           {/* Tab switcher */}
           <div className="flex mx-8 mt-6 bg-muted/70 rounded-lg p-1 gap-1">
-            {(['login', 'register'] as Tab[])
-              .filter(t => t !== 'register') // Commented out registration for now
-              .map((t) => (
-                <button
-                  key={t}
-                  onClick={() => { setTab(t); setError(null) }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${tab === t
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {t === 'login' ? <LogIn className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-                  {t === 'login' ? 'Sign In' : 'Register'}
-                </button>
-              ))}
+            {(['login', 'register'] as Tab[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => { setTab(t); setError(null) }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${tab === t
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                {t === 'login' ? <LogIn className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+                {t === 'login' ? 'Sign In' : 'Register'}
+              </button>
+            ))}
           </div>
 
           {/* Form */}
