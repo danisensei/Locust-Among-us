@@ -5,9 +5,8 @@
 
 # Change this to your actual domain name!
 roachpestanalyzer.duckdns.org {
-    # 1. Route all /api/ traffic to the Python backend
-    # We use 'handle' so the /api prefix is preserved and passed to FastAPI
-    handle /api/* {
+    # 1. Route API and Auth traffic to the Python backend
+    handle /api/* /auth/* {
         reverse_proxy swarm-engine:8001
     }
 
