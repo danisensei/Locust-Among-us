@@ -59,29 +59,13 @@ services:
     container_name: lc-ews-frontend
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - acme_challenge:/var/www/certbot
-      - acme_certs:/etc/ssl/acme
     depends_on:
       swarm-engine:
         condition: service_healthy
     restart: unless-stopped
 
-  # ── ACME.sh (ZeroSSL integration) ───────────────────────────
-  acme:
-    image: neilpang/acme.sh:latest
-    container_name: lc-ews-acme
-    command: daemon
-    volumes:
-      - acme_challenge:/var/www/certbot
-      - acme_certs:/etc/ssl/acme
-    restart: unless-stopped
-
 volumes:
   pgdata:
-  acme_challenge:
-  acme_certs:
 
 networks:
   default:
