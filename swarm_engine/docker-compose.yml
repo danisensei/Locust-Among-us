@@ -55,8 +55,8 @@ services:
       # Changed Dockerfile path to be relative to the context (root)
       dockerfile: swarm_engine/docker_frontend/Dockerfile.frontend
       args:
-        VITE_API_URL: /api
-        VITE_SWARM_API_URL: /api
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+        VITE_SWARM_API_URL: ${VITE_SWARM_API_URL:-http://localhost:8001}
     container_name: lc-ews-frontend
     ports:
       - "80:80"
