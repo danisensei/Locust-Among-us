@@ -10,6 +10,8 @@ import {
 import {
     CheckCircle2, Clock, XCircle, Eye, Loader2, MapPin, MessageSquare, Map as MapIcon, FileText, Search, Activity, ShieldAlert, CheckSquare, AlertTriangle, RefreshCw, Send
 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { useAuthFetch, API_URL } from '@/context/AuthContext'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -97,8 +99,9 @@ export default function FieldReports() {
     const [mapOpen, setMapOpen] = useState(false)
     const [mapReport, setMapReport] = useState<ReportData | null>(null)
 
-    // Filter
+    // Filter & Search
     const [filter, setFilter] = useState<'all' | 'Pending' | 'Verified' | 'Rejected'>('all')
+    const [search, setSearch] = useState('')
 
     // ── Fetch reports ──────────────────────────────────────────
     const fetchReports = useCallback(async () => {
@@ -177,7 +180,16 @@ export default function FieldReports() {
         }
     }
 
-    const filteredReports = filter === 'all' ? reports : reports.filter(r => r.status === filter)
+    const filteredReports = reports.filter(r => {
+        const matchesFilter = filter === 'all' || r.status === filter
+        const searchLower = search.toLowerCase()
+        const matchesSearch =
+            r.report_id.toLowerCase().includes(searchLower) ||
+            r.observer_name.toLowerCase().includes(searchLower) ||
+            r.zone.toLowerCase().includes(searchLower) ||
+            (r.description && r.description.toLowerCase().includes(searchLower))
+        return matchesFilter && matchesSearch
+    })
     const pendingCount = reports.filter(r => r.status === 'Pending').length
     const verifiedCount = reports.filter(r => r.status === 'Verified').length
     const rejectedCount = reports.filter(r => r.status === 'Rejected').length
@@ -249,17 +261,35 @@ export default function FieldReports() {
 
             {/* Main Reports List */}
             <div className="rounded-2xl border border-border/50 bg-background/50 backdrop-blur-xl overflow-hidden shadow-xl flex flex-col">
-                <div className="p-4 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+                <div className="p-4 border-b border-border/50 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <div className="p-2 bg-indigo-500/20 rounded-lg">
                             <Search className="h-4 w-4 text-indigo-400" />
                         </div>
                         <h2 className="font-semibold font-['Outfit'] text-lg">Field Reports Inbox</h2>
-                        {filter !== 'all' && (
-                            <Badge variant="outline" className="ml-2 bg-background border-border/50 text-muted-foreground cursor-pointer hover:bg-muted" onClick={() => setFilter('all')}>
-                                {filter} <XCircle className="h-3 w-3 ml-1" />
-                            </Badge>
-                        )}
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search ID, zone, observer..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9 bg-background/50 border-border/50 h-9 text-sm rounded-xl focus:ring-sky-500/50"
+                            />
+                        </div>
+                        <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
+                            <SelectTrigger className="w-[140px] h-9 bg-background/50 border-border/50 rounded-xl text-sm">
+                                <SelectValue placeholder="All Status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background/95 backdrop-blur-xl border-border/50">
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="Pending">Pending Review</SelectItem>
+                                <SelectItem value="Verified">Approved</SelectItem>
+                                <SelectItem value="Rejected">Rejected</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
