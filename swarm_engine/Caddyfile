@@ -5,8 +5,13 @@
 
 # Change this to your actual domain name!
 roachpestanalyzer.duckdns.org {
+    # Match both /api and /auth prefixes
+    @backend_routes {
+        path /api/* /auth/*
+    }
+
     # 1. Route API and Auth traffic to the Python backend
-    handle /api/* /auth/* {
+    handle @backend_routes {
         reverse_proxy swarm-engine:8001
     }
 
