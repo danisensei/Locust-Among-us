@@ -1,6 +1,7 @@
 {
     # Global options
     email roachpestanalyzer@gmail.com
+    debug
 }
 
 pestanalyzer.duckdns.org {
@@ -19,18 +20,5 @@ pestanalyzer.duckdns.org {
     # Configure ZeroSSL as the CA
     tls {
         ca https://acme.zerossl.com/v2/DV90
-    }
-
-    # Proxy API requests to the swarm-engine backend
-    handle /api/* {
-        reverse_proxy swarm-engine:8001
-    }
-
-    # Proxy documentation if needed (optional)
-    handle /docs {
-        reverse_proxy swarm-engine:8001
-    }
-    handle /openapi.json {
-        reverse_proxy swarm-engine:8001
     }
 }
