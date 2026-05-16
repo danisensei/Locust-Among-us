@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2, Trash2, ShieldAlert, ShieldCheck, User2 } from 'lucide-react'
 import { useAuth, useAuthFetch, API_URL } from '@/context/AuthContext'
 
@@ -29,6 +30,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [userToDelete, setUserToDelete] = useState<UserRow | null>(null)
 
   const fetchUsers = async () => {
     try {
@@ -47,12 +49,12 @@ export default function Users() {
   useEffect(() => { fetchUsers() }, [])
 
   const handleDelete = async (userId: number) => {
-    if (!confirm('Remove this user from the system?')) return
     setDeleting(userId)
     try {
       const res = await authFetch(`${API_URL}/api/users/${userId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setUsers(prev => prev.filter(u => u.id !== userId))
+      setUserToDelete(null)
     } catch (e: any) {
       alert(e.message)
     } finally {
@@ -165,7 +167,7 @@ export default function Users() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(u.id)}
+                              onClick={() => setUserToDelete(u)}
                               disabled={deleting === u.id}
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             >
@@ -185,6 +187,26 @@ export default function Users() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Remove User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove <span className="font-semibold text-foreground">{userToDelete?.name}</span> from the system? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setUserToDelete(null)} disabled={deleting === userToDelete?.id}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => userToDelete && handleDelete(userToDelete.id)} disabled={deleting === userToDelete?.id}>
+              {deleting === userToDelete?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
