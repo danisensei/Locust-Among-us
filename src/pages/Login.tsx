@@ -108,8 +108,8 @@ export default function Login() {
                 }}
               />
             </motion.div>
-            <h1 className="text-3xl font-black font-['Outfit'] text-foreground tracking-tighter mt-8">LC-EWS</h1>
-            <p className="text-sm text-muted-foreground mt-1">Locust Early Warning System</p>
+            <h1 className="text-3xl font-black font-['Outfit'] text-foreground tracking-tighter mt-8">PestiScope</h1>
+            <p className="text-sm text-muted-foreground mt-1">A Locust Early Warning and Control System</p>
           </div>
 
           {/* Tab switcher */}

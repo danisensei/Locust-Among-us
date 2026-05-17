@@ -234,7 +234,7 @@ export default function App() {
               <div className="flex flex-col items-start w-full relative">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[26px] leading-none font-black tracking-tighter bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent font-['Outfit'] drop-shadow-md pb-1 transition-all duration-700">LC-EWS</span>
+                  <span className="text-[26px] leading-none font-black tracking-tighter bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent font-['Outfit'] drop-shadow-md pb-1 transition-all duration-700">PestiScope</span>
                 </div>
                 <div className="flex items-center gap-2 pl-4">
                   <div className="h-[1px] w-4 bg-border/50" />

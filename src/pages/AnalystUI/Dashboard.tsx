@@ -193,7 +193,7 @@ export default function Dashboard() {
               onChange={setActiveTab}
             />
             <Badge variant="outline" className="text-[10px] bg-background">
-              LC-EWS v2.0
+              PestiScope v1.0
             </Badge>
           </div>
 
