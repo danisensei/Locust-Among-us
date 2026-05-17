@@ -186,7 +186,7 @@ export default function App() {
       <>
         {/* Logo */}
         <div className={`h-20 border-b border-border/50 relative overflow-hidden group cursor-default flex items-center justify-center bg-background/30`}>
-          
+
           {/* Animated Mesh Gradient Background */}
           <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] animate-pulse" />
@@ -202,11 +202,11 @@ export default function App() {
 
           {/* Faint watermark - HIDE WHEN COLLAPSED */}
           {!collapsed && (
-            <div 
-              className="absolute -right-4 -top-4 opacity-40 group-hover:opacity-80 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000 pointer-events-none transform origin-center dark:mix-blend-screen mix-blend-normal"
-              style={{ 
-                WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
-                maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 
+            <div
+              className="absolute -right-4 -top-4 opacity-15 group-hover:opacity-30 dark:opacity-25 dark:group-hover:opacity-45 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000 pointer-events-none transform origin-center dark:mix-blend-screen mix-blend-multiply dark:invert-0 invert"
+              style={{
+                WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
+                maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)'
               }}
             >
               <img src="/models/locust-tech-logo.png" alt="AI Locust Logo" className="w-32 h-32 object-contain" />
@@ -221,7 +221,7 @@ export default function App() {
             }}
           >
             {collapsed ? (
-              <motion.div 
+              <motion.div
                 className="relative flex items-center justify-center"
                 whileHover={{ scale: 1.1 }}
               >
@@ -409,110 +409,110 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-        
-        {/* ── Mobile sidebar backdrop ── */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] md:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          )}
-        </AnimatePresence>
 
-        {/* ── Desktop Sidebar (in-flow, collapsible) ── */}
-        <div className="relative z-50 shrink-0 hidden md:flex">
+      {/* ── Mobile sidebar backdrop ── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
           <motion.div
-            animate={{ width: isSidebarCollapsed ? 80 : 256 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
-            className="h-full border-r border-border/50 bg-card/50 backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)] overflow-hidden"
-          >
-            {renderSidebarContent(false)}
-          </motion.div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-          {/* Toggle Button */}
-          <motion.button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute -right-4 top-1/2 -translate-y-1/2 bg-background border border-border shadow-xl rounded-full p-2 hover:bg-accent text-primary hover:text-primary transition-all z-[60] flex items-center justify-center group"
-            whileHover={{ scale: 1.1, x: 2 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      {/* ── Desktop Sidebar (in-flow, collapsible) ── */}
+      <div className="relative z-50 shrink-0 hidden md:flex">
+        <motion.div
+          animate={{ width: isSidebarCollapsed ? 80 : 256 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
+          className="h-full border-r border-border/50 bg-card/50 backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)] overflow-hidden"
+        >
+          {renderSidebarContent(false)}
+        </motion.div>
+
+        {/* Toggle Button */}
+        <motion.button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute -right-4 top-1/2 -translate-y-1/2 bg-background border border-border shadow-xl rounded-full p-2 hover:bg-accent text-primary hover:text-primary transition-all z-[60] flex items-center justify-center group"
+          whileHover={{ scale: 1.1, x: 2 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        >
+          <motion.div
+            animate={{ rotate: isSidebarCollapsed ? 180 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <motion.div
-              animate={{ rotate: isSidebarCollapsed ? 180 : 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </motion.div>
-          </motion.button>
+            <ChevronLeft className="h-4 w-4" />
+          </motion.div>
+        </motion.button>
+      </div>
+
+      <div
+        className={`md:hidden fixed inset-y-0 left-0 z-[9999] w-64 transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="w-full h-full border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden">
+          {renderSidebarContent(true)}
         </div>
 
-        <div
-          className={`md:hidden fixed inset-y-0 left-0 z-[9999] w-64 transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        <motion.button
+          onClick={() => setIsMobileMenuOpen(false)}
+          className={`absolute -right-4 top-1/2 -translate-y-1/2 bg-background border border-border shadow-xl rounded-full p-2 hover:bg-accent text-primary hover:text-rose-500 transition-all duration-300 z-[60] flex items-center justify-center group ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          whileHover={{ scale: 1.1, x: 2 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
         >
-          <div className="w-full h-full border-r border-border/50 bg-card backdrop-blur-xl flex flex-col shadow-[4px_0_24px_-10px_rgba(0,0,0,0.3)] overflow-hidden">
-            {renderSidebarContent(true)}
+          <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
+        </motion.button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl h-14 md:h-16 flex items-center justify-between px-3 md:px-6 sticky top-0 z-[1000] shadow-sm relative">
+          {/* Subtle top glow line */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 transition-opacity duration-500 header-glow-line" />
+
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Mobile hamburger */}
+            <motion.button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 -ml-2 text-foreground/80 hover:text-foreground rounded-lg hover:bg-accent/50"
+              whileHover={{ scale: 1.05 }}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </motion.button>
+            {/* Breadcrumb / Page Title */}
+            <div className="flex items-center gap-2">
+              <span className="text-foreground/70 font-bold text-xs capitalize tracking-wide hidden sm:inline">
+                {pages.find(p => p.id === activeTab)?.section || 'Platform'}
+              </span>
+              <span className="text-foreground/30 text-xs font-light hidden sm:inline">/</span>
+              <h1 className="font-bold text-foreground tracking-tight text-sm md:text-base" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                {pages.find(p => p.id === activeTab)?.label || 'Overview'}
+              </h1>
+            </div>
           </div>
 
-          <motion.button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`absolute -right-4 top-1/2 -translate-y-1/2 bg-background border border-border shadow-xl rounded-full p-2 hover:bg-accent text-primary hover:text-rose-500 transition-all duration-300 z-[60] flex items-center justify-center group ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            whileHover={{ scale: 1.1, x: 2 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-          >
-            <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          </motion.button>
-        </div>
+          {/* Right Actions */}
+          <div className="flex items-center gap-4 relative z-[1001]">
+            <AlertDropdown onNavigate={setActiveTab} />
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl h-14 md:h-16 flex items-center justify-between px-3 md:px-6 sticky top-0 z-[1000] shadow-sm relative">
-            {/* Subtle top glow line */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 transition-opacity duration-500 header-glow-line" />
+            <div className="h-6 w-px bg-border/50 mx-1" />
+            <ThemeToggle />
+          </div>
+        </header>
 
-            <div className="flex items-center gap-2 md:gap-3">
-              {/* Mobile hamburger */}
-              <motion.button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden p-2 -ml-2 text-foreground/80 hover:text-foreground rounded-lg hover:bg-accent/50"
-                whileHover={{ scale: 1.05 }}
-              >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </motion.button>
-              {/* Breadcrumb / Page Title */}
-              <div className="flex items-center gap-2">
-                <span className="text-foreground/70 font-bold text-xs capitalize tracking-wide hidden sm:inline">
-                  {pages.find(p => p.id === activeTab)?.section || 'Platform'}
-                </span>
-                <span className="text-foreground/30 text-xs font-light hidden sm:inline">/</span>
-                <h1 className="font-bold text-foreground tracking-tight text-sm md:text-base" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  {pages.find(p => p.id === activeTab)?.label || 'Overview'}
-                </h1>
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-4 relative z-[1001]">
-              <AlertDropdown onNavigate={setActiveTab} />
-
-              <div className="h-6 w-px bg-border/50 mx-1" />
-              <ThemeToggle />
-            </div>
-          </header>
-
-          {/* Content Area */}
-          <main className="flex-1 overflow-y-auto">
-            <div className="p-3 md:p-6">
-              {renderPage()}
-            </div>
-          </main>
-        </div>
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-3 md:p-6">
+            {renderPage()}
+          </div>
+        </main>
       </div>
+    </div>
   )
 }
