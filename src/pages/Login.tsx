@@ -95,8 +95,11 @@ export default function Login() {
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-              className="mb-3 flex justify-center h-24 relative"
+              className="mb-3 flex justify-center h-24 relative items-center"
             >
+              {/* Pinkish glow specific to light theme. Hidden in dark mode. */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-fuchsia-500/15 blur-3xl rounded-full pointer-events-none dark:hidden" />
+
               {/* Perfectly centered using translate, with a radial mask to hide the hard image edges */}
               <img
                 src="/models/locust-tech-logo.png"
@@ -139,7 +142,7 @@ export default function Login() {
                   animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+                  className="overflow-hidden px-1 -mx-1"
                 >
                   <div className="space-y-1.5 pb-4">
                     <Label className="text-muted-foreground text-xs uppercase tracking-wider">Full Name</Label>
