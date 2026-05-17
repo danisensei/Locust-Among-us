@@ -203,7 +203,7 @@ export default function App() {
           {/* Faint watermark - HIDE WHEN COLLAPSED */}
           {!collapsed && (
             <div 
-              className="absolute -right-4 -top-4 opacity-40 group-hover:opacity-80 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000 pointer-events-none transform origin-center dark:mix-blend-screen mix-blend-normal"
+              className="absolute -right-4 -top-4 opacity-15 group-hover:opacity-30 dark:opacity-25 dark:group-hover:opacity-45 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000 pointer-events-none transform origin-center dark:mix-blend-screen mix-blend-multiply dark:invert-0 invert"
               style={{ 
                 WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
                 maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 

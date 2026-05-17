@@ -76,7 +76,7 @@ export default function Login() {
 
       {/* Radial glow behind the card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] rounded-full bg-primary/20 blur-[100px]" />
+        <div className="w-[600px] h-[600px] rounded-full bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-sky-500/5 dark:from-emerald-500/20 dark:via-teal-500/10 dark:to-sky-500/10 blur-[120px]" />
       </div>
 
       {/* Card */}
@@ -90,26 +90,72 @@ export default function Login() {
         <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl shadow-2xl overflow-hidden">
 
           {/* Header */}
-          <div className="px-8 pt-8 pb-6 border-b border-border text-center">
+          <div className="pt-8 pb-6 border-b border-border text-center flex flex-col items-center overflow-hidden relative">
+
+            {/* Full-width header background gradient — theme-specific */}
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.07] via-transparent to-transparent dark:from-emerald-500/[0.12] dark:via-emerald-900/5 dark:to-transparent pointer-events-none" />
+            
+            {/* The Logo Zone */}
             <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
+              initial={{ scale: 0.75, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-              className="mb-3 flex justify-center h-24 relative"
+              transition={{ delay: 0.1, type: 'spring', stiffness: 160, damping: 14 }}
+              className="relative flex items-center justify-center mb-5 w-28 h-28 group"
             >
-              {/* Perfectly centered using translate, with a radial mask to hide the hard image edges */}
-              <img 
-                src="/models/locust-tech-logo.png" 
-                alt="Tech Locust Logo" 
-                className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 h-64 w-auto object-contain drop-shadow-2xl pointer-events-none dark:mix-blend-screen mix-blend-normal" 
-                style={{ 
-                  WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)', 
-                  maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)' 
-                }}
+              {/* ——— DARK MODE LAYERS ——— */}
+              {/* Outermost slow-pulse ring */}
+              <div className="hidden dark:block absolute w-28 h-28 rounded-full border border-emerald-500/10 animate-[ping_3s_ease-out_infinite] opacity-30" />
+              {/* Mid glow halo */}
+              <div className="hidden dark:block absolute w-24 h-24 rounded-full bg-emerald-500/[0.18] blur-2xl animate-pulse" />
+              {/* Crisp outer ring */}
+              <div className="hidden dark:block absolute w-[88px] h-[88px] rounded-full border border-emerald-400/25 group-hover:border-emerald-400/45 transition-all duration-700" />
+              {/* Inner ring */}
+              <div className="hidden dark:block absolute w-[72px] h-[72px] rounded-full border border-emerald-500/15 group-hover:border-emerald-500/30 transition-all duration-700" />
+              {/* Dark glass orb core */}
+              <div 
+                className="hidden dark:flex absolute w-[68px] h-[68px] rounded-full items-center justify-center overflow-hidden"
+                style={{ background: 'radial-gradient(circle at 35% 35%, rgba(16,185,129,0.15) 0%, rgba(2,6,23,0.95) 65%)', boxShadow: 'inset 0 1px 1px rgba(16,185,129,0.2), 0 0 30px rgba(16,185,129,0.12)' }}
+              >
+                {/* Scanline sweep inside orb */}
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_40%,rgba(16,185,129,0.08)_50%,transparent_60%)] animate-[spin_6s_linear_infinite]" />
+              </div>
+
+              {/* ——— LIGHT MODE LAYERS ——— */}
+              {/* Soft ambient halo */}
+              <div className="block dark:hidden absolute w-24 h-24 rounded-full bg-emerald-400/10 blur-2xl animate-pulse" />
+              {/* Outer decorative ring */}
+              <div className="block dark:hidden absolute w-[88px] h-[88px] rounded-full border border-emerald-400/20 group-hover:border-emerald-400/40 transition-all duration-700" />
+              {/* Frosted glass orb core */}
+              <div 
+                className="block dark:hidden absolute w-[68px] h-[68px] rounded-full"
+                style={{ background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.7) 60%, rgba(209,250,229,0.4) 100%)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.9), 0 4px 20px rgba(16,185,129,0.1), 0 1px 3px rgba(0,0,0,0.05)' }}
               />
+
+              {/* ——— LOGO IMAGE — adaptive blend ——— */}
+              <div className="relative z-10 w-[68px] h-[68px] flex items-center justify-center dark:mix-blend-screen mix-blend-multiply dark:opacity-100 opacity-85 group-hover:scale-110 transition-transform duration-500">
+                <img 
+                  src="/models/locust-tech-logo.png" 
+                  alt="Tech Locust Logo"
+                  className="h-14 w-auto object-contain pointer-events-none dark:invert-0 invert"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.35))' }}
+                />
+              </div>
             </motion.div>
-            <h1 className="text-3xl font-black font-['Outfit'] text-foreground tracking-tighter mt-8">PestiScope</h1>
-            <p className="text-sm text-muted-foreground mt-1">A Locust Early Warning and Control System</p>
+
+            {/* Wordmark */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22, duration: 0.4 }}
+              className="space-y-1.5 relative z-10"
+            >
+              <h1 className="text-[2rem] font-black font-['Outfit'] tracking-tight leading-none bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 dark:from-emerald-300 dark:via-emerald-400 dark:to-sky-400 bg-clip-text text-transparent pb-0.5">
+                PestiScope
+              </h1>
+              <p className="text-[8.5px] font-bold uppercase tracking-[0.28em] text-emerald-700/50 dark:text-emerald-400/40">
+                Locust Early Warning &amp; Control System
+              </p>
+            </motion.div>
           </div>
 
           {/* Tab switcher */}
@@ -139,7 +185,7 @@ export default function Login() {
                   animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+                  className="overflow-hidden px-1.5 -mx-1.5"
                 >
                   <div className="space-y-1.5 pb-4">
                     <Label className="text-muted-foreground text-xs uppercase tracking-wider">Full Name</Label>
