@@ -3,7 +3,6 @@
 PestiScope is a high-fidelity web platform designed to monitor, predict, and coordinate mitigation efforts against locust swarms across Pakistan. The system integrates real-time drone operations, GIS-based mapping, predictive AI models, and role-based incident reporting to provide an end-to-end command-and-control dashboard.
 
 ---
-
 ## Architecture Overview
 
 PestiScope is orchestrated using a multi-container Docker structure to handle production workloads with automatic HTTPS encryption, reverse-proxy routing, and single-page routing fallbacks.
